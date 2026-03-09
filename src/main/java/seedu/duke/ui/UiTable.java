@@ -42,13 +42,25 @@ public class UiTable {
         return rows.getFirst().size();
     }
 
+    public int getRowCount() {
+        return rows.size();
+    }
+
     @Override
     public String toString() {
+        int indexLength = (""+getRowCount()).length();
+
         var widths = IntStream.range(0, getColumnCount()).map(this::getColumnWidth).toArray();
 
         StringBuilder tableString = new StringBuilder();
+
+        int i=1;
         for (UiTableRow row : rows) {
-            tableString.append(row.toString(widths)).append("\n");
+            //plus 1 for the dot and 1 for the space after the dot
+            String indexString = String.format("%-" + (indexLength+2) + "s", i+".");
+            tableString.append(indexString).append(row.toString(widths)).append("\n");
+
+            i++;
         }
 
         return tableString.toString();
