@@ -1,16 +1,14 @@
-package seedu.duke;
+package seedu.duke.ui;
 
 import org.junit.jupiter.api.Test;
 import seedu.duke.equipment.Equipment;
-import seedu.duke.ui.UiTable;
-import seedu.duke.ui.UiTableRow;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UiTableTest {
     @Test
-    public void uiTableTest() {
+    public void toString_stringRows_printsFormattedTable() {
         UiTable uiTable = new UiTable();
         uiTable.addRow(new UiTableRow("STM32 Development Board", "Total: 50", "Available: 45", "Loaned: 5"));
         uiTable.addRow(new UiTableRow("Basys3 FPGA", "Total: 20", "Available: 20", "Loaned: 0"));
@@ -26,7 +24,7 @@ public class UiTableTest {
     }
 
     @Test
-    public void uiTableTestEquipment() {
+    public void toString_equipmentRows_printsFormattedTable() {
         UiTable uiTable = new UiTable();
         uiTable.addRow(new UiTableRow(new Equipment("STM32 Development Board", 50, 45, 5)));
         uiTable.addRow(new UiTableRow(new Equipment("Basys3 FPGA", 20)));
@@ -42,7 +40,7 @@ public class UiTableTest {
     }
 
     @Test
-    public void uiTableTestLong() {
+    public void toString_manyRows_formatsIndicesCorrectly() {
         UiTable uiTable = new UiTable();
         for (int i = 0; i < 100; i++) {
             uiTable.addRow(new UiTableRow(new Equipment("STM32 Development Board", 50, 45, 5)));
@@ -56,7 +54,7 @@ public class UiTableTest {
     }
 
     @Test
-    public void uiTableTestEmpty() {
+    public void toString_emptyTable_printsEmptyMessage() {
         UiTable uiTable = new UiTable();
         String expectedOutput = "<empty table>";
         assertEquals(expectedOutput, uiTable.toString());
