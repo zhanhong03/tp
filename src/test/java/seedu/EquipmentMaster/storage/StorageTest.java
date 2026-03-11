@@ -7,6 +7,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import seedu.EquipmentMaster.equipment.Equipment;
+import seedu.EquipmentMaster.ui.Ui;
+
 import java.io.File;
 import java.util.ArrayList;
 
@@ -26,8 +28,9 @@ public class StorageTest {
 
     @Test
     public void saveAndLoad_validEquipmentList_success() {
+        Ui ui = new Ui();
         // Arrange: Create a Storage object and a dummy list of equipment
-        Storage storage = new Storage(TEST_FILE_PATH);
+        Storage storage = new Storage(TEST_FILE_PATH, ui);
         ArrayList<Equipment> originalList = new ArrayList<>();
 
         // Using your newly created 4-argument constructor!
@@ -51,8 +54,9 @@ public class StorageTest {
 
     @Test
     public void load_noExistingFile_returnsEmptyList() {
+        Ui ui = new Ui();
         // Arrange: Ensure the test file definitely does not exist
-        Storage storage = new Storage(TEST_FILE_PATH);
+        Storage storage = new Storage(TEST_FILE_PATH, ui);
         File file = new File(TEST_FILE_PATH);
         if (file.exists()) {
             file.delete();

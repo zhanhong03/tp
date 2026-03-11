@@ -17,13 +17,8 @@ public class EquipmentMaster {
 
     public EquipmentMaster(String filePath) {
         ui = new Ui();
-        storage = new Storage(filePath);
-        try {
-            equipments = new EquipmentList(storage.load());
-        } catch (EquipmentMasterException e) {
-            ui.showMessage(e.getMessage());
-            equipments = new EquipmentList(); // Fallback to empty list
-        }
+        storage = new Storage(filePath, ui);
+        this.equipments = new EquipmentList(storage.load());
     }
 
 

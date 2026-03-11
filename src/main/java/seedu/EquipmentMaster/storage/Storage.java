@@ -2,6 +2,7 @@ package seedu.EquipmentMaster.storage;
 
 import seedu.EquipmentMaster.equipment.Equipment;
 import seedu.EquipmentMaster.exception.EquipmentMasterException;
+import seedu.EquipmentMaster.ui.Ui;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -15,37 +16,36 @@ import java.util.Scanner;
  */
 public class Storage {
     private String filePath;
+    private Ui ui;
 
     /**
      * Constructor.
      * @param filePath The relative path to the .txt storage file.
      */
-    public Storage(String filePath) {
+    public Storage(String filePath, Ui ui) {
         this.filePath = filePath;
+        this.ui = ui;
     }
 
     /**
      * Saves the current list of equipment to the .txt file.
      * @param equipments The current list of equipment.
      */
-    public void save(ArrayList<Equipment> equipments) throws EquipmentMasterException{
+    public void save(ArrayList<Equipment> equipments){
         try {
             File file = new File(filePath);
             File directory = file.getParentFile();
-
-            // Create directory if it doesn't exist (e.g., creating the "data" folder)
             if (directory != null && !directory.exists()) {
                 directory.mkdirs();
             }
 
             try (FileWriter writer = new FileWriter(filePath)) {
                 for (Equipment equipment : equipments) {
-                    // Make sure your Equipment class has a toFileString() method!
                     writer.write(equipment.toFileString() + System.lineSeparator());
                 }
             }
         } catch (IOException e) {
-            throw new EquipmentMasterException("Failed to save data to " + filePath + ": " + e.getMessage());
+            ui.showMessage("Error saving equipment data: " + e.getMessage());
         }
     }
 
@@ -53,11 +53,10 @@ public class Storage {
      * Loads the equipment list stored in the .txt file.
      * @return The list of equipment from the file. Returns an empty list if the file is not found.
      */
-    public ArrayList<Equipment> load() throws EquipmentMasterException{
+    public ArrayList<Equipment> load() {
         ArrayList<Equipment> equipments = new ArrayList<>();
         File file = new File(filePath);
 
-        // If file doesn't exist, return an empty list to start fresh
         if (!file.exists()) {
             return equipments;
         }
@@ -65,15 +64,13 @@ public class Storage {
         try (Scanner scanner = new Scanner(file)) {
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
-                Equipment equipment = parseEquipment(line);
-
-                // Only add if the line was not corrupted
-                if (equipment != null) {
-                    equipments.add(equipment);
+                Equipment eq = parseEquipment(line);
+                if (eq != null) {
+                    equipments.add(eq);
                 }
             }
         } catch (Exception e) {
-            throw new EquipmentMasterException("Failed to save data to " + filePath + ": " + e.getMessage());
+            ui.showMessage("Error loading equipment data: " + e.getMessage());
         }
         return equipments;
     }
