@@ -10,6 +10,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * A class that handles the storage of the equipment list.
@@ -125,6 +127,7 @@ public class Storage {
      * @param currentSem The semester to be saved.
      */
     public void saveSettings(AcademicSemester currentSem) {
+        Logger storageLogger = Logger.getLogger(Storage.class.getName());
         try {
             File file = new File(settingsPath);
             File directory = file.getParentFile();
@@ -135,8 +138,10 @@ public class Storage {
             try (FileWriter writer = new FileWriter(settingsPath)) {
                 writer.write(currentSem.toString());
             }
+            storageLogger.log(Level.INFO, "Successfully saved semester settings to file.");
         } catch (IOException e) {
             ui.showMessage("Error saving settings: " + e.getMessage());
+            storageLogger.log(Level.SEVERE, "Failed to save settings: " + e.getMessage());
         }
     }
 

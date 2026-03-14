@@ -9,11 +9,15 @@ import seedu.equipmentmaster.semester.AcademicSemester;
 import seedu.equipmentmaster.storage.Storage;
 import seedu.equipmentmaster.ui.Ui;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public class EquipmentMaster {
     private static Storage storage;
     private Ui ui;
     private EquipmentList equipments;
     private static AcademicSemester currentSystemSemester;
+    private static final Logger logger = Logger.getLogger(EquipmentMaster.class.getName());
 
     /**
      * Initializes the application, loads system settings, and populates the equipment list.
@@ -21,6 +25,7 @@ public class EquipmentMaster {
      * @param filePath The path to the equipment data file.
      */
     public EquipmentMaster(String filePath) {
+        logger.log(Level.INFO, "Starting EquipmentMaster initialization...");
         this.ui = new Ui();
         EquipmentMaster.storage = new Storage(filePath, ui);
 
@@ -39,6 +44,7 @@ public class EquipmentMaster {
 
         // Load equipment data
         this.equipments = new EquipmentList(storage.load());
+        logger.log(Level.INFO, "System time loaded successfully.");
     }
 
     /**
