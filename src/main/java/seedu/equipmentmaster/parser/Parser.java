@@ -2,13 +2,14 @@ package seedu.equipmentmaster.parser;
 
 import seedu.equipmentmaster.commands.AddCommand;
 import seedu.equipmentmaster.commands.ByeCommand;
+import seedu.equipmentmaster.commands.FindCommand;
+import seedu.equipmentmaster.commands.ListCommand;
+import seedu.equipmentmaster.commands.GetSemCommand;
+import seedu.equipmentmaster.commands.SetSemCommand;
+import seedu.equipmentmaster.commands.HelpCommand;
+import seedu.equipmentmaster.commands.ReportCommand;
 import seedu.equipmentmaster.commands.Command;
 import seedu.equipmentmaster.commands.DeleteCommand;
-import seedu.equipmentmaster.commands.FindCommand;
-import seedu.equipmentmaster.commands.GetSemCommand;
-import seedu.equipmentmaster.commands.HelpCommand;
-import seedu.equipmentmaster.commands.ListCommand;
-import seedu.equipmentmaster.commands.SetSemCommand;
 import seedu.equipmentmaster.commands.SetStatusCommand;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
 
@@ -27,17 +28,20 @@ public class Parser {
     private static ArrayList<CommandSpec> commandSpecs = new ArrayList<>();
 
     static {
-        commandSpecs.add(new CommandSpec("add", "add n/NAME q/QUANTITY", AddCommand::parse));
+        commandSpecs.add(new CommandSpec("add", "add n/NAME q/QUANTITY [sem/SEMESTER] [life/LIFESPAN]",
+                AddCommand::parse));
         commandSpecs.add(new CommandSpec("list", "list", fullCommand -> new ListCommand()));
         commandSpecs.add(new CommandSpec("bye", "bye", fullCommand -> new ByeCommand()));
-        commandSpecs.add(new CommandSpec("setstatus", "setstatus n/NAME q/QUANTITY s/STATUS " +
-                "or setstatus INDEX q/QUANTITY s/STATUS", SetStatusCommand::parse));
+        commandSpecs.add(new CommandSpec("setstatus", "setstatus n/NAME q/QUANTITY s/STATUS "
+                + "or setstatus INDEX q/QUANTITY s/STATUS", SetStatusCommand::parse));
         commandSpecs.add(new CommandSpec("find", "find KEYWORD", FindCommand::parse));
         commandSpecs.add(new CommandSpec("setsem", "setsem AY[YYYY]/[YY] Sem[1/2]", SetSemCommand::parse));
         commandSpecs.add(new CommandSpec("getsem", "getsem", fullCommand -> new GetSemCommand()));
-        commandSpecs.add(new CommandSpec("delete", "delete n/NAME q/QUANTITY " +
-                "or delete INDEX q/QUANTITY", DeleteCommand::parse));
+        commandSpecs.add(new CommandSpec("delete", "delete n/NAME q/QUANTITY s/STATUS "
+                + "or delete INDEX q/QUANTITY s/STATUS", DeleteCommand::parse));
         commandSpecs.add(new CommandSpec("help", "help", fullCommand -> new HelpCommand()));
+        commandSpecs.add(new CommandSpec("report", "report aging [AY[YYYY]/[YY] Sem[1/2]]",
+                ReportCommand::parse));
     }
 
     /**
@@ -46,7 +50,7 @@ public class Parser {
      * @return The list of registered CommandSpec objects.
      */
     public static ArrayList<CommandSpec> getCommandSpecs() {
-        return commandSpecs;
+        return new ArrayList<>(commandSpecs);
     }
 
     /**
