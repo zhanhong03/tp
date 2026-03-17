@@ -1,6 +1,15 @@
 package seedu.equipmentmaster.parser;
 
-import seedu.equipmentmaster.commands.*;
+import seedu.equipmentmaster.commands.AddCommand;
+import seedu.equipmentmaster.commands.ByeCommand;
+import seedu.equipmentmaster.commands.Command;
+import seedu.equipmentmaster.commands.DeleteCommand;
+import seedu.equipmentmaster.commands.FindCommand;
+import seedu.equipmentmaster.commands.GetSemCommand;
+import seedu.equipmentmaster.commands.HelpCommand;
+import seedu.equipmentmaster.commands.ListCommand;
+import seedu.equipmentmaster.commands.SetSemCommand;
+import seedu.equipmentmaster.commands.SetStatusCommand;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
 
 
@@ -17,7 +26,7 @@ public class Parser {
 
     private static ArrayList<CommandSpec> commandSpecs = new ArrayList<>();
 
-    static{
+    static {
         commandSpecs.add(new CommandSpec("add", "add n/NAME q/QUANTITY", AddCommand::parse));
         commandSpecs.add(new CommandSpec("list", "list", fullCommand -> new ListCommand()));
         commandSpecs.add(new CommandSpec("bye", "bye", fullCommand -> new ByeCommand()));
@@ -26,7 +35,7 @@ public class Parser {
         commandSpecs.add(new CommandSpec("setsem", "setsem SEMESTER", SetSemCommand::parse));
         commandSpecs.add(new CommandSpec("getsem", "getsem", fullCommand -> new GetSemCommand()));
         commandSpecs.add(new CommandSpec("delete", "delete n/NAME", DeleteCommand::parse));
-        commandSpecs.add(new CommandSpec("help","help", fullCommand -> new HelpCommand()));
+        commandSpecs.add(new CommandSpec("help", "help", fullCommand -> new HelpCommand()));
     }
 
     /**
@@ -48,9 +57,9 @@ public class Parser {
     public static Command parse(String fullCommand) throws EquipmentMasterException {
         String[] words = fullCommand.trim().split("\\s+");
 
-        for(CommandSpec spec: commandSpecs){
-            if(spec.keyword.equalsIgnoreCase(words[0])){
-                return  spec.creator.parse(fullCommand);
+        for (CommandSpec spec : commandSpecs) {
+            if (spec.keyword.equalsIgnoreCase(words[0])) {
+                return spec.creator.parse(fullCommand);
             }
         }
 
@@ -67,7 +76,7 @@ public class Parser {
     /**
      * Represents the specification of a command, including its keyword, format, and creation logic.
      */
-    public static class CommandSpec{
+    public static class CommandSpec {
         private String keyword;
         private String format;
         private CommandFactory creator;

@@ -7,8 +7,6 @@ import seedu.equipmentmaster.ui.Ui;
 import seedu.equipmentmaster.ui.UiTable;
 import seedu.equipmentmaster.ui.UiTableRow;
 
-import java.util.stream.IntStream;
-
 /**
  * Represents a command that displays a help message listing all available commands
  * and their usage formats.
