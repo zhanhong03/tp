@@ -12,9 +12,24 @@ import seedu.equipmentmaster.commands.DeleteCommand;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
 
 
+import java.util.ArrayList;
+
 import static seedu.equipmentmaster.common.Messages.MESSAGE_INVALID_INPUT;
 
 public class Parser {
+
+    private static ArrayList<CommandSpec> commandSpecs = new ArrayList<>();
+
+    static{
+        commandSpecs.add(new CommandSpec("add", "add n/NAME q/QUANTITY", AddCommand::parse));
+        commandSpecs.add(new CommandSpec("list", "list", fullCommand -> new ListCommand()));
+        commandSpecs.add(new CommandSpec("bye", "bye", fullCommand -> new ByeCommand()));
+        commandSpecs.add(new CommandSpec("setstatus", "setstatus n/NAME s/STATUS", SetStatusCommand::parse));
+        commandSpecs.add(new CommandSpec("find", "find KEYWORD", FindCommand::parse));
+        commandSpecs.add(new CommandSpec("setsem", "setsem SEMESTER", SetSemCommand::parse));
+        commandSpecs.add(new CommandSpec("getsem", "getsem", fullCommand -> new GetSemCommand()));
+        commandSpecs.add(new CommandSpec("delete", "delete n/NAME", DeleteCommand::parse));
+    }
 
     /**
      * Parses the full command string typed by the user and returns the corresponding Command object.
@@ -26,26 +41,28 @@ public class Parser {
     public static Command parse(String fullCommand) throws EquipmentMasterException {
         String[] words = fullCommand.trim().split("\\s+");
 
-        switch (words[0]) {
-        case "add":
-            return AddCommand.parse(fullCommand);
-        case "list":
-            return new ListCommand();
-        case "bye":
-            return new ByeCommand();
-        case "setstatus":
-            return SetStatusCommand.parse(fullCommand);
-        case "find":
-            return FindCommand.parse(fullCommand);
-        case "setsem":
-            return SetSemCommand.parse(fullCommand);
-        case "getsem":
-            return new GetSemCommand();
-        case "delete":
-            return DeleteCommand.parse(fullCommand);
+        for(CommandSpec spec: commandSpecs){
+            if(spec.keyword.equalsIgnoreCase(words[0])){
+                return  spec.creator.parse(fullCommand);
+            }
+        }
 
-        default:
-            throw new EquipmentMasterException(MESSAGE_INVALID_INPUT);
+        throw new EquipmentMasterException(MESSAGE_INVALID_INPUT);
+    }
+
+    private interface CommandFactory {
+        Command parse(String fullCommand) throws EquipmentMasterException;
+    }
+
+    private static class CommandSpec{
+        String keyword;
+        String format;
+        CommandFactory creator;
+
+        public CommandSpec(String keyword, String format, CommandFactory creator) {
+            this.keyword = keyword;
+            this.format = format;
+            this.creator = creator;
         }
     }
 }
