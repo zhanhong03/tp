@@ -30,11 +30,13 @@ public class Parser {
         commandSpecs.add(new CommandSpec("add", "add n/NAME q/QUANTITY", AddCommand::parse));
         commandSpecs.add(new CommandSpec("list", "list", fullCommand -> new ListCommand()));
         commandSpecs.add(new CommandSpec("bye", "bye", fullCommand -> new ByeCommand()));
-        commandSpecs.add(new CommandSpec("setstatus", "setstatus n/NAME s/STATUS", SetStatusCommand::parse));
+        commandSpecs.add(new CommandSpec("setstatus", "setstatus n/NAME q/QUANTITY s/STATUS " +
+                "or setstatus INDEX q/QUANTITY s/STATUS", SetStatusCommand::parse));
         commandSpecs.add(new CommandSpec("find", "find KEYWORD", FindCommand::parse));
-        commandSpecs.add(new CommandSpec("setsem", "setsem SEMESTER", SetSemCommand::parse));
+        commandSpecs.add(new CommandSpec("setsem", "setsem AY[YYYY]/[YY] Sem[1/2]", SetSemCommand::parse));
         commandSpecs.add(new CommandSpec("getsem", "getsem", fullCommand -> new GetSemCommand()));
-        commandSpecs.add(new CommandSpec("delete", "delete n/NAME", DeleteCommand::parse));
+        commandSpecs.add(new CommandSpec("delete", "delete n/NAME q/QUANTITY " +
+                "or delete INDEX q/QUANTITY", DeleteCommand::parse));
         commandSpecs.add(new CommandSpec("help", "help", fullCommand -> new HelpCommand()));
     }
 
