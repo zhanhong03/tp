@@ -1,6 +1,7 @@
 package seedu.equipmentmaster.equipmentlist;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 import seedu.equipmentmaster.equipment.Equipment;
 
@@ -32,6 +33,16 @@ public class EquipmentList {
      * @param newEquipment Equipment object to be added.
      */
     public void addEquipment(Equipment newEquipment) {
+        for (Equipment existingItem : equipments) {
+            boolean isNameMatch = existingItem.getName().equalsIgnoreCase(newEquipment.getName());
+            boolean isSemMatch = Objects.equals(existingItem.getLifespanYears(), newEquipment.getLifespanYears());
+
+            if (isNameMatch && isSemMatch) {
+                existingItem.setQuantity(existingItem.getQuantity() + newEquipment.getQuantity());
+                existingItem.setAvailable(existingItem.getAvailable() + newEquipment.getAvailable());
+                return;
+            }
+        }
         equipments.add(newEquipment);
     }
 
