@@ -71,4 +71,25 @@ public class EquipmentList {
     public ArrayList<Equipment> getAllEquipments() {
         return equipments;
     }
+
+    /**
+     * Removes an equipment item at the specified index.
+     *
+     * @param index Index of the equipment to be removed.
+     * @return The equipment that was removed.
+     */
+    public void removeEquipment(int index) {
+        equipments.remove(index);
+    }
+
+    /**
+     * Removes a specific equipment object from the list.
+     * This is useful when the equipment's quantity drops to zero.
+     *
+     * @param equipment The equipment object to be removed.
+     * @return True if the equipment was successfully removed, false otherwise.
+     */
+    public void removeEquipment(Equipment equipment) {
+        equipments.remove(equipment);
+    }
 }

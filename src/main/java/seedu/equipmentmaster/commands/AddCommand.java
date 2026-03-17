@@ -54,8 +54,8 @@ public class AddCommand extends Command{
         }
         try {
             int quantity = Integer.parseInt(qtString);
-            if (quantity < 0) {
-                throw new EquipmentMasterException("Equipment quantity cannot be negative.");
+            if (quantity <= 0) {
+                throw new EquipmentMasterException("Equipment quantity must be positive.");
             }
             return new AddCommand(name, quantity);
         } catch (NumberFormatException e) {
