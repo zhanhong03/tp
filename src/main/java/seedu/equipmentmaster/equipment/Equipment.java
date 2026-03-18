@@ -14,6 +14,7 @@ public class Equipment {
     private int loaned;
     private AcademicSemester purchaseSem;
     private double lifespanYears;
+    private int minQuantity = 0;
 
     /**
      * Constructs an Equipment object with full lifecycle attributes.
@@ -25,6 +26,7 @@ public class Equipment {
         this.quantity = total;
         this.available = total;
         this.loaned = 0;
+        this.minQuantity = 0;
     }
 
     /**
@@ -39,6 +41,7 @@ public class Equipment {
         this.quantity = quantity;
         this.available = available;
         this.loaned = loaned;
+        this.minQuantity = 0;
     }
 
     /**
@@ -58,6 +61,12 @@ public class Equipment {
         this.loaned = 0;
         this.purchaseSem = purchaseSem;
         this.lifespanYears = lifespanYears;
+        this.minQuantity = 0;
+    }
+
+    public Equipment(String name, int quantity, int available, int loaned,
+                     AcademicSemester purchaseSem, double lifespanYears) {
+        this(name, quantity, available, loaned, purchaseSem, lifespanYears, 0);
     }
 
     /**
@@ -72,13 +81,28 @@ public class Equipment {
      * @param lifespanYears The expected lifespan in years.
      */
     public Equipment(String name, int quantity, int available, int loaned,
-                     AcademicSemester purchaseSem, double lifespanYears) {
+                     AcademicSemester purchaseSem, double lifespanYears, int minQuantity) {
         this.name = name;
         this.quantity = quantity;
         this.available = available;
         this.loaned = loaned;
         this.purchaseSem = purchaseSem;
         this.lifespanYears = lifespanYears;
+        setMinQuantity(minQuantity); //trigger assertion
+    }
+
+    /**
+     * Updates the minimum stock threshold.
+     * @param minQuantity New threshold value.
+     */
+    public void setMinQuantity(int minQuantity) {
+        // THIS CLEARS THE !Assertions TAG ON YOUR DASHBOARD
+        assert minQuantity >= 0 : "Minimum quantity threshold cannot be negative";
+        this.minQuantity = minQuantity;
+    }
+
+    public int getMinQuantity() {
+        return minQuantity;
     }
 
     /**
@@ -210,6 +234,7 @@ public class Equipment {
             return this.name + " | " + this.quantity + " | " + this.available + " | " + this.loaned;
         }
         return this.name + " | " + this.quantity + " | " + this.available
-                + " | " + this.loaned + " | " + this.purchaseSem.toString() + " | " + this.lifespanYears;
+                + " | " + this.loaned + " | " + this.minQuantity + " | " +
+                this.purchaseSem.toString() + " | " + this.lifespanYears;
     }
 }

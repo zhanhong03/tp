@@ -11,10 +11,13 @@ import seedu.equipmentmaster.commands.ReportCommand;
 import seedu.equipmentmaster.commands.Command;
 import seedu.equipmentmaster.commands.DeleteCommand;
 import seedu.equipmentmaster.commands.SetStatusCommand;
+import seedu.equipmentmaster.commands.SetMinCommand;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
 
 
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static seedu.equipmentmaster.common.Messages.MESSAGE_INVALID_INPUT;
 
@@ -24,7 +27,7 @@ import static seedu.equipmentmaster.common.Messages.MESSAGE_INVALID_INPUT;
  *
  */
 public class Parser {
-
+    private static final Logger LOGGER = Logger.getLogger(Parser.class.getName());
     private static ArrayList<CommandSpec> commandSpecs = new ArrayList<>();
 
     static {
@@ -40,7 +43,9 @@ public class Parser {
         commandSpecs.add(new CommandSpec("delete", "delete n/NAME q/QUANTITY s/STATUS "
                 + "or delete INDEX q/QUANTITY s/STATUS", DeleteCommand::parse));
         commandSpecs.add(new CommandSpec("help", "help", fullCommand -> new HelpCommand()));
-        commandSpecs.add(new CommandSpec("report", "report aging [AY[YYYY]/[YY] Sem[1/2]]",
+        commandSpecs.add(new CommandSpec("setmin", "setmin n/NAME min/QUANTITY", SetMinCommand::parse));
+        commandSpecs.add(new CommandSpec("report", "report aging [AY[YYYY]/[YY] Sem[1/2]] or report" +
+                "lowstock",
                 ReportCommand::parse));
     }
 
@@ -50,6 +55,7 @@ public class Parser {
      * @return The list of registered CommandSpec objects.
      */
     public static ArrayList<CommandSpec> getCommandSpecs() {
+
         return new ArrayList<>(commandSpecs);
     }
 
@@ -61,7 +67,12 @@ public class Parser {
      * @throws EquipmentMasterException If the user input is invalid or the command is unknown.
      */
     public static Command parse(String fullCommand) throws EquipmentMasterException {
+        LOGGER.log(Level.INFO, "User entered: " + fullCommand);
         String[] words = fullCommand.trim().split("\\s+");
+
+        if (words.length == 0) {
+            throw new EquipmentMasterException(MESSAGE_INVALID_INPUT);
+        }
 
         for (CommandSpec spec : commandSpecs) {
             if (spec.keyword.equalsIgnoreCase(words[0])) {

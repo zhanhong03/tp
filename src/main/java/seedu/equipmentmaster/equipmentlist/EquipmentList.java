@@ -49,6 +49,21 @@ public class EquipmentList {
     }
 
     /**
+     * Finds an equipment item by its name (case-insensitive).
+     *
+     * @param name The name of the equipment to search for.
+     * @return The Equipment object if found, otherwise null.
+     */
+    public Equipment findByName(String name) {
+        for (Equipment equipment : equipments) {
+            if (equipment.getName().equalsIgnoreCase(name)) {
+                return equipment;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Retrieves an equipment item at the specified index.
      *
      * @param index Index of the equipment in the list.

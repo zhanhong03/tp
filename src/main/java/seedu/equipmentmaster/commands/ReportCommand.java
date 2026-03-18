@@ -30,7 +30,8 @@ public class ReportCommand extends Command {
         String[] words = fullCommand.trim().split("\\s+", 3);
 
         if (words.length < 2) {
-            throw new EquipmentMasterException("Please specify the report type. Usage: report aging [Semester]");
+            throw new EquipmentMasterException("Please specify the report type. Usage: report aging [Semester] OR" +
+                    "report lowstock");
         }
 
         String reportType = words[1].trim().toLowerCase();
@@ -42,11 +43,37 @@ public class ReportCommand extends Command {
 
     @Override
     public void execute(EquipmentList equipments, Ui ui, Storage storage) {
-        if (!reportType.equalsIgnoreCase("aging")) {
+        if (reportType.equalsIgnoreCase("lowstock")) {
+            executeLowStockReport(equipments, ui);
+        } else if (reportType.equalsIgnoreCase("aging")) {
+            executeAgingReport(equipments, ui);
+        } else {
             ui.showMessage("Invalid report type. Currently supported: report aging");
-            return;
+        }
+    }
+
+    private void executeLowStockReport(EquipmentList equipments, Ui ui) {
+        ui.showMessage("Low Stock Alert (Items below minimum threshold):");
+        boolean foundLowStock = false;
+        int count = 0;
+
+        for (int i = 0; i < equipments.getSize(); i++) {
+            Equipment eq = equipments.getEquipment(i);
+            if (eq.getAvailable() < eq.getMinQuantity()) {
+                foundLowStock = true;
+                count++;
+                ui.showMessage(count + ". " + eq.getName()
+                        + " | Available: " + eq.getAvailable()
+                        + " | Min: " + eq.getMinQuantity() + " -> RESTOCK NEEDED");
+            }
         }
 
+        if (!foundLowStock) {
+            ui.showMessage("All inventory levels are above their minimum thresholds.");
+        }
+    }
+
+    private void executeAgingReport(EquipmentList equipments, Ui ui) {
         AcademicSemester targetSem;
         try {
             if (!targetSemStr.isEmpty()) {

@@ -34,7 +34,8 @@ public class AcademicSemester {
         // Validation: Ensure the start year and end year are consecutive (e.g., 2024 and 25)
         if ((startYear + 1) % 100 != endYearShort) {
             throw new EquipmentMasterException("Academic Year mismatch! "
-                    + "The years must be consecutive (e.g., 2024/25).");
+                    + "" +
+                    "The years must be consecutive (e.g., 2024/25).");
         }
     }
 

@@ -26,6 +26,7 @@ public class AddCommand extends Command{
     private final int quantity;
     private final AcademicSemester purchaseSem;
     private final double lifespanYears;
+    private final int minQuantity;
 
     /**
      * Constructs an {@code AddCommand} with the specified equipment name and quantity.
@@ -35,11 +36,12 @@ public class AddCommand extends Command{
      * @param purchaseSem Sem that the item was bought
      * @param lifespanYears Lifespan of the item in year
      */
-    public AddCommand(String name, int quantity, AcademicSemester purchaseSem, double lifespanYears) {
+    public AddCommand(String name, int quantity, AcademicSemester purchaseSem, double lifespanYears, int minQuantity) {
         this.name = name;
         this.quantity = quantity;
         this.purchaseSem = purchaseSem;
         this.lifespanYears = lifespanYears;
+        this.minQuantity = minQuantity;
     }
 
     /**
@@ -63,6 +65,7 @@ public class AddCommand extends Command{
 
         String name = extractArgument(fullCommand, "n/");
         String qtString = extractArgument(fullCommand, "q/");
+        String minQtyStr = extractArgument(fullCommand, "min/");
         String purchaseSemStr = extractArgument(fullCommand, "bought/");
         String lifespanYearsStr = extractArgument(fullCommand, "life/");
 
@@ -83,6 +86,16 @@ public class AddCommand extends Command{
             logger.log(Level.WARNING, "Failed to parse quantity as an integer: " + qtString, e);
             throw new EquipmentMasterException("Please enter a valid whole number for quantity");
         }
+
+        int minQuantity = 0;
+        if (!minQtyStr.isEmpty()) {
+            try {
+                minQuantity = Integer.parseInt(minQtyStr);
+            } catch (NumberFormatException e) {
+                throw new EquipmentMasterException("Please enter a valid whole number for minimum threshold");
+            }
+        }
+
         AcademicSemester purchaseSem = new AcademicSemester(purchaseSemStr.trim());
         double lifespanYear;
         try {
@@ -92,7 +105,7 @@ public class AddCommand extends Command{
             throw new EquipmentMasterException("Please enter a valid number for lifespan in years");
         }
         logger.log(Level.INFO, "Successfully parsed AddCommand for equipment: " + name);
-        return new AddCommand(name, quantity, purchaseSem, lifespanYear);
+        return new AddCommand(name, quantity, purchaseSem, lifespanYear, minQuantity);
     }
 
     /**
@@ -106,6 +119,9 @@ public class AddCommand extends Command{
     private static String extractArgument(String fullCommand, String prefix) throws EquipmentMasterException {
         int prefixIndex = fullCommand.indexOf(prefix);
         if (prefixIndex < 0) {
+            if (prefix.equals("min/")) {
+                return "";
+            }
             throw new EquipmentMasterException(MESSAGE_INVALID_ADD_FORMAT);
         }
         int valueStart = prefixIndex + prefix.length();
@@ -137,12 +153,14 @@ public class AddCommand extends Command{
      */
     @Override
     public void execute(EquipmentList equipments, Ui ui, Storage storage) {
-        Equipment equipment = new Equipment(name, quantity, quantity, 0, purchaseSem, lifespanYears);
+        Equipment equipment = new Equipment(name, quantity, quantity, 0, purchaseSem, lifespanYears,
+                minQuantity);
         equipments.addEquipment(equipment);
         storage.save(equipments.getAllEquipments());
         ui.showMessage("Added " + quantity + " of " + name + ". (Total Available: "
                 + equipment.getAvailable() + ") Purchase: "
                 + purchaseSem.toString() + " | Lifespan: " +
-                lifespanYears + (lifespanYears == 1.0 ? " year" : " years"));
+                lifespanYears + (lifespanYears == 1.0 ? " year" : " years")
+                + " | Min Threshold: " + minQuantity);
     }
 }

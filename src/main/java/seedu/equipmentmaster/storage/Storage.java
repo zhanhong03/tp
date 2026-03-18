@@ -1,7 +1,6 @@
 package seedu.equipmentmaster.storage;
 
 import seedu.equipmentmaster.equipment.Equipment;
-import seedu.equipmentmaster.exception.EquipmentMasterException;
 import seedu.equipmentmaster.semester.AcademicSemester;
 import seedu.equipmentmaster.ui.Ui;
 
@@ -82,64 +81,66 @@ public class Storage {
 
     /**
      * Converts a formatted string from the .txt file into an Equipment object.
-     * @param line A single line of text from the save file.
-     * @return An Equipment object, or null if the string format is corrupted.
+     * Handles names containing "|" by parsing data columns from the end of the string.
      */
     private Equipment parseEquipment(String line) {
-        // Expected format: Name | Total | Available | Loaned
-        if (line == null) {
+        if (line == null || line.isBlank()) {
             return null;
         }
 
-        final String delimiter = " | ";
-        // Find separators from the end: Name [delim] Total [delim] Available [delim] Loaned
-        int lastSep = line.lastIndexOf(delimiter);
-        if (lastSep == -1) {
+        final String delim = " | ";
+        int s1 = line.lastIndexOf(delim);
+        if (s1 == -1) {
             return null;
         }
+        int s2 = line.lastIndexOf(delim, s1 - 1);
+        int s3 = (s2 == -1) ? -1 : line.lastIndexOf(delim, s2 - 1);
+        int s4 = (s3 == -1) ? -1 : line.lastIndexOf(delim, s3 - 1);
+        int s5 = (s4 == -1) ? -1 : line.lastIndexOf(delim, s4 - 1);
+        int s6 = (s5 == -1) ? -1 : line.lastIndexOf(delim, s5 - 1);
 
-        int forthSep = line.lastIndexOf(delimiter, lastSep - 1);
-        if (forthSep == -1) {
-            return null;
+        if (s6 != -1) {
+            try {
+                String name = line.substring(0, s6).trim();
+                int q = Integer.parseInt(line.substring(s6 + 3, s5).trim());
+                int a = Integer.parseInt(line.substring(s5 + 3, s4).trim());
+                int l = Integer.parseInt(line.substring(s4 + 3, s3).trim());
+                int min = Integer.parseInt(line.substring(s3 + 3, s2).trim());
+                AcademicSemester sem = new AcademicSemester(line.substring(s2 + 3, s1).trim());
+                double life = Double.parseDouble(line.substring(s1 + 3).trim());
+                return new Equipment(name, q, a, l, sem, life, min);
+            } catch (Exception e) {
+                // Fall through to Case 2 if parsing fails
+            }
         }
 
-        int thirdSep = line.lastIndexOf(delimiter, forthSep - 1);
-        if (thirdSep == -1) {
-            return null;
+        if (s5 != -1) {
+            try {
+                String name = line.substring(0, s5).trim();
+                int q = Integer.parseInt(line.substring(s5 + 3, s4).trim());
+                int a = Integer.parseInt(line.substring(s4 + 3, s3).trim());
+                int l = Integer.parseInt(line.substring(s3 + 3, s2).trim());
+                AcademicSemester sem = new AcademicSemester(line.substring(s2 + 3, s1).trim());
+                double life = Double.parseDouble(line.substring(s1 + 3).trim());
+                return new Equipment(name, q, a, l, sem, life, 0);
+            } catch (Exception e) {
+                // Fall through to Case 3 if parsing fails
+            }
         }
 
-        int secondSep = line.lastIndexOf(delimiter, thirdSep - 1);
-        if (secondSep == -1) {
-            return null;
+        if (s3 != -1) {
+            try {
+                String name = line.substring(0, s3).trim();
+                int q = Integer.parseInt(line.substring(s3 + 3, s2).trim());
+                int a = Integer.parseInt(line.substring(s2 + 3, s1).trim());
+                int l = Integer.parseInt(line.substring(s1 + 3).trim());
+                return new Equipment(name, q, a, l);
+            } catch (Exception e) {
+                return null;
+            }
         }
 
-        int firstSep = line.lastIndexOf(delimiter, secondSep - 1);
-        if (firstSep == -1) {
-            return null;
-        }
-
-        String name = line.substring(0, firstSep);
-        String totalStr = line.substring(firstSep + delimiter.length(), secondSep);
-        String availableStr = line.substring(secondSep + delimiter.length(), thirdSep);
-        String loanedStr = line.substring(thirdSep + delimiter.length(), forthSep);
-        String purchaseSemStr = line.substring(forthSep + delimiter.length(), lastSep);
-        String lifespanYearsStr = line.substring(lastSep + delimiter.length());
-        try {
-            int totalQuantity = Integer.parseInt(totalStr.trim());
-            int availableQuantity = Integer.parseInt(availableStr.trim());
-            int loanedQuantity = Integer.parseInt(loanedStr.trim());
-            AcademicSemester purchaseSem = new AcademicSemester(purchaseSemStr);
-            double lifespanYears = Double.parseDouble(lifespanYearsStr.trim());
-
-            return new Equipment(name, totalQuantity, availableQuantity, loanedQuantity, purchaseSem, lifespanYears);
-
-        } catch (NumberFormatException e) {
-            // Ignore corrupted lines
-            return null;
-        } catch (EquipmentMasterException e) {
-            // Treat invalid semesters as corrupted lines as well
-            return null;
-        }
+        return null;
     }
 
     /**
