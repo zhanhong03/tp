@@ -205,7 +205,11 @@ public class Equipment {
      * @return Equipment data formatted for saving to file.
      */
     public String toFileString() {
-        return this.name + " | " + this.quantity + " | " + this.available +
-                " | " + this.loaned + " | " + this.purchaseSem.toString() + " | " + this.lifespanYears;
+        if (this.purchaseSem == null) {
+            // Legacy format without lifecycle data (purchase semester and lifespan).
+            return this.name + " | " + this.quantity + " | " + this.available + " | " + this.loaned;
+        }
+        return this.name + " | " + this.quantity + " | " + this.available
+                + " | " + this.loaned + " | " + this.purchaseSem.toString() + " | " + this.lifespanYears;
     }
 }

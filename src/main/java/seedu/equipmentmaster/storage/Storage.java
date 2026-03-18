@@ -137,7 +137,8 @@ public class Storage {
             // Ignore corrupted lines
             return null;
         } catch (EquipmentMasterException e) {
-            throw new RuntimeException(e);
+            // Treat invalid semesters as corrupted lines as well
+            return null;
         }
     }
 

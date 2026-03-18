@@ -60,44 +60,70 @@ public class AddCommand extends Command{
                     "Invalid add command format.\n"
                             + "Usage: add n/NAME q/QUANTITY bought/SEMESTER life/LIFESPAN_YEARS");
         }
-        int nameIndex = fullCommand.indexOf("n/");
-        int quantityIndex = fullCommand.indexOf("q/");
-        int purchaseSemIndex = fullCommand.indexOf("bought/");
-        int lifespanYearsIndex = fullCommand.indexOf("life/");
-        String name = "";
-        String qtString = "";
-        String purchaseSemStr = "";
-        String lifespanYearsStr = "";
-        if (nameIndex < quantityIndex) {
-            name = fullCommand.substring(nameIndex + 2, quantityIndex - 1).trim();
-            qtString = fullCommand.substring(quantityIndex + 2, purchaseSemIndex - 1).trim();
-        } else {
-            qtString = fullCommand.substring(quantityIndex + 2, nameIndex - 1).trim();
-            name = fullCommand.substring(nameIndex + 2, purchaseSemIndex - 1).trim();
-        }
-        purchaseSemStr = fullCommand.substring(purchaseSemIndex + 7, lifespanYearsIndex - 1);
-        lifespanYearsStr = fullCommand.substring(lifespanYearsIndex + 5);
+
+        String name = extractArgument(fullCommand, "n/");
+        String qtString = extractArgument(fullCommand, "q/");
+        String purchaseSemStr = extractArgument(fullCommand, "bought/");
+        String lifespanYearsStr = extractArgument(fullCommand, "life/");
+
         if (name.isEmpty() || qtString.isEmpty() || purchaseSemStr.isEmpty() || lifespanYearsStr.isEmpty()) {
             logger.log(Level.WARNING, "One or more parsed fields are empty.");
             throw new EquipmentMasterException(
                     "Invalid add command format.\n"
                             + "Usage: add n/NAME q/QUANTITY bought/SEMESTER life/LIFESPAN_YEARS");
         }
+        int quantity;
         try {
-            int quantity = Integer.parseInt(qtString);
+            quantity = Integer.parseInt(qtString);
             if (quantity <= 0) {
                 logger.log(Level.WARNING, "Parsed quantity is zero or negative: " + quantity);
                 throw new EquipmentMasterException("Equipment quantity must be positive.");
             }
-            AcademicSemester purchaseSem = new AcademicSemester(purchaseSemStr.trim());
-            double lifespanYear = Double.parseDouble(lifespanYearsStr.trim());
-
-            logger.log(Level.INFO, "Successfully parsed AddCommand for equipment: " + name);
-            return new AddCommand(name, quantity, purchaseSem, lifespanYear);
         } catch (NumberFormatException e) {
-            logger.log(Level.WARNING, "Failed to parse numeric fields.", e);
+            logger.log(Level.WARNING, "Failed to parse quantity as an integer: " + qtString, e);
             throw new EquipmentMasterException("Please enter a valid whole number for quantity");
         }
+        AcademicSemester purchaseSem = new AcademicSemester(purchaseSemStr.trim());
+        double lifespanYear;
+        try {
+            lifespanYear = Double.parseDouble(lifespanYearsStr.trim());
+        } catch (NumberFormatException e) {
+            logger.log(Level.WARNING, "Failed to parse lifespan in years as a number: " + lifespanYearsStr, e);
+            throw new EquipmentMasterException("Please enter a valid number for lifespan in years");
+        }
+        logger.log(Level.INFO, "Successfully parsed AddCommand for equipment: " + name);
+        return new AddCommand(name, quantity, purchaseSem, lifespanYear);
+    }
+
+    /**
+     * Extracts the argument value following the given prefix, up to the next known prefix or end of string.
+     *
+     * @param fullCommand The full user input string.
+     * @param prefix The prefix whose value should be extracted (e.g., "n/", "q/").
+     * @return The trimmed value associated with the prefix, or an empty string if none.
+     * @throws EquipmentMasterException If the prefix cannot be found.
+     */
+    private static String extractArgument(String fullCommand, String prefix) throws EquipmentMasterException {
+        int prefixIndex = fullCommand.indexOf(prefix);
+        if (prefixIndex < 0) {
+            throw new EquipmentMasterException(MESSAGE_INVALID_ADD_FORMAT);
+        }
+        int valueStart = prefixIndex + prefix.length();
+        int valueEnd = fullCommand.length();
+        String[] allPrefixes = { "n/", "q/", "bought/", "life/" };
+        for (String otherPrefix : allPrefixes) {
+            if (otherPrefix.equals(prefix)) {
+                continue;
+            }
+            int idx = fullCommand.indexOf(otherPrefix, valueStart);
+            if (idx != -1 && idx < valueEnd) {
+                valueEnd = idx;
+            }
+        }
+        if (valueStart >= valueEnd) {
+            return "";
+        }
+        return fullCommand.substring(valueStart, valueEnd).trim();
     }
 
     /**
@@ -117,6 +143,6 @@ public class AddCommand extends Command{
         ui.showMessage("Added " + quantity + " of " + name + ". (Total Available: "
                 + equipment.getAvailable() + ") Purchase: "
                 + purchaseSem.toString() + " | Lifespan: " +
-                lifespanYears + (lifespanYears == 1.0 ? " year" : " years") + ")");
+                lifespanYears + (lifespanYears == 1.0 ? " year" : " years"));
     }
 }

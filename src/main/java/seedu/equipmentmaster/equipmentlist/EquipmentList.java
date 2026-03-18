@@ -35,11 +35,13 @@ public class EquipmentList {
     public void addEquipment(Equipment newEquipment) {
         for (Equipment existingItem : equipments) {
             boolean isNameMatch = existingItem.getName().equalsIgnoreCase(newEquipment.getName());
-            boolean isSemMatch = Objects.equals(existingItem.getLifespanYears(), newEquipment.getLifespanYears());
+            boolean isLifespanMatch = Objects.equals(existingItem.getLifespanYears(), newEquipment.getLifespanYears());
+            boolean isPurchaseSemMatch = Objects.equals(existingItem.getPurchaseSem(), newEquipment.getPurchaseSem());
 
-            if (isNameMatch && isSemMatch) {
+            if (isNameMatch && isLifespanMatch && isPurchaseSemMatch) {
                 existingItem.setQuantity(existingItem.getQuantity() + newEquipment.getQuantity());
                 existingItem.setAvailable(existingItem.getAvailable() + newEquipment.getAvailable());
+                existingItem.setLoaned(existingItem.getLoaned() + newEquipment.getLoaned());
                 return;
             }
         }
