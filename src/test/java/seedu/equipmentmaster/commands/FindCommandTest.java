@@ -78,7 +78,7 @@ public class FindCommandTest {
     }
 
     @Test
-    public void getMatchingEquipments_searchByModuleCode_caseInsensitive_returnsMatchedList() {
+    public void getMatchingEquipments_moduleCodeCaseInsensitive_returnsMatchedList() {
         // Arrange
         EquipmentList equipments = new EquipmentList();
         equipments.addEquipment(createEquipmentWithModules("FPGA", 40, "EE2026"));

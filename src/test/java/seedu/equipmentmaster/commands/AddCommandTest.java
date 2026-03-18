@@ -128,3 +128,4 @@ public class AddCommandTest {
         assertTrue(added.getModuleCodes().contains("CG2028"));
     }
 }
+

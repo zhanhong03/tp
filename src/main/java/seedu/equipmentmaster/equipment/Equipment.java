@@ -274,15 +274,13 @@ public class Equipment {
      * @return Equipment data formatted for saving to file.
      */
     public String toFileString() {
-        String result = name + " | " + quantity + " | " + available + " | " + loaned;
+        String purchaseSemStr = (purchaseSem != null) ? purchaseSem.toString() : "";
+        String lifespanStr = (purchaseSem != null) ? String.valueOf(lifespanYears) : "";
+        String modulesStr = (moduleCodes != null && !moduleCodes.isEmpty())
+                ? String.join(",", moduleCodes)
+                : "";
 
-        if (purchaseSem != null) {
-            result += " | " + purchaseSem + " | " + lifespanYears;
-        }
-
-        if (moduleCodes != null && !moduleCodes.isEmpty()) {
-            result += " | Modules: " + moduleCodes;
-        }
-        return result;
+        return name + " | " + quantity + " | " + available + " | " + loaned
+                + " | " + purchaseSemStr + " | " + lifespanStr + " | " + modulesStr;
     }
 }

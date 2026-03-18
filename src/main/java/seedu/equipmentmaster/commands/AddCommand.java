@@ -52,7 +52,8 @@ public class AddCommand extends Command {
      * @param quantity    Number of items to add.
      * @param moduleCodes List of module codes associated with this equipment.
      */
-    public AddCommand(String name, int quantity, AcademicSemester purchaseSem, double lifespanYears, ArrayList<String> moduleCodes) {
+    public AddCommand(String name, int quantity, AcademicSemester purchaseSem,
+                      double lifespanYears, ArrayList<String> moduleCodes) {
         this.name = name;
         this.quantity = quantity;
         this.purchaseSem = purchaseSem;
