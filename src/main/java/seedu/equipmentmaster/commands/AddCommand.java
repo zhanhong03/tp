@@ -129,8 +129,6 @@ public class AddCommand extends Command {
         ArrayList<String> moduleCodes = new ArrayList<>();
 
         if (fullCommand.contains("bought/") && fullCommand.contains("life/")) {
-            purchaseSemStr = extractArgument(fullCommand, "bought/");
-            lifespanYearsStr = extractArgument(fullCommand, "life/");
 
             if (!purchaseSemStr.isEmpty() && !lifespanYearsStr.isEmpty()) {
                 purchaseSem = new AcademicSemester(purchaseSemStr.trim());
@@ -176,14 +174,14 @@ public class AddCommand extends Command {
     private static String extractArgument(String fullCommand, String prefix) throws EquipmentMasterException {
         int prefixIndex = fullCommand.indexOf(prefix);
         if (prefixIndex < 0) {
-            if (prefix.equals("min/")) {
+            if (prefix.equals("min/") || prefix.equals("bought/") || prefix.equals("life/")) {
                 return "";
             }
             throw new EquipmentMasterException(MESSAGE_INVALID_ADD_FORMAT);
         }
         int valueStart = prefixIndex + prefix.length();
         int valueEnd = fullCommand.length();
-        String[] allPrefixes = {"n/", "q/", "bought/", "life/", "m/"};
+        String[] allPrefixes = {"n/", "q/", "bought/", "life/", "m/", "min/"};
         for (String otherPrefix : allPrefixes) {
             if (otherPrefix.equals(prefix)) {
                 continue;
@@ -226,7 +224,9 @@ public class AddCommand extends Command {
                     .append(" | Lifespan: ").append(lifespanYears)
                     .append(lifespanYears == 1.0 ? " year" : " years");
         }
-        message.append(" | Min Threshold: ").append(minQuantity);
+        if (minQuantity > 0) {
+            message.append(" | Min Threshold: ").append(minQuantity);
+        }
 
         ui.showMessage(message.toString());
     }
