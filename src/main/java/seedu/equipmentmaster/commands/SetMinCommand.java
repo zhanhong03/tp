@@ -39,7 +39,9 @@ public class SetMinCommand extends Command {
                 throw new EquipmentMasterException("Minimum threshold cannot be negative.");
             }
             return new SetMinCommand(name, min);
-        } catch (Exception e) {
+        } catch (EquipmentMasterException e) {
+            throw e;
+        } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
             throw new EquipmentMasterException("Invalid format! Use: setmin n/NAME min/QUANTITY");
         }
     }
