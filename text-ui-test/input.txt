@@ -26,17 +26,17 @@ find
 find xyz123
 find STM
 setstatus
-setstatus 999 q/5 s/BROKEN
-setstatus 1 q/10 s/BROKEN
+setstatus 999 q/5 s/loaned
+setstatus 1 q/10 s/loaned
 delete
-delete 100 q/5
-delete n/Aliens q/5
-delete 1 q/5000
-delete n/STM32 q/0
-delete n/STM32 q/-10
-delete n/STM32 q/abc
-delete 1 q/10
-delete n/STM32 q/5
+delete 100 q/5 s/available
+delete n/Aliens q/5 s/available
+delete 1 q/5000 s/available
+delete n/STM32 q/0 s/available
+delete n/STM32 q/-10 s/available
+delete n/STM32 q/abc s/available
+delete 1 q/10 s/available
+delete n/STM32 q/5 s/available
 setmin n/Soldering Iron min/20
 report
 report invalid_type
