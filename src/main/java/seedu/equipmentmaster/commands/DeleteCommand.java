@@ -142,7 +142,7 @@ public class DeleteCommand extends Command {
         int newTotal = target.getQuantity() - quantity;
         target.setQuantity(newTotal);
 
-        //3. Print success message exactly once
+        // 3. Print success message exactly once
         if (newTotal == 0) {
             equipments.removeEquipment(target);
             ui.showMessage("Deleted " + quantity + " " + status + " unit(s) of " + target.getName() + ".");

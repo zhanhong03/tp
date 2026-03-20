@@ -19,8 +19,8 @@ public class UiTableTest {
         uiTable.addRow(new UiTableRow("HDMI Cable", "Total: 100", "Available: <N/A>", "Loaned: <N/A>"));
 
         String expectedOutput = """
-                1. STM32 Development Board | Total: 50  | Available: 45    | Loaned: 5   
-                2. Basys3 FPGA             | Total: 20  | Available: 20    | Loaned: 0   
+                1. STM32 Development Board | Total: 50  | Available: 45    | Loaned: 5
+                2. Basys3 FPGA             | Total: 20  | Available: 20    | Loaned: 0
                 3. HDMI Cable              | Total: 100 | Available: <N/A> | Loaned: <N/A>
                 """.trim();
 
