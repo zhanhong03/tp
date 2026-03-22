@@ -42,19 +42,39 @@ public class EquipmentMasterTest {
 
 
     @Test
-    public void constructor_missingFile_startsEmpty() {
-        // Arrange
-        String missingPath = "data/non_existent.txt";
-        File file = new File(missingPath);
+    public void constructor_missingFiles_startsEmpty() {
+        // Arrange: Define paths for the three required storage files
+        String missingEqPath = "data/test_missing_eq.txt";
+        String missingSetPath = "data/test_missing_set.txt";
+        String missingModPath = "data/test_missing_mod.txt";
+
+        // Helper function (defined below) to clean up before testing
+        deleteFileIfExists(missingEqPath);
+        deleteFileIfExists(missingSetPath);
+        deleteFileIfExists(missingModPath);
+
+        // Act: Initialize the main application with these missing file paths
+        EquipmentMaster app = new EquipmentMaster(missingEqPath, missingSetPath, missingModPath);
+
+        // Assert: Verify that the application falls back safely and creates an empty list
+        assertNotNull(app.getEquipmentList(), "Equipment list should be initialized even if files are missing.");
+        assertEquals(0, app.getEquipmentList().getSize(),
+                "App should start with an empty equipment list if no file is found.");
+
+        // Clean up: Delete the files that the application automatically created during the test
+        deleteFileIfExists(missingEqPath);
+        deleteFileIfExists(missingSetPath);
+        deleteFileIfExists(missingModPath);
+    }
+
+    /**
+     * Helper method to safely delete a file if it exists.
+     * @param filePath The path of the file to be deleted.
+     */
+    private void deleteFileIfExists(String filePath) {
+        File file = new File(filePath);
         if (file.exists()) {
             file.delete();
         }
-
-        // Act
-        EquipmentMaster app = new EquipmentMaster(missingPath);
-
-        // Assert
-        assertNotNull(app.getEquipmentList());
-        assertEquals(0, app.getEquipmentList().getSize(), "App should start with an empty list if no file is found.");
     }
 }

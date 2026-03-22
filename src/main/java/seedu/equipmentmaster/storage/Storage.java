@@ -21,18 +21,22 @@ import java.util.logging.Logger;
  * It reads data from and writes data to a specified .txt file.
  */
 public class Storage {
-    private String filePath;
+    private String equipmentFilePath;
     private Ui ui;
-    private String settingsPath = "data/settings.txt";
-    private String moduleFilePath = "data/module.txt";
+    private String settingFilePath;
+    private String moduleFilePath;
 
     /**
      * Constructor.
-     * @param filePath The relative path to the .txt storage file.
+     * @param equipmentFilePath The relative path to the data.txt storage file.
+     * @param settingFilePath The relative path to the setting.txt storage file.
+     * @param moduleFilePath The relative path to the module.txt storage file.
      */
-    public Storage(String filePath, Ui ui) {
-        this.filePath = filePath;
+    public Storage(String equipmentFilePath, Ui ui, String settingFilePath, String moduleFilePath) {
+        this.equipmentFilePath = equipmentFilePath;
         this.ui = ui;
+        this.settingFilePath = settingFilePath;
+        this. moduleFilePath = moduleFilePath;
     }
 
     /**
@@ -41,13 +45,13 @@ public class Storage {
      */
     public void save(ArrayList<Equipment> equipments){
         try {
-            File file = new File(filePath);
+            File file = new File(equipmentFilePath);
             File directory = file.getParentFile();
             if (directory != null && !directory.exists()) {
                 directory.mkdirs();
             }
 
-            try (FileWriter writer = new FileWriter(filePath)) {
+            try (FileWriter writer = new FileWriter(equipmentFilePath)) {
                 for (Equipment equipment : equipments) {
                     writer.write(equipment.toFileString() + System.lineSeparator());
                 }
@@ -63,7 +67,7 @@ public class Storage {
      */
     public ArrayList<Equipment> load() {
         ArrayList<Equipment> equipments = new ArrayList<>();
-        File file = new File(filePath);
+        File file = new File(equipmentFilePath);
 
         if (!file.exists()) {
             return equipments;
@@ -140,13 +144,13 @@ public class Storage {
     public void saveSettings(AcademicSemester currentSem) {
         Logger storageLogger = Logger.getLogger(Storage.class.getName());
         try {
-            File file = new File(settingsPath);
+            File file = new File(settingFilePath);
             File directory = file.getParentFile();
             if (directory != null && !directory.exists()) {
                 directory.mkdirs();
             }
 
-            try (FileWriter writer = new FileWriter(settingsPath)) {
+            try (FileWriter writer = new FileWriter(settingFilePath)) {
                 writer.write(currentSem.toString());
             }
             storageLogger.log(Level.INFO, "Successfully saved semester settings to file.");
@@ -161,7 +165,7 @@ public class Storage {
      * @return The saved semester as a String, or a default value if not found.
      */
     public String loadSettings() {
-        File file = new File(settingsPath);
+        File file = new File(settingFilePath);
         if (!file.exists()) {
             return "AY2024/25 Sem1"; // Default value
         }
@@ -224,25 +228,25 @@ public class Storage {
             }
 
             // Read and parse the data
-            Scanner scanner = new Scanner(file);
-            while (scanner.hasNext()) {
-                String line = scanner.nextLine();
+            try (Scanner scanner = new Scanner(file);){
+                while (scanner.hasNext()) {
+                    String line = scanner.nextLine();
 
-                if (line.trim().isEmpty()) {
-                    continue;
-                }
+                    if (line.trim().isEmpty()) {
+                        continue;
+                    }
 
-                String[] parts = line.split(" \\| ");
+                    String[] parts = line.split(" \\| ");
 
-                if (parts.length == 2) {
-                    String name = parts[0].trim();
-                    int pax = Integer.parseInt(parts[1].trim());
+                    if (parts.length == 2) {
+                        String name = parts[0].trim();
+                        int pax = Integer.parseInt(parts[1].trim());
 
-                    // Add the reconstructed module to the list
-                    loadedList.addModule(new Module(name, pax));
+                        // Add the reconstructed module to the list
+                        loadedList.addModule(new Module(name, pax));
+                    }
                 }
             }
-            scanner.close();
 
         } catch (IOException e) {
             // Print the I/O error directly to the console instead of throwing an exception

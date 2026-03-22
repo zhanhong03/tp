@@ -24,6 +24,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  */
 public class DeleteCommandTest {
     private static final String TEST_FILE_PATH = "test_equipment.txt";
+    private static final String TEST_SETTING_FILE_PATH = "test_setting.txt";
+    private static final String TEST_MODULE_FILE_PATH = "test_module.txt";
 
     @TempDir
     Path tempDir;
@@ -37,7 +39,8 @@ public class DeleteCommandTest {
         equipments = new EquipmentList();
         ui = new Ui();
         // Use a temporary file so we don't overwrite real data during tests
-        storage = new Storage(tempDir.resolve("test_equipment.txt").toString(), ui);
+        storage = new Storage(tempDir.resolve("test_equipment.txt").toString(),
+                ui, tempDir.resolve("test_setting.txt").toString(), tempDir.resolve("test_module.txt").toString());
     }
 
     @Test
@@ -171,7 +174,7 @@ public class DeleteCommandTest {
         // Arrange
         EquipmentList equipments = new EquipmentList();
         Ui ui = new Ui();
-        Storage storage = new Storage(TEST_FILE_PATH, ui);
+        Storage storage = new Storage(TEST_FILE_PATH, ui, TEST_SETTING_FILE_PATH, TEST_MODULE_FILE_PATH);
         equipments.addEquipment(new Equipment("Basys3 FPGA", 10));
         ModuleList moduleList = new ModuleList();
 

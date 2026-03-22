@@ -23,7 +23,7 @@ class HelpCommandTest {
     @BeforeEach
     public void setUp() {
         ui = new Ui(System.in, new PrintStream(outputStreamCaptor));
-        storage = new Storage("dummy/path.txt", ui);
+        storage = new Storage("dummy/path.txt", ui, "dummy/settingPath.txt", "dummy/modulePath.txt");
         equipmentList = new EquipmentList();
     }
 

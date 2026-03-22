@@ -24,12 +24,14 @@ public class EquipmentMaster {
     /**
      * Initializes the application, loads system settings, and populates the equipment list.
      *
-     * @param filePath The path to the equipment data file.
+     * @param equipmentFilePath The relative path to the data.txt storage file.
+     * @param settingFilePath The relative path to the setting.txt storage file.
+     * @param moduleFilePath The relative path to the module.txt storage file.
      */
-    public EquipmentMaster(String filePath) {
+    public EquipmentMaster(String equipmentFilePath, String settingFilePath, String moduleFilePath) {
         logger.log(Level.INFO, "Starting EquipmentMaster initialization...");
         this.ui = new Ui();
-        EquipmentMaster.storage = new Storage(filePath, ui);
+        EquipmentMaster.storage = new Storage(equipmentFilePath, ui, settingFilePath, moduleFilePath);
 
         // Load the system time from settings.txt during startup
         try {
@@ -93,7 +95,7 @@ public class EquipmentMaster {
 
     public static void main(String[] args) throws EquipmentMasterException{
         LogManager.getLogManager().reset();
-        new EquipmentMaster("data/equipment.txt").run();
+        new EquipmentMaster("data/equipment.txt", "data/setting.txt", "data/module.txt").run();
     }
 
     public EquipmentList getEquipmentList() {

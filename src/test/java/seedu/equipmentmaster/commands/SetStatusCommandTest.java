@@ -29,7 +29,8 @@ public class SetStatusCommandTest {
     public void setUp() {
         ui = new Ui();
         // Create a unique file in the temp directory for each test
-        storage = new Storage(tempDir.resolve("test.txt").toString(), ui);
+        storage = new Storage(tempDir.resolve("test.txt").toString(),
+                ui, tempDir.resolve("test_setting.txt").toString(), tempDir.resolve("test_module.txt").toString());
         equipments = new EquipmentList();
     }
 

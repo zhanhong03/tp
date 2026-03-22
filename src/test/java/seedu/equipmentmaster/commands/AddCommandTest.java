@@ -17,13 +17,15 @@ import java.util.ArrayList;
 
 public class AddCommandTest {
     private static final String TEST_FILE_PATH = "test_equipment.txt";
+    private static final String TEST_SETTING_FILE_PATH = "test_setting.txt";
+    private static final String TEST_MODULE_FILE_PATH = "test_module.txt";
 
     @Test
     public void execute_validEquipment_addsToList() throws EquipmentMasterException {
         // Arrange
         EquipmentList equipments = new EquipmentList();
         Ui ui = new Ui();
-        Storage storage = new Storage(TEST_FILE_PATH, ui);
+        Storage storage = new Storage(TEST_FILE_PATH, ui, TEST_SETTING_FILE_PATH, TEST_MODULE_FILE_PATH);
         ModuleList moduleList = new ModuleList();
 
         // Test basic add (no modules, no semester/lifespan)
@@ -48,7 +50,7 @@ public class AddCommandTest {
 
         EquipmentList equipments = new EquipmentList();
         Ui ui = new Ui();
-        Storage storage = new Storage(TEST_FILE_PATH, ui);
+        Storage storage = new Storage(TEST_FILE_PATH, ui, TEST_SETTING_FILE_PATH, TEST_MODULE_FILE_PATH);
         ModuleList moduleList = new ModuleList();
 
         // 1. Create dummy data for your new fields
@@ -77,7 +79,7 @@ public class AddCommandTest {
         // Arrange
         EquipmentList equipments = new EquipmentList();
         Ui ui = new Ui();
-        Storage storage = new Storage(TEST_FILE_PATH, ui);
+        Storage storage = new Storage(TEST_FILE_PATH, ui, TEST_SETTING_FILE_PATH, TEST_MODULE_FILE_PATH);
         ModuleList moduleList = new ModuleList();
 
         ArrayList<String> modules = new ArrayList<>();
@@ -107,7 +109,7 @@ public class AddCommandTest {
         // Arrange
         EquipmentList equipments = new EquipmentList();
         Ui ui = new Ui();
-        Storage storage = new Storage(TEST_FILE_PATH, ui);
+        Storage storage = new Storage(TEST_FILE_PATH, ui, TEST_SETTING_FILE_PATH, TEST_MODULE_FILE_PATH);
         ModuleList moduleList = new ModuleList();
 
         AcademicSemester testSem = new AcademicSemester("AY2023/24 Sem1");
