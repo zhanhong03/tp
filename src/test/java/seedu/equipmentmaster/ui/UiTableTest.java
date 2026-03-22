@@ -19,8 +19,8 @@ public class UiTableTest {
         uiTable.addRow(new UiTableRow("HDMI Cable", "Total: 100", "Available: <N/A>", "Loaned: <N/A>"));
 
         String expectedOutput = """
-                1. STM32 Development Board | Total: 50  | Available: 45    | Loaned: 5   \s
-                2. Basys3 FPGA             | Total: 20  | Available: 20    | Loaned: 0   \s
+                1. STM32 Development Board | Total: 50  | Available: 45    | Loaned: 5
+                2. Basys3 FPGA             | Total: 20  | Available: 20    | Loaned: 0
                 3. HDMI Cable              | Total: 100 | Available: <N/A> | Loaned: <N/A>
                 """.trim();
 
@@ -53,8 +53,10 @@ public class UiTableTest {
         // Assuming your AcademicSemester toString returns "AY2025/26 Sem2"
         AcademicSemester testSem = new AcademicSemester("AY2025/26 Sem2");
 
-        // Header row must match the column count (6 columns)
-        uiTable.addRow(new UiTableRow("Name", "Total", "Available", "Loaned", "Purchase", "Lifespan"));
+        // Header row must match the column count
+        uiTable.addRow(new UiTableRow("Name", "Total", "Available", "Loaned", "Min", "Purchase", "Lifespan",
+                "Modules"));
+
 
         // Add rows using the Equipment objects
         uiTable.addRow(new UiTableRow(new Equipment("STM32 Development Board", 50, 45, 5, testSem, 5.0, 0)));

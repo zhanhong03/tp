@@ -3,33 +3,174 @@ Welcome to Equipment Master! How can I help you today?
    / ____/___  __  ______  ____  ___  /  |/  /___ ______/ /____  _____
   / __/ / __ `/ / / / __ \/ __ \/ _ \/ /|_/ / __ `/ ___/ __/ _ \/ ___/
  / /___/ /_/ / /_/ / /_/ / /_/ /  __/ /  / / /_/ (__  ) /_/  __/ /
-/_____/\__, /\__,_/ .___/ .___/\___/\__/  /_/  /_/\__,_/____/\__/\___/_/
+/_____/\__, /\__,_/ .___/ .___/\___/\__/  /_/  /_/\__,_/____/\__/
       /____/     /_/   /_/
+
 ===================================================
-System semester updated to AY2024/25 Sem1.
 ===================================================
-Added 100 unit(s) of Resistor. (Total Available: 100)
+Here are the available commands:
+#   Command   | Format
+1.  add       | add n/NAME q/QUANTITY [m/MODULE] [bought/SEMESTER] [min/MINTHRESHOLD] [life/LIFESPAN]
+2.  list      | list
+3.  bye       | bye
+4.  setstatus | setstatus n/NAME q/QUANTITY s/STATUS or setstatus INDEX q/QUANTITY s/STATUS
+5.  find      | find KEYWORD
+6.  setsem    | setsem AY[YYYY]/[YY] Sem[1/2]
+7.  getsem    | getsem
+8.  delete    | delete n/NAME q/QUANTITY s/STATUS or delete INDEX q/QUANTITY s/STATUS
+9.  help      | help
+10. setmin    | setmin n/NAME min/QUANTITY
+11. report    | report aging [AY[YYYY]/[YY] Sem[1/2]] or report lowstock
 ===================================================
-Added 50 unit(s) of STM32. (Total Available: 50)
-Lifecycle tracking enabled: Bought in AY2024/25 Sem1, Lifespan: 2.5 years.
 ===================================================
-Added 5 unit(s) of Oscilloscope. (Total Available: 5)
-Lifecycle tracking enabled: Bought in AY2020/21 Sem1, Lifespan: 3.0 years.
+Here are the available commands:
+#   Command   | Format
+1.  add       | add n/NAME q/QUANTITY [m/MODULE] [bought/SEMESTER] [min/MINTHRESHOLD] [life/LIFESPAN]
+2.  list      | list
+3.  bye       | bye
+4.  setstatus | setstatus n/NAME q/QUANTITY s/STATUS or setstatus INDEX q/QUANTITY s/STATUS
+5.  find      | find KEYWORD
+6.  setsem    | setsem AY[YYYY]/[YY] Sem[1/2]
+7.  getsem    | getsem
+8.  delete    | delete n/NAME q/QUANTITY s/STATUS or delete INDEX q/QUANTITY s/STATUS
+9.  help      | help
+10. setmin    | setmin n/NAME min/QUANTITY
+11. report    | report aging [AY[YYYY]/[YY] Sem[1/2]] or report lowstock
 ===================================================
-Equipment quantity must be greater than 0.
 ===================================================
-Here is the equipment log:
-1. Resistor | Total: 100 | Available: 100 | Loaned: 0
-2. STM32 | Total: 50 | Available: 50 | Loaned: 0 | Bought: AY2024/25 Sem1 | Lifespan: 2.5
-3. Oscilloscope | Total: 5 | Available: 5 | Loaned: 0 | Bought: AY2020/21 Sem1 | Lifespan: 3.0
+The current system time is: AY2024/25 Sem1
 ===================================================
-Successfully deleted 20 unit(s) of Resistor from available.
 ===================================================
-Insufficient available quantity to delete.
+The current system time is: AY2024/25 Sem1
 ===================================================
-Aging Equipment Report (Current Sem: AY2024/25 Sem1)
----------------------------------------------------
-1. Oscilloscope (Qty: 5, Bought: AY2020/21 Sem1) | Age: 4.0/3.0 Years | Status: [REPLACE SOON]
 ===================================================
-Bye. Hope to see you again soon!
+Please specify a semester. Usage: setsem AY[YYYY]/[YY] Sem[1/2]
+===================================================
+===================================================
+System time updated. Current academic semester is now set to AY2024/25 Sem1
+===================================================
+===================================================
+Please enter with the right format (with n/ and q/)
+===================================================
+===================================================
+Please enter with the right format (with n/ and q/)
+===================================================
+===================================================
+Please enter with the right format (with n/ and q/)
+===================================================
+===================================================
+Equipment quantity must be positive.
+===================================================
+===================================================
+Equipment quantity must be positive.
+===================================================
+===================================================
+Please enter a valid whole number for quantity.
+===================================================
+===================================================
+Added 10 of Ghost. (Total Available: 10)
+===================================================
+===================================================
+Please enter a valid whole number for minimum threshold
+===================================================
+===================================================
+Added 1000 of Resistor. (Total Available: 1000) | Min Threshold: 50
+===================================================
+===================================================
+Added 50 of STM32 with modules [CG2111A, CG2271]. (Total Available: 50) Purchase: AY2024/25 Sem1 | Lifespan: 2.5 years
+===================================================
+===================================================
+Added 5 of Oscilloscope. (Total Available: 5) Purchase: AY2020/21 Sem1 | Lifespan: 3.0 years
+===================================================
+===================================================
+Added 10 of Soldering Iron with modules [EE2026]. (Total Available: 10) | Min Threshold: 2
+===================================================
+===================================================
+The current system time is: AY2024/25 Sem1
+===================================================
+===================================================
+Invalid format! Use: setmin n/NAME min/QUANTITY
+===================================================
+===================================================
+Success: Minimum threshold for Ghost set to 10
+===================================================
+===================================================
+Minimum threshold cannot be negative.
+===================================================
+===================================================
+Invalid format! Use: setmin n/NAME min/QUANTITY
+===================================================
+===================================================
+Success: Minimum threshold for Resistor set to 100
+===================================================
+===================================================
+Please provide a keyword to find. Example: find STM32
+===================================================
+===================================================
+There is no matching equipment in your list.
+===================================================
+===================================================
+1 equipment listed!
+STM32 | Total: 50 | Available: 50 | loaned: 0 | Min: 0 | Purchase: AY2024/25 Sem1 | Lifespan: 2.5 years | Modules: [CG2111A, CG2271]
+===================================================
+===================================================
+Missing index. Use: setstatus INDEX q/QUANTITY s/STATUS
+===================================================
+===================================================
+Invalid index. Please provide an index between 1 and 5.
+===================================================
+===================================================
+10 units of Ghost are now LOANED.
+===================================================
+===================================================
+Invalid format. Use: delete [INDEX|n/NAME] q/QUANTITY s/STATUS
+===================================================
+===================================================
+Invalid index. Please check the list again.
+===================================================
+===================================================
+Equipment 'Aliens' not found.
+===================================================
+===================================================
+Only 0 available unit(s). Cannot delete 5000.
+===================================================
+===================================================
+Quantity to delete must be greater than 0.
+===================================================
+===================================================
+Quantity to delete must be greater than 0.
+===================================================
+===================================================
+Quantity must be a valid whole number.
+===================================================
+===================================================
+Only 0 available unit(s). Cannot delete 10.
+===================================================
+===================================================
+Deleted 5 available unit(s) of STM32.
+===================================================
+===================================================
+Success: Minimum threshold for Soldering Iron set to 20
+Warning: Item is currently below this new threshold!
+===================================================
+===================================================
+Please specify the report type. Usage: report aging [Semester] OR report lowstock
+===================================================
+===================================================
+Invalid report type. Currently supported: aging, lowstock.
+===================================================
+===================================================
+Low Stock Alert (Items below minimum threshold):
+1. Soldering Iron | Quantity: 10 | Min: 20 -> RESTOCK NEEDED
+===================================================
+===================================================
+Low Stock Alert (Items below minimum threshold):
+1. Soldering Iron | Quantity: 10 | Min: 20 -> RESTOCK NEEDED
+===================================================
+===================================================
+Aging Equipment Report (Calculated for: AY2024/25 Sem1):
+4. Oscilloscope (Qty: 5, Bought: AY2020/21 Sem1) | Age: 4.0 Years | Status: [REPLACE SOON]
+===================================================
+===================================================
+Goodbye! See you back in the lab soon.
 ===================================================

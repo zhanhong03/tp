@@ -31,7 +31,7 @@ public class ReportCommand extends Command {
         String[] words = fullCommand.trim().split("\\s+", 3);
 
         if (words.length < 2) {
-            throw new EquipmentMasterException("Please specify the report type. Usage: report aging [Semester] OR" +
+            throw new EquipmentMasterException("Please specify the report type. Usage: report aging [Semester] OR " +
                     "report lowstock");
         }
 
@@ -49,7 +49,7 @@ public class ReportCommand extends Command {
         } else if (reportType.equalsIgnoreCase("aging")) {
             executeAgingReport(equipments, ui);
         } else {
-            ui.showMessage("Invalid report type. Currently supported: report aging");
+            ui.showMessage("Invalid report type. Currently supported: aging, lowstock.");
         }
     }
 
@@ -60,11 +60,11 @@ public class ReportCommand extends Command {
 
         for (int i = 0; i < equipments.getSize(); i++) {
             Equipment eq = equipments.getEquipment(i);
-            if (eq.getAvailable() < eq.getMinQuantity()) {
+            if (eq.getQuantity() < eq.getMinQuantity()) {
                 foundLowStock = true;
                 count++;
                 ui.showMessage(count + ". " + eq.getName()
-                        + " | Available: " + eq.getAvailable()
+                        + " | Quantity: " + eq.getQuantity()
                         + " | Min: " + eq.getMinQuantity() + " -> RESTOCK NEEDED");
             }
         }

@@ -27,7 +27,7 @@ public class SetMinCommand extends Command {
         target.setMinQuantity(minQty);
         ui.showMessage("Success: Minimum threshold for " + name + " set to " + minQty);
 
-        if (target.getAvailable() < target.getMinQuantity()) {
+        if (target.getQuantity() < target.getMinQuantity()) {
             ui.showMessage("Warning: Item is currently below this new threshold!");
         }
         storage.save(equipments.getAllEquipments());
@@ -35,10 +35,15 @@ public class SetMinCommand extends Command {
 
     public static Command parse(String command) throws EquipmentMasterException {
         try {
-            String name = command.split("n/")[1].split("min/")[0].trim();
+            String name = command.split(" n/")[1].split(" min/")[0].trim();
             int min = Integer.parseInt(command.split("min/")[1].trim());
+            if (min < 0) {
+                throw new EquipmentMasterException("Minimum threshold cannot be negative.");
+            }
             return new SetMinCommand(name, min);
-        } catch (Exception e) {
+        } catch (EquipmentMasterException e) {
+            throw e;
+        } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
             throw new EquipmentMasterException("Invalid format! Use: setmin n/NAME min/QUANTITY");
         }
     }

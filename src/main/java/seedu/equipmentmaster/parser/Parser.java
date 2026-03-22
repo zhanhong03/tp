@@ -34,8 +34,8 @@ public class Parser {
     private static ArrayList<CommandSpec> commandSpecs = new ArrayList<>();
 
     static {
-        commandSpecs.add(new CommandSpec("add", "add n/NAME q/QUANTITY [m/MODULE] [bought/SEMESTER] " +
-                "[min/MINTHRESHOLD] [life/LIFESPAN]",
+        commandSpecs.add(new CommandSpec("add", "add n/NAME q/QUANTITY [m/MODULE] " +
+                "[bought/SEMESTER] [min/MINTHRESHOLD] [life/LIFESPAN]",
                 AddCommand::parse));
         commandSpecs.add(new CommandSpec("list", "list", fullCommand -> new ListCommand()));
         commandSpecs.add(new CommandSpec("bye", "bye", fullCommand -> new ByeCommand()));
@@ -48,7 +48,7 @@ public class Parser {
                 + "or delete INDEX q/QUANTITY s/STATUS", DeleteCommand::parse));
         commandSpecs.add(new CommandSpec("help", "help", fullCommand -> new HelpCommand()));
         commandSpecs.add(new CommandSpec("setmin", "setmin n/NAME min/QUANTITY", SetMinCommand::parse));
-        commandSpecs.add(new CommandSpec("report", "report aging [AY[YYYY]/[YY] Sem[1/2]] or report" +
+        commandSpecs.add(new CommandSpec("report", "report aging [AY[YYYY]/[YY] Sem[1/2]] or report " +
                 "lowstock",
                 ReportCommand::parse));
         commandSpecs.add(new CommandSpec("addmod", "addmod n/NAME pax/QTY", AddModCommand::parse));

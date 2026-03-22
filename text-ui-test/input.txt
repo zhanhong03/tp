@@ -1,10 +1,46 @@
+help
+help me please
+getsem
+getsem please
+setsem
 setsem AY2024/25 Sem1
-add n/Resistor q/100
-add n/STM32 q/50 sem/AY2024/25 Sem1 life/2.5
-add n/Oscilloscope q/5 sem/AY2020/21 Sem1 life/3.0
-add n/Raspberry Pi q/0
-list
-delete 1 q/20 s/available
-delete n/STM32 q/100 s/available
+add
+add n/
+add q/10
+add n/Ghost q/0
+add n/Ghost q/-5
+add n/Ghost q/abc
+add n/Ghost q/10 life/forever
+add n/Ghost q/10 min/none
+add n/Resistor q/1000 min/50
+add n/STM32 q/50 bought/AY2024/25 Sem1 life/2.5 m/CG2111A M/CG2271 m/cg2111a
+add n/Oscilloscope q/5 bought/AY2020/21 Sem1 life/3.0
+add n/Soldering Iron q/10 m/EE2026 min/2
+getsem
+setmin
+setmin n/Ghost min/10
+setmin n/Resistor min/-5
+setmin n/Resistor min/abc
+setmin n/Resistor min/100
+find
+find xyz123
+find STM
+setstatus
+setstatus 999 q/5 s/loaned
+setstatus 1 q/10 s/loaned
+delete
+delete 100 q/5 s/available
+delete n/Aliens q/5 s/available
+delete 1 q/5000 s/available
+delete n/STM32 q/0 s/available
+delete n/STM32 q/-10 s/available
+delete n/STM32 q/abc s/available
+delete 1 q/10 s/available
+delete n/STM32 q/5 s/available
+setmin n/Soldering Iron min/20
+report
+report invalid_type
+report lowstock
+report lowstock please
 report aging AY2024/25 Sem1
 bye

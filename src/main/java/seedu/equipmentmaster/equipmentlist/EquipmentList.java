@@ -37,11 +37,14 @@ public class EquipmentList {
             boolean isNameMatch = existingItem.getName().equalsIgnoreCase(newEquipment.getName());
             boolean isLifespanMatch = Objects.equals(existingItem.getLifespanYears(), newEquipment.getLifespanYears());
             boolean isPurchaseSemMatch = Objects.equals(existingItem.getPurchaseSem(), newEquipment.getPurchaseSem());
-
             if (isNameMatch && isLifespanMatch && isPurchaseSemMatch) {
                 existingItem.setQuantity(existingItem.getQuantity() + newEquipment.getQuantity());
                 existingItem.setAvailable(existingItem.getAvailable() + newEquipment.getAvailable());
                 existingItem.setLoaned(existingItem.getLoaned() + newEquipment.getLoaned());
+
+                for (String moduleCode : newEquipment.getModuleCodes()) {
+                    existingItem.addModuleCode(moduleCode);
+                }
                 return;
             }
         }
