@@ -117,13 +117,7 @@ public class SetBufferCommand extends Command {
         assert storage != null : "Storage dependency cannot be null";
         assert percentage >= 0 : "Buffer percentage should be non-negative";
 
-        Equipment target = null;
-        for (Equipment e : equipments.getAllEquipments()) {
-            if (e.getName().equalsIgnoreCase(name)) {
-                target = e;
-                break;
-            }
-        }
+        Equipment target = equipments.findByName(name);
 
         if (target == null) {
             ui.showMessage("Equipment '" + name + "' not found.");
