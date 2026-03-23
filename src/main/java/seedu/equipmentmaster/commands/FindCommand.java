@@ -46,15 +46,14 @@ public class FindCommand extends Command {
 
     /**
      * Extracts the core logic of finding matching equipment so it can be tested easily.
-     * Searches in both equipment name AND module codes
      *
      * @param equipments The current list of equipment to search through.
      * @return An ArrayList containing only the equipment that matches the keyword.
      */
     public ArrayList<Equipment> getMatchingEquipments(EquipmentList equipments) {
         ArrayList<Equipment> matchingEquipments = new ArrayList<>();
-        // Normalize the keyword for case-insensitive, multi-word matching
         String rawKeyword = (this.keyword == null) ? "" : this.keyword.trim();
+
         // Preserve original behavior: if keyword is empty, all equipments match
         if (rawKeyword.isEmpty()) {
             for (int i = 0; i < equipments.getSize(); i++) {
@@ -62,31 +61,66 @@ public class FindCommand extends Command {
             }
             return matchingEquipments;
         }
+
         String[] tokens = rawKeyword.toLowerCase().split("\\s+");
+
+        // Refactored: Main loop is now clean and easy to read (SLAP Principle)
         for (int i = 0; i < equipments.getSize(); i++) {
             Equipment eq = equipments.getEquipment(i);
-            String equipmentNameLower = eq.getName().toLowerCase();
-            for (String token : tokens) {
-                if (!token.isEmpty() && equipmentNameLower.contains(token)) {
-                    matchingEquipments.add(eq);
-                    break; // Avoid adding the same equipment multiple times
-                }
-                // Check module codes
-                if (eq.getModuleCodes() != null && !eq.getModuleCodes().isEmpty()) {
-                    for (String module : eq.getModuleCodes()) {
-                        if (module.toLowerCase().contains(token)) {
-                            matchingEquipments.add(eq);
-                            break;
-                        }
-                    }
-                    // If added from module search, break out of token loop
-                    if (matchingEquipments.contains(eq)) {
-                        break;
-                    }
-                }
+            if (isMatchFound(eq, tokens)) {
+                matchingEquipments.add(eq);
             }
         }
         return matchingEquipments;
+    }
+
+    /**
+     * Helper method to check if an equipment matches any of the given search tokens.
+     *
+     * @param eq     The equipment to check.
+     * @param tokens The array of search keywords.
+     * @return true if the equipment matches at least one token, false otherwise.
+     */
+    private boolean isMatchFound(Equipment eq, String[] tokens) {
+        for (String token : tokens) {
+            if (token.isEmpty()) {
+                continue;
+            }
+            // Early return: As soon as we find one match, we return true.
+            // This eliminates the need for the clunky "contains(eq) -> break" logic!
+            if (matchesNameOrModule(eq, token)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Helper method to check if a single token matches the equipment's name or its module codes.
+     *
+     * @param eq    The equipment to check.
+     * @param token The single search keyword.
+     * @return true if the token is found in the name or module codes.
+     */
+    private boolean matchesNameOrModule(Equipment eq, String token) {
+        // 1. Check equipment name
+        if (eq.getName().toLowerCase().contains(token)) {
+            return true;
+        }
+
+        // 2. Guard Clause: If there are no modules, stop checking here
+        if (eq.getModuleCodes() == null || eq.getModuleCodes().isEmpty()) {
+            return false;
+        }
+
+        // 3. Check module codes
+        for (String module : eq.getModuleCodes()) {
+            if (module.toLowerCase().contains(token)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
