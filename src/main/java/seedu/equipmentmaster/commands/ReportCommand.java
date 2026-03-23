@@ -1,13 +1,11 @@
 package seedu.equipmentmaster.commands;
 
+import seedu.equipmentmaster.context.Context;
 import seedu.equipmentmaster.equipment.Equipment;
 import seedu.equipmentmaster.equipmentlist.EquipmentList;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
-import seedu.equipmentmaster.modulelist.ModuleList;
-import seedu.equipmentmaster.storage.Storage;
 import seedu.equipmentmaster.ui.Ui;
 import seedu.equipmentmaster.semester.AcademicSemester;
-import seedu.equipmentmaster.EquipmentMaster;
 
 /**
  * Generates specific reports for the equipment inventory.
@@ -42,12 +40,21 @@ public class ReportCommand extends Command {
         return new ReportCommand(reportType, targetSem);
     }
 
+    /**
+     * Executes the report command.
+     * Analyzes the equipment list to generate and display either a low-stock alert report or an aging equipment report.
+     *
+     * @param context The application context containing the equipment list, UI, and current system semester.
+     */
     @Override
-    public void execute(EquipmentList equipments, ModuleList moduleList, Ui ui, Storage storage) {
+    public void execute(Context context) {
+        Ui ui = context.getUi();
+        EquipmentList equipments = context.getEquipments();
+
         if (reportType.equalsIgnoreCase("lowstock")) {
             executeLowStockReport(equipments, ui);
         } else if (reportType.equalsIgnoreCase("aging")) {
-            executeAgingReport(equipments, ui);
+            executeAgingReport(equipments, ui, context);
         } else {
             ui.showMessage("Invalid report type. Currently supported: aging, lowstock.");
         }
@@ -74,13 +81,13 @@ public class ReportCommand extends Command {
         }
     }
 
-    private void executeAgingReport(EquipmentList equipments, Ui ui) {
+    private void executeAgingReport(EquipmentList equipments, Ui ui, Context context) {
         AcademicSemester targetSem;
         try {
             if (!targetSemStr.isEmpty()) {
                 targetSem = new AcademicSemester(targetSemStr);
             } else {
-                targetSem = EquipmentMaster.getCurrentSemester();
+                targetSem = context.getCurrentSemester();
                 if (targetSem == null) {
                     throw new EquipmentMasterException("System semester not set! Use 'setsem' first.");
                 }

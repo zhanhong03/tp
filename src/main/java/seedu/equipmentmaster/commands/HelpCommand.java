@@ -1,9 +1,7 @@
 package seedu.equipmentmaster.commands;
 
-import seedu.equipmentmaster.equipmentlist.EquipmentList;
-import seedu.equipmentmaster.modulelist.ModuleList;
+import seedu.equipmentmaster.context.Context;
 import seedu.equipmentmaster.parser.Parser;
-import seedu.equipmentmaster.storage.Storage;
 import seedu.equipmentmaster.ui.Ui;
 import seedu.equipmentmaster.ui.UiTable;
 import seedu.equipmentmaster.ui.UiTableRow;
@@ -24,15 +22,13 @@ public class HelpCommand extends Command {
 
     /**
      * Executes the help command.
-     * Retrieves the list of command specifications from the Parser and displays
-     * them in a formatted table via the UI.
+     * Displays a help message listing all available commands and their usage formats to the user.
      *
-     * @param equipments The equipment list (not used by this command).
-     * @param ui The user interface to display the help message.
-     * @param storage The storage system (not used by this command).
+     * @param context The application context containing the UI.
      */
     @Override
-    public void execute(EquipmentList equipments, ModuleList moduleList, Ui ui, Storage storage) {
+    public void execute(Context context) {
+        Ui ui = context.getUi();
         UiTable table = new UiTable(true);
         table.addRow(new UiTableRow("Command","Format"));
         for(Parser.CommandSpec spec: Parser.getCommandSpecs()){

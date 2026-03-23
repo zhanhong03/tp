@@ -1,8 +1,6 @@
 package seedu.equipmentmaster.commands;
 
-import seedu.equipmentmaster.equipmentlist.EquipmentList;
-import seedu.equipmentmaster.modulelist.ModuleList;
-import seedu.equipmentmaster.storage.Storage;
+import seedu.equipmentmaster.context.Context;
 import seedu.equipmentmaster.ui.Ui;
 
 /**
@@ -13,14 +11,13 @@ import seedu.equipmentmaster.ui.Ui;
 public class ByeCommand extends Command {
 
     /**
-     * Executes the bye command by displaying a goodbye message.
+     * Executes the add module command using the provided application context.
      *
-     * @param equipments The equipment list (not used in this command).
-     * @param ui The user interface used to display the goodbye message.
-     * @param storage The storage system (not used in this command).
+     * @param context The Context object containing global states like moduleList, Ui, and Storage.
      */
     @Override
-    public void execute(EquipmentList equipments, ModuleList moduleList, Ui ui, Storage storage) {
+    public void execute(Context context) {
+        Ui ui = context.getUi();
         ui.showGoodByeMessage();
     }
 

@@ -3,9 +3,9 @@ package seedu.equipmentmaster.commands;
 import seedu.equipmentmaster.equipment.Equipment;
 import seedu.equipmentmaster.equipmentlist.EquipmentList;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
-import seedu.equipmentmaster.modulelist.ModuleList;
 import seedu.equipmentmaster.storage.Storage;
 import seedu.equipmentmaster.ui.Ui;
+import seedu.equipmentmaster.context.Context;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -106,12 +106,14 @@ public class SetBufferCommand extends Command {
     /**
      * Executes the setbuffer command.
      *
-     * @param equipments The current list of equipment.
-     * @param ui         The user interface to display messages.
-     * @param storage    The storage utility to save changes.
+     * @param context The application context containing the equipment list, UI, and current system semester.
      */
     @Override
-    public void execute(EquipmentList equipments, ModuleList moduleList, Ui ui, Storage storage) {
+    public void execute(Context context) {
+        EquipmentList equipments = context.getEquipments();
+        Ui ui = context.getUi();
+        Storage storage = context.getStorage();
+
         assert equipments != null : "EquipmentList dependency cannot be null";
         assert ui != null : "Ui dependency cannot be null";
         assert storage != null : "Storage dependency cannot be null";

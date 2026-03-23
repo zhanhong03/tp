@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.junit.jupiter.api.io.TempDir;
+import seedu.equipmentmaster.context.Context;
 import seedu.equipmentmaster.equipment.Equipment;
 import seedu.equipmentmaster.equipmentlist.EquipmentList;
 import seedu.equipmentmaster.modulelist.ModuleList;
@@ -19,6 +20,7 @@ import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 
 /**
@@ -55,7 +57,9 @@ public class DeleteCommandTest {
 
         // Action: Delete 3 available
         DeleteCommand command = new DeleteCommand(1, 3, "available");
-        command.execute(equipments, moduleList, ui, storage);
+        AcademicSemester currentSystemSemester = new AcademicSemester("AY2024/25 Sem1");
+        Context context = new Context(equipments, moduleList, ui, storage, currentSystemSemester);
+        command.execute(context);
 
         // Verify: Total becomes 7, Available becomes 7
         assertEquals(7, eq.getQuantity());
@@ -73,7 +77,9 @@ public class DeleteCommandTest {
 
         // Action: Delete 2 loaned
         DeleteCommand command = new DeleteCommand("Multimeter", 2, "loaned");
-        command.execute(equipments, moduleList, ui, storage);
+        AcademicSemester currentSystemSemester = new AcademicSemester("AY2024/25 Sem1");
+        Context context = new Context(equipments, moduleList, ui, storage, currentSystemSemester);
+        command.execute(context);
 
         // Verify: Total becomes 8, Loaned becomes 2, Available remains 6
         assertEquals(8, eq.getQuantity());
@@ -92,7 +98,9 @@ public class DeleteCommandTest {
 
         // Action: Delete all 5 available
         DeleteCommand command = new DeleteCommand(1, 5, "available");
-        command.execute(equipments, moduleList, ui, storage);
+        AcademicSemester currentSystemSemester = new AcademicSemester("AY2024/25 Sem1");
+        Context context = new Context(equipments, moduleList, ui, storage, currentSystemSemester);
+        command.execute(context);
 
         // Verify: The item should be completely removed from the list
         assertEquals(0, equipments.getSize());
@@ -110,7 +118,13 @@ public class DeleteCommandTest {
 
         // Action & Verify: Try to delete 3 available (only 2 exist)
         DeleteCommand command = new DeleteCommand(1, 3, "available");
-        assertThrows(EquipmentMasterException.class, () -> command.execute(equipments, moduleList, ui, storage));
+        try {
+            AcademicSemester currentSystemSemester = new AcademicSemester("AY2024/25 Sem1");
+            Context context = new Context(equipments, moduleList, ui, storage, currentSystemSemester);
+            assertThrows(EquipmentMasterException.class, () -> command.execute(context));
+        } catch (EquipmentMasterException e) {
+            fail("Test setup failed unexpectedly: " + e.getMessage());
+        }
     }
 
     @Test
@@ -124,7 +138,13 @@ public class DeleteCommandTest {
 
         // Action & Verify: Try to delete 2 loaned (only 1 exists)
         DeleteCommand command = new DeleteCommand("Raspberry Pi", 2, "loaned");
-        assertThrows(EquipmentMasterException.class, () -> command.execute(equipments, moduleList, ui, storage));
+        try {
+            AcademicSemester currentSystemSemester = new AcademicSemester("AY2024/25 Sem1");
+            Context context = new Context(equipments, moduleList, ui, storage, currentSystemSemester);
+            assertThrows(EquipmentMasterException.class, () -> command.execute(context));
+        } catch (EquipmentMasterException e) {
+            fail("Test setup failed unexpectedly: " + e.getMessage());
+        }
     }
 
     @Test
@@ -148,7 +168,9 @@ public class DeleteCommandTest {
 
         // Act: Delete 4 units from index 1
         DeleteCommand command = new DeleteCommand(1, 4, "available");
-        command.execute(equipments, moduleList, ui, storage);
+        AcademicSemester currentSystemSemester = new AcademicSemester("AY2024/25 Sem1");
+        Context context = new Context(equipments, moduleList, ui, storage, currentSystemSemester);
+        command.execute(context);
 
         // Assert
         assertEquals(6, equipments.getEquipment(0).getQuantity());
@@ -164,7 +186,9 @@ public class DeleteCommandTest {
 
         // Act: Delete 5 units by name
         DeleteCommand command = new DeleteCommand("STM32 Board", 5, "available");
-        command.execute(equipments, moduleList, ui, storage);
+        AcademicSemester currentSystemSemester = new AcademicSemester("AY2024/25 Sem1");
+        Context context = new Context(equipments, moduleList, ui, storage, currentSystemSemester);
+        command.execute(context);
 
         // Assert
         assertEquals(15, equipments.getEquipment(0).getQuantity());
@@ -181,10 +205,16 @@ public class DeleteCommandTest {
         ModuleList moduleList = new ModuleList();
 
         // Act & Assert: Check if it throws exception for out of bounds
-        DeleteCommand command = new DeleteCommand(2, 1, "available");
-        assertThrows(EquipmentMasterException.class, () -> {
-            command.execute(equipments, moduleList, ui, storage);
-        });
+        try {
+            DeleteCommand command = new DeleteCommand(2, 1, "available");
+            AcademicSemester currentSystemSemester = new AcademicSemester("AY2024/25 Sem1");
+            Context context = new Context(equipments, moduleList, ui, storage, currentSystemSemester);
+            assertThrows(EquipmentMasterException.class, () -> {
+                command.execute(context);
+            });
+        } catch (EquipmentMasterException e) {
+            fail("Test setup failed unexpectedly: " + e.getMessage());
+        }
     }
 
     @Test
@@ -199,7 +229,9 @@ public class DeleteCommandTest {
         equipments.addEquipment(eq);
 
         DeleteCommand command = new DeleteCommand("Resistor", 3, "available");
-        command.execute(equipments, moduleList, ui, storage);
+        AcademicSemester currentSystemSemester = new AcademicSemester("AY2024/25 Sem1");
+        Context context = new Context(equipments, moduleList, ui, storage, currentSystemSemester);
+        command.execute(context);
 
         String output = outputStream.toString();
         assertTrue(output.contains("!!! LOW STOCK ALERT: Resistor"));
@@ -217,7 +249,9 @@ public class DeleteCommandTest {
         ModuleList moduleList = new ModuleList();
 
         DeleteCommand command = new DeleteCommand("Resistor", 2, "available");
-        command.execute(equipments, moduleList, ui, storage);
+        AcademicSemester currentSystemSemester = new AcademicSemester("AY2024/25 Sem1");
+        Context context = new Context(equipments, moduleList, ui, storage, currentSystemSemester);
+        command.execute(context);
 
         String output = outputStream.toString();
         assertTrue(!output.contains("!!! LOW STOCK ALERT:"));

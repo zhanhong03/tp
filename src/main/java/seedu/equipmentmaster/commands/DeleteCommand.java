@@ -1,9 +1,9 @@
 package seedu.equipmentmaster.commands;
 
+import seedu.equipmentmaster.context.Context;
 import seedu.equipmentmaster.equipment.Equipment;
 import seedu.equipmentmaster.equipmentlist.EquipmentList;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
-import seedu.equipmentmaster.modulelist.ModuleList;
 import seedu.equipmentmaster.storage.Storage;
 import seedu.equipmentmaster.ui.Ui;
 
@@ -111,16 +111,19 @@ public class DeleteCommand extends Command {
     }
 
     /**
-     * Finds the target equipment and reduces its quantity.
+     * Executes the delete equipment command.
+     * Reduces the specified quantity of an equipment or removes it entirely if the quantity reaches zero,
+     * then updates the storage file.
      *
-     * @param equipments The current list of equipment.
-     * @param ui         The user interface to display the result.
-     * @param storage    The storage utility to save changes.
-     * @throws EquipmentMasterException If the item is not found or quantity is invalid.
+     * @param context The application context containing the equipment list, UI, and storage.
+     * @throws EquipmentMasterException If the equipment is not found, quantity is invalid, or saving fails.
      */
     @Override
-    public void execute(EquipmentList equipments, ModuleList moduleList, Ui ui, Storage storage) throws
-            EquipmentMasterException {
+    public void execute(Context context) throws EquipmentMasterException {
+        EquipmentList equipments = context.getEquipments();
+        Ui ui = context.getUi();
+        Storage storage = context.getStorage();
+
         Equipment target = findTarget(equipments);
 
         // 1. Check and deduct from specific status

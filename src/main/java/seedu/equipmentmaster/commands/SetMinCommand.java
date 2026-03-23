@@ -1,9 +1,9 @@
 package seedu.equipmentmaster.commands;
 
+import seedu.equipmentmaster.context.Context;
 import seedu.equipmentmaster.equipment.Equipment;
 import seedu.equipmentmaster.equipmentlist.EquipmentList;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
-import seedu.equipmentmaster.modulelist.ModuleList;
 import seedu.equipmentmaster.storage.Storage;
 import seedu.equipmentmaster.ui.Ui;
 
@@ -16,9 +16,19 @@ public class SetMinCommand extends Command {
         this.minQty = minQty;
     }
 
+    /**
+     * Executes the set minimum threshold command.
+     * Updates the minimum stock threshold for a specific equipment to trigger future low-stock alerts.
+     *
+     * @param context The application context containing the equipment list, UI, and storage.
+     * @throws EquipmentMasterException If the equipment is not found or saving fails.
+     */
     @Override
-    public void execute(EquipmentList equipments, ModuleList moduleList, Ui ui, Storage storage)
-            throws EquipmentMasterException {
+    public void execute(Context context) throws EquipmentMasterException {
+        EquipmentList equipments = context.getEquipments();
+        Ui ui = context.getUi();
+        Storage storage = context.getStorage();
+
         Equipment target = equipments.findByName(name);
         if (target == null) {
             throw new EquipmentMasterException("Equipment not found: " + name);

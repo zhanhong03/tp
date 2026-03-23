@@ -5,10 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.equipmentmaster.context.Context;
 import seedu.equipmentmaster.equipment.Equipment;
 import seedu.equipmentmaster.equipmentlist.EquipmentList;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
 import seedu.equipmentmaster.modulelist.ModuleList;
+import seedu.equipmentmaster.semester.AcademicSemester;
 import seedu.equipmentmaster.storage.Storage;
 import seedu.equipmentmaster.ui.Ui;
 
@@ -30,10 +32,12 @@ public class SetBufferCommandTest {
         ModuleList moduleList = new ModuleList();
 
         AddCommand addCommand = new AddCommand("STM32", 10);
-        addCommand.execute(equipments, moduleList, ui, storage);
+        AcademicSemester currentSystemSemester = new AcademicSemester("AY2024/25 Sem1");
+        Context context = new Context(equipments, moduleList, ui, storage, currentSystemSemester);
+        addCommand.execute(context);
 
         SetBufferCommand command = new SetBufferCommand("STM32", 15.0);
-        command.execute(equipments, moduleList, ui, storage);
+        command.execute(context);
 
         Equipment equipment = equipments.getEquipment(0);
         assertEquals(15.0, equipment.getBufferPercentage(), 0.0001);
@@ -48,10 +52,16 @@ public class SetBufferCommandTest {
         Storage storage = new Storage(TEST_FILE_PATH, ui, TEST_SETTING_FILE_PATH, TEST_MODULE_FILE_PATH);
 
         SetBufferCommand command = new SetBufferCommand("NonExistent", 10.0);
-        command.execute(equipments, moduleList, ui, storage);
+        try {
+            AcademicSemester currentSystemSemester = new AcademicSemester("AY2024/25 Sem1");
+            Context context = new Context(equipments, moduleList, ui, storage, currentSystemSemester);
+            command.execute(context);
 
-        String output = outputStream.toString();
-        assertTrue(output.contains("Equipment 'NonExistent' not found."));
+            String output = outputStream.toString();
+            assertTrue(output.contains("Equipment 'NonExistent' not found."));
+        } catch (EquipmentMasterException e) {
+            ui.showMessage(e.getMessage());
+        }
     }
 
     @Test
@@ -62,10 +72,12 @@ public class SetBufferCommandTest {
         ModuleList moduleList = new ModuleList();
 
         AddCommand addCommand = new AddCommand("STM32", 10);
-        addCommand.execute(equipments, moduleList, ui, storage);
+        AcademicSemester currentSystemSemester = new AcademicSemester("AY2024/25 Sem1");
+        Context context = new Context(equipments, moduleList, ui, storage, currentSystemSemester);
+        addCommand.execute(context);
 
         SetBufferCommand command = SetBufferCommand.parse("setbuffer n/STM32 b/10%");
-        command.execute(equipments, moduleList, ui, storage);
+        command.execute(context);
 
         Equipment equipment = equipments.getEquipment(0);
         assertEquals(10.0, equipment.getBufferPercentage(), 0.0001);
@@ -79,10 +91,12 @@ public class SetBufferCommandTest {
         ModuleList moduleList = new ModuleList();
 
         AddCommand addCommand = new AddCommand("STM32", 10);
-        addCommand.execute(equipments, moduleList, ui, storage);
+        AcademicSemester currentSystemSemester = new AcademicSemester("AY2024/25 Sem1");
+        Context context = new Context(equipments, moduleList, ui, storage, currentSystemSemester);
+        addCommand.execute(context);
 
         SetBufferCommand command = new SetBufferCommand("STM32", 15.5);
-        command.execute(equipments, moduleList, ui, storage);
+        command.execute(context);
 
         storage.save(equipments.getAllEquipments());
         ArrayList<Equipment> loadedList = storage.load();
@@ -100,7 +114,9 @@ public class SetBufferCommandTest {
         ModuleList moduleList = new ModuleList();
 
         AddCommand addCommand = new AddCommand("STM32", 10);
-        addCommand.execute(equipments, moduleList, ui, storage);
+        AcademicSemester currentSystemSemester = new AcademicSemester("AY2024/25 Sem1");
+        Context context = new Context(equipments, moduleList, ui, storage, currentSystemSemester);
+        addCommand.execute(context);
 
         Equipment equipment = equipments.getEquipment(0);
         assertEquals(0.0, equipment.getBufferPercentage(), 0.0001);

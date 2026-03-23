@@ -1,8 +1,7 @@
 package seedu.equipmentmaster.commands;
 
+import seedu.equipmentmaster.context.Context;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
-
-import seedu.equipmentmaster.equipmentlist.EquipmentList;
 import seedu.equipmentmaster.modulelist.ModuleList;
 import seedu.equipmentmaster.ui.Ui;
 import seedu.equipmentmaster.storage.Storage;
@@ -24,17 +23,17 @@ public class DelModCommand extends Command {
 
     /**
      * Executes the delete module command.
-     * Removes the module from the ModuleList and saves the updated list to storage.
+     * Removes the specified course module from the system and updates the storage file.
      *
-     * @param equipmentList The list of equipments (not used in this command).
-     * @param moduleList    The list of course modules.
-     * @param ui            The user interface.
-     * @param storage       The storage to save data to the hard disk.
-     * @throws EquipmentMasterException If the specified module is not found.
+     * @param context The application context containing the module list, UI, and storage.
+     * @throws EquipmentMasterException If the module is not found or saving fails.
      */
     @Override
-    public void execute(EquipmentList equipmentList, ModuleList moduleList, Ui ui, Storage storage)
-            throws EquipmentMasterException {
+    public void execute(Context context) throws EquipmentMasterException {
+        ModuleList moduleList = context.getModuleList();
+        Ui ui = context.getUi();
+        Storage storage = context.getStorage();
+
         // 1. Delete the module. If it doesn't exist, this throws an EquipmentMasterException.
         moduleList.deleteModule(moduleName);
 

@@ -1,11 +1,13 @@
 package seedu.equipmentmaster.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import seedu.equipmentmaster.context.Context;
 import seedu.equipmentmaster.equipment.Equipment;
 import seedu.equipmentmaster.equipmentlist.EquipmentList;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
@@ -43,7 +45,9 @@ public class SetStatusCommandTest {
         SetStatusCommand command = new SetStatusCommand("BasyS3 FPGA", 5, "loaned");
 
         // Act
-        command.execute(equipments, moduleList, ui, storage);
+        AcademicSemester currentSystemSemester = new AcademicSemester("AY2024/25 Sem1");
+        Context context = new Context(equipments, moduleList, ui, storage, currentSystemSemester);
+        command.execute(context);
 
         // Assert
         Equipment eq = equipments.getEquipment(0);
@@ -59,12 +63,18 @@ public class SetStatusCommandTest {
         SetStatusCommand command = new SetStatusCommand("BasyS3 FPGA", -5, "loaned");
 
         // Act
-        command.execute(equipments, moduleList, ui, storage);
+        try {
+            AcademicSemester currentSystemSemester = new AcademicSemester("AY2024/25 Sem1");
+            Context context = new Context(equipments, moduleList, ui, storage, currentSystemSemester);
+            command.execute(context);
 
-        // Assert
-        Equipment eq = equipments.getEquipment(0);
-        assertEquals(40, eq.getAvailable());
-        assertEquals(0, eq.getLoaned());
+            // Assert
+            Equipment eq = equipments.getEquipment(0);
+            assertEquals(40, eq.getAvailable());
+            assertEquals(0, eq.getLoaned());
+        } catch (EquipmentMasterException e) {
+            fail("Test setup failed unexpectedly: " + e.getMessage());
+        }
     }
 
     @Test
@@ -76,7 +86,9 @@ public class SetStatusCommandTest {
         SetStatusCommand command = new SetStatusCommand(1, 3, "available");
 
         // Act
-        command.execute(equipments, moduleList, ui, storage);
+        AcademicSemester currentSystemSemester = new AcademicSemester("AY2024/25 Sem1");
+        Context context = new Context(equipments, moduleList, ui, storage, currentSystemSemester);
+        command.execute(context);
 
         // Assert
         Equipment eq = equipments.getEquipment(0);
@@ -92,11 +104,17 @@ public class SetStatusCommandTest {
         SetStatusCommand command = new SetStatusCommand(1, -3, "available");
 
         // Act
-        command.execute(equipments, moduleList, ui, storage);
+        try {
+            AcademicSemester currentSystemSemester = new AcademicSemester("AY2024/25 Sem1");
+            Context context = new Context(equipments, moduleList, ui, storage, currentSystemSemester);
+            command.execute(context);
 
-        // Assert
-        Equipment eq = equipments.getEquipment(0);
-        assertEquals(30, eq.getAvailable());
-        assertEquals(10, eq.getLoaned());
+            // Assert
+            Equipment eq = equipments.getEquipment(0);
+            assertEquals(30, eq.getAvailable());
+            assertEquals(10, eq.getLoaned());
+        } catch (EquipmentMasterException e) {
+            fail("Test setup failed unexpectedly: " + e.getMessage());
+        }
     }
 }

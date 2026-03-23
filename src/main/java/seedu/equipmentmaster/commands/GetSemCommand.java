@@ -1,11 +1,8 @@
 package seedu.equipmentmaster.commands;
 
-import seedu.equipmentmaster.equipmentlist.EquipmentList;
-import seedu.equipmentmaster.modulelist.ModuleList;
-import seedu.equipmentmaster.storage.Storage;
+import seedu.equipmentmaster.context.Context;
 import seedu.equipmentmaster.ui.Ui;
 import seedu.equipmentmaster.semester.AcademicSemester;
-import seedu.equipmentmaster.EquipmentMaster;
 
 /**
  * Command to display the current global academic semester set in the system.
@@ -13,20 +10,20 @@ import seedu.equipmentmaster.EquipmentMaster;
 public class GetSemCommand extends Command {
 
     /**
-     * Executes the command to fetch and display the current system semester.
+     * Executes the get semester command.
+     * Retrieves and displays the current global academic semester from the application context.
      *
-     * @param equipments The list of equipment (not used in this command).
-     * @param ui The user interface used to display the output.
-     * @param storage The storage handler (not used in this command).
+     * @param context The application context containing the global semester state and UI.
      */
     @Override
-    public void execute(EquipmentList equipments, ModuleList moduleList, Ui ui, Storage storage) {
-        AcademicSemester current = EquipmentMaster.getCurrentSemester();
+    public void execute(Context context) {
+        Ui ui = context.getUi();
+        AcademicSemester current = context.getCurrentSemester();
 
         if (current == null) {
             ui.showMessage("The system time has not been initialized yet.");
         } else {
-            ui.showMessage("The current system time is: " + current.toString());
+            ui.showMessage("The current system time is: " + current);
         }
     }
 }

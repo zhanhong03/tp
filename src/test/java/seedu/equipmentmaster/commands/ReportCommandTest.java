@@ -3,6 +3,7 @@ package seedu.equipmentmaster.commands;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import seedu.equipmentmaster.context.Context;
 import seedu.equipmentmaster.equipment.Equipment;
 import seedu.equipmentmaster.equipmentlist.EquipmentList;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
@@ -17,6 +18,7 @@ import java.io.PrintStream;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 
@@ -66,9 +68,15 @@ public class ReportCommandTest {
     public void execute_invalidReportType_showsError() {
         ModuleList moduleList = new ModuleList();
         ReportCommand command = new ReportCommand("broken", "");
-        command.execute(equipments, moduleList, ui, storage);
+        try {
+            AcademicSemester currentSystemSemester = new AcademicSemester("AY2024/25 Sem1");
+            Context context = new Context(equipments, moduleList, ui, storage, currentSystemSemester);
+            command.execute(context);
 
-        assertTrue(outContent.toString().contains("Invalid report type"));
+            assertTrue(outContent.toString().contains("Invalid report type"));
+        } catch (EquipmentMasterException e) {
+            fail("Test setup failed unexpectedly: " + e.getMessage());
+        }
     }
 
     @Test
@@ -90,7 +98,9 @@ public class ReportCommandTest {
 
         // Execute report using a future semester to simulate time passing
         ReportCommand command = new ReportCommand("aging", "AY2028/29 Sem1");
-        command.execute(equipments, moduleList, ui, storage);
+        AcademicSemester currentSystemSemester = new AcademicSemester("AY2024/25 Sem1");
+        Context context = new Context(equipments, moduleList, ui, storage, currentSystemSemester);
+        command.execute(context);
 
         String output = outContent.toString();
 
@@ -118,7 +128,9 @@ public class ReportCommandTest {
 
         // Check report in the SAME semester it was bought
         ReportCommand command = new ReportCommand("aging", "AY2025/26 Sem1");
-        command.execute(equipments, moduleList, ui, storage);
+        AcademicSemester currentSystemSemester = new AcademicSemester("AY2024/25 Sem1");
+        Context context = new Context(equipments, moduleList, ui, storage, currentSystemSemester);
+        command.execute(context);
 
         String output = outContent.toString();
         assertTrue(output.contains("Great news! No equipment needs replacement"));
@@ -134,7 +146,9 @@ public class ReportCommandTest {
 
         // Act: Execute the 'report lowstock' command
         ReportCommand command = new ReportCommand("lowstock", "");
-        command.execute(equipments, moduleList, ui, storage);
+        AcademicSemester currentSystemSemester = new AcademicSemester("AY2024/25 Sem1");
+        Context context = new Context(equipments, moduleList, ui, storage, currentSystemSemester);
+        command.execute(context);
 
         // Assert: Verify that the "RESTOCK NEEDED" alert is NOT triggered
         String output = outContent.toString();
@@ -151,7 +165,9 @@ public class ReportCommandTest {
 
         // Act: Execute the 'report lowstock' command
         ReportCommand command = new ReportCommand("lowstock", "");
-        command.execute(equipments, moduleList, ui, storage);
+        AcademicSemester currentSystemSemester = new AcademicSemester("AY2024/25 Sem1");
+        Context context = new Context(equipments, moduleList, ui, storage, currentSystemSemester);
+        command.execute(context);
 
         // Assert: Verify the exact output format matches expectations
         String output = outContent.toString();

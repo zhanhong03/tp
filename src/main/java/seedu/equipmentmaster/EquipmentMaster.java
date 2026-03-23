@@ -2,6 +2,7 @@ package seedu.equipmentmaster;
 
 import java.util.logging.LogManager;
 import seedu.equipmentmaster.commands.Command;
+import seedu.equipmentmaster.context.Context;
 import seedu.equipmentmaster.equipmentlist.EquipmentList;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
 import seedu.equipmentmaster.modulelist.ModuleList;
@@ -14,9 +15,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class EquipmentMaster {
-    private static Storage storage;
-    private static AcademicSemester currentSystemSemester;
     private static final Logger logger = Logger.getLogger(EquipmentMaster.class.getName());
+    private Storage storage;
+    private AcademicSemester currentSystemSemester;
     private Ui ui;
     private EquipmentList equipments;
     private ModuleList moduleList;
@@ -31,16 +32,17 @@ public class EquipmentMaster {
     public EquipmentMaster(String equipmentFilePath, String settingFilePath, String moduleFilePath) {
         logger.log(Level.INFO, "Starting EquipmentMaster initialization...");
         this.ui = new Ui();
-        EquipmentMaster.storage = new Storage(equipmentFilePath, ui, settingFilePath, moduleFilePath);
+        this.storage = new Storage(equipmentFilePath, ui, settingFilePath, moduleFilePath);
+
 
         // Load the system time from settings.txt during startup
         try {
             String savedSemStr = storage.loadSettings();
-            currentSystemSemester = new AcademicSemester(savedSemStr);
+            this.currentSystemSemester = new AcademicSemester(savedSemStr);
         } catch (EquipmentMasterException e) {
             // Fallback to default if the saved settings are corrupted
             try {
-                currentSystemSemester = new AcademicSemester("AY2024/25 Sem1");
+                this.currentSystemSemester = new AcademicSemester("AY2024/25 Sem1");
             } catch (EquipmentMasterException ignored) {
                 // Should not happen with valid hardcoded default
             }
@@ -57,33 +59,16 @@ public class EquipmentMaster {
         assert !Parser.getCommandSpecs().isEmpty() : "No commands loaded! Check Parser initialization.";
     }
 
-    /**
-     * Updates the global current academic semester for the entire application.
-     *
-     * @param semester The new AcademicSemester to set as the current system time.
-     */
-    public static void setCurrentSemester(AcademicSemester semester) {
-        currentSystemSemester = semester;
-    }
-
-    /**
-     * Retrieves the current global system academic semester.
-     *
-     * @return The AcademicSemester currently set as the system time.
-     */
-    public static AcademicSemester getCurrentSemester() {
-        return currentSystemSemester;
-    }
-
     public void run() {
         ui.showWelcomeMessage();
+        Context context = new Context(equipments, moduleList, ui, storage, currentSystemSemester);
         boolean isExit = false;
         while (!isExit) {
             try {
                 String fullCommand = ui.readCommand();
                 ui.showLine();
                 Command c = Parser.parse(fullCommand);
-                c.execute(equipments, moduleList, ui, storage);
+                c.execute(context);
                 isExit = c.isExit();
             } catch (EquipmentMasterException e) {
                 ui.showMessage(e.getMessage());

@@ -1,6 +1,6 @@
 package seedu.equipmentmaster.commands;
 
-import seedu.equipmentmaster.equipmentlist.EquipmentList;
+import seedu.equipmentmaster.context.Context;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
 import seedu.equipmentmaster.modulelist.ModuleList;
 import seedu.equipmentmaster.module.Module;
@@ -34,13 +34,16 @@ public class AddModCommand extends Command {
 
     /**
      * Executes the add module command.
-     * Adds the module to the provided ModuleList and displays a success message via the Ui.
+     * Creates a new course module, adds it to the system, and persists the updated module list to storage.
      *
-     * @param moduleList The list of modules to be updated.
-     * @param ui         The user interface to display output.
+     * @param context The application context containing the module list, UI, and storage.
      */
     @Override
-    public void execute(EquipmentList equipments, ModuleList moduleList, Ui ui, Storage storage) {
+    public void execute(Context context) {
+        ModuleList moduleList = context.getModuleList();
+        Ui ui = context.getUi();
+        Storage storage = context.getStorage();
+
         try {
             Module newModule = new Module(moduleName, pax);
             moduleList.addModule(newModule);

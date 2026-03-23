@@ -1,9 +1,9 @@
 package seedu.equipmentmaster.commands;
 
+import seedu.equipmentmaster.context.Context;
 import seedu.equipmentmaster.equipment.Equipment;
 import seedu.equipmentmaster.equipmentlist.EquipmentList;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
-import seedu.equipmentmaster.modulelist.ModuleList;
 import seedu.equipmentmaster.storage.Storage;
 import seedu.equipmentmaster.ui.Ui;
 
@@ -167,15 +167,15 @@ public class SetStatusCommand extends Command {
 
     /**
      * Executes the set status command.
-     * Validates the quantity and status, finds the target equipment by index or name,
-     * updates the available and loaned quantities, and saves changes to storage.
+     * Updates the loaned or available status of a specific equipment and saves the updated state.
      *
-     * @param equipments The current list of equipment to operate on.
-     * @param ui The user interface to display messages.
-     * @param storage The storage utility to save changes.
+     * @param context The application context containing the equipment list, UI, and storage.
      */
     @Override
-    public void execute(EquipmentList equipments, ModuleList moduleList, Ui ui, Storage storage) {
+    public void execute(Context context) {
+        Ui ui = context.getUi();
+        EquipmentList equipments = context.getEquipments();
+        Storage storage = context.getStorage();
         if (quantity <= 0) {
             ui.showMessage("Quantity must be greater than 0.");
             return;

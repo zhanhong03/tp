@@ -1,12 +1,10 @@
 package seedu.equipmentmaster.commands;
 
+import seedu.equipmentmaster.context.Context;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
-
-import seedu.equipmentmaster.equipmentlist.EquipmentList;
 import seedu.equipmentmaster.modulelist.ModuleList;
 import seedu.equipmentmaster.module.Module;
 import seedu.equipmentmaster.ui.Ui;
-import seedu.equipmentmaster.storage.Storage;
 
 /**
  * Represents a command to list all current course modules tracked in the system.
@@ -23,18 +21,16 @@ public class ListModCommand extends Command {
 
     /**
      * Executes the list module command.
-     * Retrieves all modules from the underlying ModuleList and prints them to the console.
-     * If the list is empty, it notifies the user accordingly.
+     * Displays all currently tracked course modules and their respective enrollment numbers.
      *
-     * @param equipmentList The list of equipments (not used in this command).
-     * @param moduleList    The list of course modules to be displayed.
-     * @param ui            The user interface for displaying messages.
-     * @param storage       The storage component (not used since no data is modified).
-     * @throws EquipmentMasterException If an error occurs during execution.
+     * @param context The application context containing the module list and UI.
+     * @throws EquipmentMasterException If an error occurs while formatting the output.
      */
     @Override
-    public void execute(EquipmentList equipmentList, ModuleList moduleList, Ui ui, Storage storage)
-            throws EquipmentMasterException {
+    public void execute(Context context) throws EquipmentMasterException {
+        ModuleList moduleList = context.getModuleList();
+        Ui ui = context.getUi();
+
         // 1. Check if the module list is empty
         if (moduleList.getModules().isEmpty()) {
 

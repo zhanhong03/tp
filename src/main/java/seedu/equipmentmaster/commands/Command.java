@@ -1,11 +1,8 @@
 package seedu.equipmentmaster.commands;
 
-
-import seedu.equipmentmaster.equipmentlist.EquipmentList;
+import seedu.equipmentmaster.context.Context;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
-import seedu.equipmentmaster.modulelist.ModuleList;
-import seedu.equipmentmaster.storage.Storage;
-import seedu.equipmentmaster.ui.Ui;
+
 
 /**
  * Represents an abstract command in the EquipmentMaster application.
@@ -14,16 +11,13 @@ import seedu.equipmentmaster.ui.Ui;
  */
 public abstract class Command {
     /**
-     * Executes the command using the provided equipment list,
-     * user interface, and storage system.
+     * Executes the command using the provided application context.
      *
-     * @param equipments The equipment list that the command operates on.
-     * @param ui The user interface used for displaying messages.
-     * @param storage The storage system used to save or retrieve data.
-     * @throws EquipmentMasterException If an error occurs during execution.
+     * @param context The {@code Context} object containing all necessary global states
+     *     (e.g., equipment list, module list, UI, storage, and current semester).
+     * @throws EquipmentMasterException If an error specific to the command's execution occurs.
      */
-    public abstract void execute(EquipmentList equipments, ModuleList moduleList, Ui ui, Storage storage)
-            throws EquipmentMasterException;
+    public abstract void execute(Context context) throws EquipmentMasterException;
 
     /**
      * Indicates whether this command should terminate the application.

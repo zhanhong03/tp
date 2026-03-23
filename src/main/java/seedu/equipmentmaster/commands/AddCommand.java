@@ -1,10 +1,10 @@
 package seedu.equipmentmaster.commands;
 
 
+import seedu.equipmentmaster.context.Context;
 import seedu.equipmentmaster.equipment.Equipment;
 import seedu.equipmentmaster.equipmentlist.EquipmentList;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
-import seedu.equipmentmaster.modulelist.ModuleList;
 import seedu.equipmentmaster.semester.AcademicSemester;
 import seedu.equipmentmaster.storage.Storage;
 import seedu.equipmentmaster.ui.Ui;
@@ -216,12 +216,18 @@ public class AddCommand extends Command {
     }
 
     /**
-     * Executes the add command by creating the equipment,
-     * adding it to the equipment list, saving the updated list,
-     * and displaying a message to the user.
+     * Executes the add equipment command.
+     * Extracts necessary components from the context, adds the new equipment to the list,
+     * and saves the updated list to storage.
+     *
+     * @param context The application context containing the equipment list, UI, and storage.
      */
     @Override
-    public void execute(EquipmentList equipments, ModuleList moduleList, Ui ui, Storage storage) {
+    public void execute(Context context) {
+        EquipmentList equipments = context.getEquipments();
+        Ui ui = context.getUi();
+        Storage storage = context.getStorage();
+
         assert equipments != null : "EquipmentList dependency cannot be null";
         assert ui != null : "Ui dependency cannot be null";
         assert storage != null : "Storage dependency cannot be null";

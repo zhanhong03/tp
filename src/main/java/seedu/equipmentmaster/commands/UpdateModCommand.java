@@ -1,10 +1,9 @@
 package seedu.equipmentmaster.commands;
 
+import seedu.equipmentmaster.context.Context;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import seedu.equipmentmaster.equipmentlist.EquipmentList;
 import seedu.equipmentmaster.modulelist.ModuleList;
 import seedu.equipmentmaster.ui.Ui;
 import seedu.equipmentmaster.storage.Storage;
@@ -29,17 +28,17 @@ public class UpdateModCommand extends Command {
 
     /**
      * Executes the update module command.
-     * Updates the pax in the underlying ModuleList and saves the updated list to storage.
+     * Updates the enrollment pax of an existing course module and saves the changes to storage.
      *
-     * @param equipmentList The list of equipments (not used in this command).
-     * @param moduleList    The list of course modules.
-     * @param ui            The user interface.
-     * @param storage       The storage to save data to the hard disk.
-     * @throws EquipmentMasterException If the specified module is not found.
+     * @param context The application context containing the module list, UI, and storage.
+     * @throws EquipmentMasterException If the module is not found or saving fails.
      */
     @Override
-    public void execute(EquipmentList equipmentList, ModuleList moduleList, Ui ui, Storage storage)
-            throws EquipmentMasterException {
+    public void execute(Context context) throws EquipmentMasterException {
+        Ui ui = context.getUi();
+        ModuleList moduleList = context.getModuleList();
+        Storage storage = context.getStorage();
+
         // 1. Update the module. If it doesn't exist, this will throw an EquipmentMasterException.
         moduleList.updateModule(moduleName, newPax);
 
