@@ -154,7 +154,7 @@ The following sequence diagram details the object interactions during the genera
 ### Procurement Report (Automated Restocking)
 
 #### 1. Overview
-The Procurement Report acts as the central mathematical brain of the ERP system. It automates the complex task of calculating semesterly purchase orders. Instead of relying on gut feelings, the system aggregates demand from enrolled student numbers across different modules, applies a safety buffer, and compares it against current stock to output a precise "To Buy" list.
+The Procurement Report is a computed report that calculates recommended semesterly purchase quantities. It aggregates demand from enrolled student numbers across different modules, applies a configured safety buffer, and compares the result against current stock to produce a "To Buy" list.
 
 #### 2. Implementation Details
 The feature is integrated into the existing `ReportCommand` class to group all analytical logic in one place. The core logic resides in the `executeProcurementReport(Context)` method.
