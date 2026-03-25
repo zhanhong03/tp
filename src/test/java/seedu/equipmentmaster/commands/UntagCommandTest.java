@@ -70,11 +70,12 @@ class UntagCommandTest {
     }
 
     @Test
-    void parse_wrongOrder_throwsException() {
-        EquipmentMasterException exception = assertThrows(EquipmentMasterException.class, () -> {
-            UntagCommand.parse("untag n/stm32 m/CG2111");
+    void parse_anyOrder_returnsUntagCommand() {
+        // Test that the new parser can handle flags in reverse order!
+        assertDoesNotThrow(() -> {
+            UntagCommand command = UntagCommand.parse("untag n/stm32 m/CG2111");
+            assertNotNull(command);
         });
-        assertTrue(exception.getMessage().contains("Please provide the arguments in the correct order"));
     }
 
     // ==========================================

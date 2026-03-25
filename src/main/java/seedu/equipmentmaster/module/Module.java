@@ -2,6 +2,7 @@
 package seedu.equipmentmaster.module;
 
 import java.util.HashMap;
+import java.util.TreeMap;
 
 import seedu.equipmentmaster.exception.EquipmentMasterException;
 
@@ -62,14 +63,17 @@ public class Module {
      *
      * @param equipmentName The name of the equipment (e.g., "STM32").
      * @param ratio         The fractional requirement per student (e.g., 0.2).
-     * @throws EquipmentMasterException If the ratio is zero or negative.
+     * @throws EquipmentMasterException If the ratio is non-finite, zero or negative.
      */
     public void addEquipmentRequirement(String equipmentName, double ratio) throws EquipmentMasterException {
+        // Edge Case Handling: Non-finite Requirement
+        if (!Double.isFinite(ratio)) {
+            throw new EquipmentMasterException("Requirement ratio must be a finite number.");
+        }
         // Edge Case Handling: Negative/Zero Requirement
         if (ratio <= 0.0) {
             throw new EquipmentMasterException("Requirement ratio must be strictly greater than 0.0.");
         }
-        
         this.equipmentRequirements.put(equipmentName, ratio);
     }
 
@@ -91,10 +95,10 @@ public class Module {
      * Retrieves the map of equipment requirements.
      * Useful for calculating total demand later.
      *
-     * @return The HashMap of equipment names and their requirement ratios.
+     * @return A copy of the HashMap of equipment names and their requirement ratios.
      */
     public HashMap<String, Double> getEquipmentRequirements() {
-        return this.equipmentRequirements;
+        return new HashMap<>(this.equipmentRequirements);
     }
 
     /**
@@ -109,6 +113,8 @@ public class Module {
         if (this.equipmentRequirements == null || this.equipmentRequirements.isEmpty()) {
             return baseString;
         }
+
+        TreeMap<String, Double> sortedReqs = new TreeMap<>(this.equipmentRequirements);
 
         // If there are tags, format them nicely!
         StringBuilder tagsBuilder = new StringBuilder(" | Required: ");

@@ -142,6 +142,35 @@ public class Parser {
             return creator;
         }
 
+        /**
+         * Safely extracts an argument from a command string based on a prefix.
+         * @param fullCommand The raw user input.
+         * @param prefix The specific prefix to extract (e.g., "n/").
+         * @param allPrefixes An array of all possible prefixes for this command (e.g., {" m/", " n/", " req/"}).
+         * @return The extracted string, or an empty string if not found.
+         */
+        public static String extractArgument(String fullCommand, String prefix, String[] allPrefixes) {
+            String paddedCommand = " " + fullCommand.trim() + " ";
+            String searchPrefix = " " + prefix;
+            int startIdx = paddedCommand.indexOf(searchPrefix);
+
+            if (startIdx == -1) {
+                return "";
+            }
+
+            startIdx += searchPrefix.length();
+            int endIdx = paddedCommand.length();
+
+            // Find the nearest NEXT prefix to know where to stop extracting
+            for (String p : allPrefixes) {
+                int pIdx = paddedCommand.indexOf(p, startIdx);
+                if (pIdx != -1 && pIdx < endIdx) {
+                    endIdx = pIdx;
+                }
+            }
+            return paddedCommand.substring(startIdx, endIdx).trim();
+        }
+
 
     }
 }

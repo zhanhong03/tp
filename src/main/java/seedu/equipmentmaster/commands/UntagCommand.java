@@ -1,5 +1,7 @@
 package seedu.equipmentmaster.commands;
 
+import static seedu.equipmentmaster.parser.Parser.CommandSpec.extractArgument;
+
 import seedu.equipmentmaster.context.Context;
 import seedu.equipmentmaster.equipmentlist.EquipmentList;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
@@ -30,29 +32,14 @@ public class UntagCommand extends Command {
      * @throws EquipmentMasterException If the format or prefixes are invalid.
      */
     public static UntagCommand parse(String fullCommand) throws EquipmentMasterException {
-        int mIndex = fullCommand.indexOf("m/");
-        int nIndex = fullCommand.indexOf("n/");
+        String[] prefixes = {" m/", " n/"};
 
-        if (mIndex == -1 || nIndex == -1) {
-            throw new EquipmentMasterException(
-                    "Invalid command format. \nExpected: untag m/MOD_NAME n/EQ_NAME"
-            );
-        }
-
-        if (!(mIndex < nIndex)) {
-            throw new EquipmentMasterException(
-                    "Please provide the arguments in the correct order: m/MOD_NAME n/EQ_NAME"
-            );
-        }
-
-        // Extract and trim the values
-        String parsedModuleName = fullCommand.substring(mIndex + 2, nIndex).trim();
-        // Since there is no req/, equipmentName goes to the end of the string
-        String parsedEquipmentName = fullCommand.substring(nIndex + 2).trim();
+        String parsedModuleName = extractArgument(fullCommand, "m/", prefixes);
+        String parsedEquipmentName = extractArgument(fullCommand, "n/", prefixes);
 
         if (parsedModuleName.isEmpty() || parsedEquipmentName.isEmpty()) {
             throw new EquipmentMasterException(
-                    "Module name and equipment name cannot be empty."
+                    "Invalid command format. \nExpected: untag m/MOD_NAME n/EQ_NAME"
             );
         }
 

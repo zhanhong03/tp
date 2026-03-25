@@ -1,5 +1,7 @@
 package seedu.equipmentmaster.commands;
 
+import static seedu.equipmentmaster.parser.Parser.CommandSpec.extractArgument;
+
 import seedu.equipmentmaster.context.Context;
 import seedu.equipmentmaster.equipmentlist.EquipmentList;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
@@ -8,12 +10,12 @@ import seedu.equipmentmaster.modulelist.ModuleList;
 import seedu.equipmentmaster.storage.Storage;
 import seedu.equipmentmaster.ui.Ui;
 
-public class TagCommand extends Command{
+public class TagCommand extends Command {
     private final String equipmentName;
     private final String moduleName;
-    private final Double requirementRatio;
+    private final double requirementRatio;
 
-    public TagCommand(String moduleName, String equipmentName, Double requirementRatio) {
+    public TagCommand(String moduleName, String equipmentName, double requirementRatio) {
         this.equipmentName = equipmentName;
         this.moduleName = moduleName;
         this.requirementRatio = requirementRatio;
@@ -40,13 +42,26 @@ public class TagCommand extends Command{
         Module targetModule = modules.getModule(moduleName);
         String officialEquipmentName = equipments.findByName(equipmentName).getName();
 
-        // Use the officialEquipmentName, NOT the moduleName!
+        // Use the officialEquipmentName and the module's canonical name
         targetModule.addEquipmentRequirement(officialEquipmentName, requirementRatio);
-        int studentsPerItem = (int) Math.round(1.0 / requirementRatio);
-
-        ui.showMessage("Successfully linked equipment to module:\n" +
-                moduleName + " now requires " + requirementRatio + " x " + equipmentName +
-                " per student (1 item per " + studentsPerItem + " students).");
+        String moduleDisplayName = targetModule.getName();
+        String equipmentDisplayName = officialEquipmentName;
+        StringBuilder successMessage = new StringBuilder();
+        successMessage.append("Successfully linked equipment to module:\n")
+                .append(moduleDisplayName)
+                .append(" now requires ")
+                .append(requirementRatio)
+                .append(" x ")
+                .append(equipmentDisplayName)
+                .append(" per student");
+        if (requirementRatio > 0.0 && requirementRatio <= 1.0) {
+            int studentsPerItem = (int) Math.round(1.0 / requirementRatio);
+            successMessage.append(" (1 item per ")
+                    .append(studentsPerItem)
+                    .append(" students)");
+        }
+        successMessage.append(".");
+        ui.showMessage(successMessage.toString());
 
         try {
             storage.saveModules(modules);
@@ -63,41 +78,20 @@ public class TagCommand extends Command{
      * @throws EquipmentMasterException If the format, prefixes, or decimals are invalid.
      */
     public static TagCommand parse(String fullCommand) throws EquipmentMasterException {
-        // 1. Find the starting positions of our prefixes
-        int mIndex = fullCommand.indexOf("m/");
-        int nIndex = fullCommand.indexOf("n/");
-        int reqIndex = fullCommand.indexOf("req/");
+        String[] prefixes = {" m/", " n/", " req/"};
 
-        // 2. Validate that all prefixes exist in the string
-        if (mIndex == -1 || nIndex == -1 || reqIndex == -1) {
+        // Extract using the shared method
+        String moduleName = extractArgument(fullCommand, "m/", prefixes);
+        String equipmentName = extractArgument(fullCommand, "n/", prefixes);
+        String reqString = extractArgument(fullCommand, "req/", prefixes);
+
+        if (moduleName.isEmpty() || equipmentName.isEmpty() || reqString.isEmpty()) {
             throw new EquipmentMasterException(
                     "Invalid command format. \nExpected: tag m/MOD_NAME n/EQ_NAME req/FRACTION"
             );
         }
 
-        // 3. Ensure they are in the correct order so substring extraction works safely
-        if (!(mIndex < nIndex && nIndex < reqIndex)) {
-            throw new EquipmentMasterException(
-                    "Please provide the arguments in the correct order: m/MOD_NAME n/EQ_NAME req/FRACTION"
-            );
-        }
-
-        // 4. Extract and trim the values
-        // moduleName is everything between "m/" and " n/"
-        String moduleName = fullCommand.substring(mIndex + 2, nIndex).trim();
-        // equipmentName is everything between "n/" and " req/"
-        String equipmentName = fullCommand.substring(nIndex + 2, reqIndex).trim();
-        // reqString is everything after "req/" to the end of the line
-        String reqString = fullCommand.substring(reqIndex + 4).trim();
-
-        // 5. Check for empty inputs (e.g., user typed "tag m/ n/STM32 req/0.2")
-        if (moduleName.isEmpty() || equipmentName.isEmpty() || reqString.isEmpty()) {
-            throw new EquipmentMasterException(
-                    "Module name, equipment name, and requirement ratio cannot be empty."
-            );
-        }
-
-        // 6. Handle the Invalid Decimals edge case (e.g., "req/0.2.5" or "req/abc")
+        // 3. Handle the Invalid Decimals edge case
         double requirementRatio;
         try {
             requirementRatio = Double.parseDouble(reqString);
@@ -106,8 +100,12 @@ public class TagCommand extends Command{
                     "Invalid requirement ratio format. Please provide a valid decimal number (e.g., 0.2)."
             );
         }
-
-        // 7. Return the constructed command
+        if (!Double.isFinite(requirementRatio) || requirementRatio <= 0.0) {
+            throw new EquipmentMasterException(
+                    "Invalid requirement ratio. Please provide a positive, finite decimal number (e.g., 0.2)."
+            );
+        }
+        // 4. Return the constructed command
         return new TagCommand(moduleName, equipmentName, requirementRatio);
     }
 

@@ -82,6 +82,12 @@ public class AddModCommand extends Command {
         }
 
         String moduleName = matcher.group(1).trim();
+        // SECURITY CHECK: Prevent Delimiter Collision in Storage
+        if (moduleName.contains("|") || moduleName.contains(",") || moduleName.contains("=")) {
+            throw new EquipmentMasterException(
+                    "Invalid name! Names cannot contain reserved storage characters: '|', ',', or '='"
+            );
+        }
         String paxString = matcher.group(2).trim();
 
         // Add this explicit check to prevent empty module names

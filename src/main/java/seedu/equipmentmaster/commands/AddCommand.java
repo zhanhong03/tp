@@ -103,6 +103,11 @@ public class AddCommand extends Command {
 
         // Extract name and quantity
         String name = extractArgument(fullCommand, "n/");
+        if (name.contains("|") || name.contains(",") || name.contains("=")) {
+            throw new EquipmentMasterException(
+                    "Invalid name! Names cannot contain reserved storage characters: '|', ',', or '='"
+            );
+        }
         String qtString = extractArgument(fullCommand, "q/");
         String minQtyStr = extractArgument(fullCommand, "min/");
         String purchaseSemStr = extractArgument(fullCommand, "bought/");
