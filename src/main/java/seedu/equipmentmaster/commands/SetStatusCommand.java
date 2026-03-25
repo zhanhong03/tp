@@ -49,6 +49,7 @@ public class SetStatusCommand extends Command {
         this.status = status;
     }
 
+    //@@author JovianJosh
     /**
      * Parses the arguments for the 'setstatus' command.
      * Determines whether the command uses name-based or index-based identification.
@@ -164,6 +165,7 @@ public class SetStatusCommand extends Command {
 
         return new SetStatusCommand(index, quantity, status);
     }
+    //@@author
 
     /**
      * Executes the set status command.
