@@ -3,6 +3,8 @@ package seedu.equipmentmaster.commands;
 
 import seedu.equipmentmaster.context.Context;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
+import seedu.equipmentmaster.module.Module;
+import seedu.equipmentmaster.modulelist.ModuleList;
 import seedu.equipmentmaster.storage.Storage;
 import seedu.equipmentmaster.ui.Ui;
 import seedu.equipmentmaster.semester.AcademicSemester;
@@ -57,10 +59,26 @@ public class SetSemCommand extends Command {
                 throw new EquipmentMasterException(
                         "Please specify a semester. Usage: setsem AY[YYYY]/[YY] Sem[1/2]");
             }
+
+            // Capture old semester before updating
+            AcademicSemester oldSem = context.getCurrentSemester();
+
             AcademicSemester newSem = new AcademicSemester(rawSem);
             context.setCurrentSemester(newSem);
             storage.saveSettings(newSem);
             ui.showMessage("System time updated. Current academic semester is now set to " + newSem);
+
+            // Only warn if semester actually changed and modules exist
+            ModuleList moduleList = context.getModuleList();
+            if (moduleList != null && !moduleList.getModules().isEmpty()
+                    && (oldSem == null || !newSem.equals(oldSem))) {
+                ui.showMessage("[!] WARNING: Semester changed. Please remember to update the enrollment"
+                        + " numbers for the following modules using the 'updatemod' command:");
+                for (Module m : moduleList.getModules()) {
+                    ui.showMessage("    - " + m.getName() + " (Current: " + m.getPax() + ")");
+                }
+            }
+
         } catch (EquipmentMasterException e) {
             ui.showMessage(e.getMessage());
         }

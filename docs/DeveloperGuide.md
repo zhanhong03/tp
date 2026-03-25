@@ -151,6 +151,57 @@ The following sequence diagram details the object interactions during the genera
 
 ---
 
+### Procurement Report (Automated Restocking)
+
+#### 1. Overview
+The Procurement Report is a computed report that calculates recommended semesterly purchase quantities. It aggregates demand from enrolled student numbers across different modules, applies a configured safety buffer, and compares the result against current stock to produce a "To Buy" list.
+
+#### 2. Implementation Details
+The feature is integrated into the existing `ReportCommand` class to group all analytical logic in one place. The core logic resides in the `executeProcurementReport(Context)` method.
+
+The calculation follows this strict algorithm for each equipment item:
+1.  **Demand Aggregation**: The system iterates through the `moduleCodes` list associated with the equipment. It retrieves the latest enrollment numbers (pax) from the `ModuleList` and sums them up to determine the `Base Demand`.
+    *   *Orphaned Tag Handling*: If a module code exists in the equipment's tag list but has been deleted from the `ModuleList`, it is gracefully ignored to prevent `NullPointerException`.
+2.  **Buffer Application**: The `Base Demand` is multiplied by `(1 + bufferPercentage / 100.0)`.
+3.  **Indivisibility Rule**: The result is rounded up to the nearest whole number using `Math.ceil()`. You cannot purchase 0.5 of a board.
+4.  **Gap Analysis**: The system subtracts the *Total Quantity* (owned inventory) from the *Total Required*.
+    *   Note: It uses *Total Quantity* rather than *Available Quantity* because procurement decisions are based on total asset ownership, regardless of whether items are currently loaned out.
+5.  **Output**: If `To Buy > 0`, the item is flagged in the report.
+
+#### 3. Design Considerations
+**Alternative 1 (Current Implementation): Total Ownership vs. Demand**
+*   **How it works:** `To Buy = Required - Total_Quantity`.
+*   **Why it was chosen:** This is the correct accounting approach. If 10 items are needed, and we own 10 but 5 are loaned out, we do *not* need to buy more. We just need to wait for returns. Using `Available` would lead to massive over-purchasing during active semesters.
+
+**Alternative 2: Available Stock vs. Demand**
+*   **How it works:** `To Buy = Required - Available_Quantity`.
+*   **Why it was rejected:** As mentioned above, this leads to double-purchasing. If an item is temporarily loaned, it is still an asset we own. Procurement budgets should only be spent on actual inventory deficits, not temporary shortages.
+
+---
+
+### `UiTable`: Dynamic UI Table Generation Utility
+
+#### 1. Overview
+As Equipment Master is a Command Line Interface (CLI) application, presenting structured data (such as inventory lists or command help tables) in a readable format is a significant challenge. The **Dynamic UI Table Generation** feature provides a reusable component `UiTable` and `UiTableRow` to automatically format and align variable-length data into neat, spreadsheet-like views. This component is heavily utilized by commands like `ListCommand` and `HelpCommand`.
+
+#### 2. Implementation Details
+The feature is implemented through two key classes in the `ui` package: `UiTable` and `UiTableRow`.
+
+*   **`UiTableRow`**: Represents a single row of data. It serves as an adapter, accepting raw strings or domain objects (like `Equipment`) and converting them into a list of cell values. It also handles the low-level string padding logic.
+*   **`UiTable`**: Acts as the layout engine. It collects multiple `UiTableRow` objects and calculates the maximum width required for each column by scanning all rows. This ensures that columns are perfectly aligned regardless of the data length.
+
+When `ListCommand` is executed:
+1.  It instantiates a new `UiTable`.
+2.  It streams the `EquipmentList` and maps each `Equipment` object into a `UiTableRow`.
+3.  Each row is added to the table.
+4.  Finally, `table.toString()` is called. This triggers the calculation of column widths (`getColumnWidth`) and the generation of the final formatted string with indices and separators.
+
+Similarly, `HelpCommand` utilizes `UiTable` but enables the `hasHeader` flag, allowing it to render a title row ("Command" | "Format") without the auto-generated numeric index.
+
+#### 3. Class Diagram
+![UiTable Class Diagram](images/uiTable.png)
+---
+
 ## Product scope
 ### Target user profile
 
