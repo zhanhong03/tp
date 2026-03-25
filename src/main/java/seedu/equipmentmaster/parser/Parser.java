@@ -12,6 +12,8 @@ import seedu.equipmentmaster.commands.DeleteCommand;
 import seedu.equipmentmaster.commands.HelpCommand;
 import seedu.equipmentmaster.commands.SetMinCommand;
 import seedu.equipmentmaster.commands.AddModCommand;
+import seedu.equipmentmaster.commands.TagCommand;
+import seedu.equipmentmaster.commands.UntagCommand;
 import seedu.equipmentmaster.commands.UpdateModCommand;
 import seedu.equipmentmaster.commands.DelModCommand;
 import seedu.equipmentmaster.commands.ListModCommand;
@@ -58,6 +60,10 @@ public class Parser {
         commandSpecs.add(new CommandSpec("listmod", "listmod", fullCommand -> new ListModCommand()));
         commandSpecs.add(new CommandSpec("setbuffer", "setbuffer n/NAME b/PERCENTAGE",
                 SetBufferCommand::parse));
+        commandSpecs.add(new CommandSpec("tag", "tag m/MOD_NAME n/EQ_NAME req/FRACTION",
+                TagCommand::parse));
+        commandSpecs.add(new CommandSpec("untag", "untag m/MOD_NAME n/EQ_NAME",
+                UntagCommand::parse));
     }
 
     /**
