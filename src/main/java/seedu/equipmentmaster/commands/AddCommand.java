@@ -83,9 +83,9 @@ public class AddCommand extends Command {
         this.purchaseSem = null;
         this.lifespanYears = 0.0;
         this.minQuantity = 0;
-        this.moduleCodes = moduleCodes;
+        this.moduleCodes = moduleCodes != null ? moduleCodes : new ArrayList<>();
     }
-
+    
     /**
      * Parses the arguments for the 'add' command and creates an AddCommand object.
      *
