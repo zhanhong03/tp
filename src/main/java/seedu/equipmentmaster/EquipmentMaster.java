@@ -53,11 +53,12 @@ public class EquipmentMaster {
         logger.log(Level.INFO, "System time loaded successfully.");
 
         this.moduleList = storage.loadModules();
+        // @@author
 
         // Check loaded commands
         logger.log(Level.INFO, "Loaded "+Parser.getCommandSpecs().size()+" commands.");
         assert !Parser.getCommandSpecs().isEmpty() : "No commands loaded! Check Parser initialization.";
-        // @@author
+
     }
 
     public void run() {
