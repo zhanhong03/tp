@@ -108,24 +108,26 @@ To illustrate this feature without cluttering a single diagram, the logic is div
 ### Module Tracking System
 
 #### 1. Overview
-The Module Tracking System allows lab technicians to manage a central registry of academic course modules (e.g., `CG2111A`). It supports standard lifecycle operations (adding, deleting, and listing modules) and advanced many-to-many relationship mapping, linking modules to specific equipment requirements based on student enrollment sizes (pax).
+The Module Tracking System allows lab technicians to manage a central registry of academic course modules (e.g., `CG2111A`). It supports standard lifecycle operations (adding, deleting, listing, and updating student pax) and advanced many-to-many relationship mapping using the `tag` and `untag` commands, which link modules to specific equipment requirements based on usage ratios.
 
 #### 2. Implementation Details
 The core of the system is the `ModuleList` class, which manages a collection of `Module` entities. The system utilizes the **Context Object Pattern** to manage dependencies across all module-related commands.
 
-**Standard Operations (`addmod`, `delmod`, `listmod`):**
-* **Add/Delete:** `AddModCommand` and `DelModCommand` extract the `ModuleList` and `Storage` from the unified `Context`. They modify the list (adding or removing a `Module` by its module code) and immediately invoke `Storage#saveModules()` to persist the state.
-* **List:** `ListModCommand` simply retrieves the `ModuleList` from the `Context` and formats the current registry for the `Ui` to display.
+**Standard Operations (`addmod`, `delmod`, `listmod`, `updatemod`):**
+* **Add/Delete/List:** `AddModCommand` and `DelModCommand` modify the `ModuleList` registry, while `ListModCommand` retrieves the summary.
+* **Update Pax:** `UpdateModCommand` is strictly responsible for modifying the semantic metadata of a module, specifically updating the student enrollment size (`pax`). It locates the `Module` via `ModuleList` and calls `Module#setPax(newPax)`.
 
-**Advanced Mapping (`updatemod` / Equipment Requirements):**
-To support complex lab setups, a recent architectural enhancement introduced a `HashMap<String, Double>` within each `Module` to map required equipment names to their usage ratios per student.
-When a requirement is added or updated:
-1. The command extracts the `ModuleList` and retrieves the target `Module`.
-2. The low-level mathematical validation and map insertion are handled by `Module#addEquipmentRequirement(equipmentName, ratio)`.
-3. `Storage` is invoked to persist the updated state.
+**Advanced Requirement Mapping (`tag` and `untag`):**
+To support complex lab setups, the architecture utilizes a `HashMap<String, Double>` within each `Module` to map required equipment names to their usage ratios per student. This relational mapping is handled by `TagCommand` and `UntagCommand`.
+When a requirement is tagged:
+1. The user inputs `tag m/CG2111A eq/STM32 ratio/0.5`.
+2. `TagCommand` extracts the `ModuleList` and retrieves the target `Module`.
+3. The low-level mathematical validation and map insertion are delegated to `Module#addEquipmentRequirement(equipmentName, ratio)`.
+4. `Storage#saveModules()` is invoked to persist the updated relational state.
+   *(Note: `UntagCommand` follows a similar flow, calling `Module#removeEquipmentRequirement(equipmentName)` to cleanly sever the relationship).*
 
 **Code Snippet: Defensive Programming in Domain Objects**
-To demonstrate our adherence to defensive programming and SLAP, the mathematical validation logic for updating requirements is completely encapsulated within the `Module` entity:
+To demonstrate our adherence to defensive programming and SLAP, the mathematical validation logic for `TagCommand` is completely encapsulated within the `Module` entity rather than the command itself:
 
 ```java
 public void addEquipmentRequirement(String equipmentName, double ratio) throws EquipmentMasterException {
@@ -143,24 +145,24 @@ public void addEquipmentRequirement(String equipmentName, double ratio) throws E
 To illustrate the data structure and execution flow of the complete Module Tracking System, we employ both a Class Diagram and a Sequence Diagram.
 
 **Class Diagram: System Architecture**
-*(Note: Minor exception classes and standard Java libraries are omitted. The diagram highlights the inheritance of commands and the use of HashMap for relational mapping.)*
+*(Note: Minor exception classes and standard Java libraries are omitted. The diagram highlights the separation of concerns between standard module commands and the tagging commands used for mapping.)*
 ![Module System Class Diagram](images/module_class.png)
 
-**Sequence Diagram: Update Module Execution Flow**
-*(Note: UI rendering steps and generic self-calls have been abstracted to focus on the core Model interactions during an update operation.)*
-![UpdateMod Sequence Diagram](images/updatemod.png)
+**Sequence Diagram: Tag Module Execution Flow**
+*(Note: UI rendering steps and generic self-calls have been abstracted to focus on the core Model interactions during a tagging operation.)*
+![TagCommand Sequence Diagram](images/tag_module.png)
 
 #### 4. Design Considerations
-* **Alternative 1 (Current Implementation): Ratio-Based Relational Mapping (HashMap)**
-  * **How it works:** Each `Module` maintains a `HashMap` linking equipment names (Strings) to a fractional ratio (Double).
+* **Alternative 1 (Current Implementation): Ratio-Based Relational Mapping via `tag`**
+  * **How it works:** Each `Module` maintains a `HashMap` linking equipment names to a fractional ratio. Relationships are dynamically built using `TagCommand`.
   * **Why it was chosen:** It provides extreme flexibility. Not every piece of equipment has a 1:1 student ratio (e.g., one oscilloscope might be shared by 4 students, ratio = 0.25). This mathematical modeling allows the system to accurately calculate exact lab demands without data redundancy.
 
 * **Alternative 2: Storing Hardcoded Integers**
   * **How it works:** Instead of a ratio, the module stores the absolute integer number of equipment needed (e.g., "Needs 50 STM32s").
-  * **Why it was rejected:** This creates a brittle system. If the student enrollment (pax) changes from 100 to 150, the technician would have to manually recalculate and update every single equipment requirement. The ratio-based approach automatically scales demand when pax is updated.
+  * **Why it was rejected:** This creates a brittle system. If the `UpdateModCommand` changes the pax from 100 to 150, the technician would have to manually recalculate and re-tag every single equipment requirement. The ratio-based approach automatically scales demand when pax is updated.
 
 #### 5. Future Implementations (Beyond v2.1)
-* **Automated Demand Forecasting:** Leveraging the ratio `HashMap` and the current `pax`, future versions will introduce a `forecast` command. This will cross-reference the required total (pax * ratio) against the actual available inventory in the `EquipmentList`, automatically flagging shortages before the semester begins.
+* **Automated Demand Forecasting:** Leveraging the ratio `HashMap` established by `TagCommand` and the current `pax` managed by `UpdateModCommand`, future versions will introduce a `forecast` command. This will cross-reference the required total (pax * ratio) against the actual available inventory in the `EquipmentList`, automatically flagging shortages before the semester begins.
 
 ---
 
@@ -319,11 +321,13 @@ To test the system with pre-populated data without typing everything manually:
 ### 3. Testing the Enhanced Find Feature
 1. **Prerequisite:** Ensure the system has at least one equipment tagged to a module (e.g., "STM32" tagged to "CG2111A").
 2. **Test Case:** Type `find CG2111A` and press Enter.
-  * **Expected:** The system returns a list of all equipment associated with that module, even if the equipment name itself does not contain the string "CG2111A".
+  * **Expected:** The system returns a list of all equipment associated with that module, even if the equipment name itself does not contain the string "CG21".
 3. **Test Case:** Type `find nonExistentItem`.
   * **Expected:** The system displays a message indicating that 0 items were found.
 
 ### 4. Testing the Aging Equipment Report
 1. **Prerequisite:** Ensure the inventory contains equipment with different `purchaseSemester` values (some older than their `lifespan`, some newer).
-2. **Test Case:** Type `report aging` and press Enter.
-  * **Expected:** The system parses the current date, compares it against the purchase semesters, and prints a formatted list of *only* the equipment that has exceeded or reached its expected lifespan.
+2. **Setup Context:** Type `setsem AY25/26 Sem1` (or any future semester to simulate time passing) to set the system's current academic context.
+  * **Expected:** The system confirms the current semester has been updated.
+3. **Test Case:** Type `report aging` and press Enter.
+  * **Expected:** The system uses the currently set academic semester (from `Context#getCurrentSemester()`) to calculate ages, and prints a formatted list of *only* the equipment that has exceeded or reached its expected lifespan.
