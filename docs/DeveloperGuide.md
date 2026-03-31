@@ -226,7 +226,7 @@ During execution:
 #### 5. Future Implementations (Beyond v2.1)
 To further enhance the automated lab management experience, the following feature is planned for future iterations:
 * **Automated Procurement Generation:** Building upon the Aging Equipment Report and the Module Tracking System (pax sizes), the system will hypothetically cross-reference aging items with next semester's expected student intake to automatically generate a formatted PDF "Purchase Request Form", detailing exactly how many new boards are needed to replace dead stock and meet student quotas.
-//@@author XiaoGeNekidora
+<!-- @@author XiaoGeNekidora -->
 ---
 
 ### Procurement Report (Automated Restocking)
@@ -279,7 +279,7 @@ Similarly, `HelpCommand` utilizes `UiTable` but enables the `hasHeader` flag, al
 #### 3. Class Diagram
 ![UiTable Class Diagram](images/uiTable.png)
 ---
-//@@author
+<!-- @@author -->
 ## Product scope
 ### Target user profile
 
