@@ -196,7 +196,7 @@ To illustrate the data structure and execution flow of the Module Tracking Syste
   * **Why it was rejected:** Creates massive data redundancy. If a module's enrollment changes from 100 to 150, the system would have to perform an $O(N)$ traversal through the entire inventory to update every single piece of equipment associated with that module, risking severe state inconsistencies.
 
 #### 5. Future Implementations (Beyond v2.1)
-* **Automated Demand Forecasting:** Building upon the robust `pax` tracking established by `UpdateModCommand`, future versions will introduce a feature to map equipment usage ratios directly to modules. The system will cross-reference these expected totals against the actual available inventory, automatically flagging shortages before the semester begins.
+* **Automated Demand Forecasting:** Building upon the robust `pax` tracking established by `UpdateModCommand` and the existing mapping of equipment-usage ratios to modules (via the `tag`/`untag` commands and each `Module`’s equipment-requirement ratio map), future versions will use these mappings to automatically forecast total equipment demand per module and semester, cross-reference the expected totals against the actual available inventory, and surface forecasts and shortage warnings (e.g. via reports) before the semester begins.
 
 ---
 
