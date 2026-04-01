@@ -47,8 +47,8 @@ Removes a specific quantity of equipment from your inventory. To maintain strict
 * **Format (by Name):** `delete n/NAME q/QUANTITY s/STATUS`
 
 **Example:**
-* **Delete by Index:** `delete 1 q/5 s/available (Removes 5 available units from the 1st item in the list)`
-* **Delete by Name:** `delete n/Soldering Iron q/2 s/loaned (Removes 2 loaned units of Soldering Irons)`
+* **Delete by Index:** `delete 1 q/5 s/available` (Removes 5 available units from the 1st item in the list)
+* **Delete by Name:** `delete n/Soldering Iron q/2 s/loaned` (Removes 2 loaned units of Soldering Irons)
 
 #### Setting low-stock alerts: `setmin`
 Updates the minimum stock threshold for an existing piece of equipment. If your inventory drops to or below this configured number, the system will trigger a LOW STOCK ALERT to remind you to procure more.
