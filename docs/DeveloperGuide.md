@@ -8,6 +8,48 @@
 
 ## Design & implementation
 
+### Parser Component (Command Factory Pattern)
+
+#### 1. Overview
+The `Parser` component acts as the primary gateway for processing user input into executable `Command` objects. It is designed using the **Command Factory Pattern** to ensure high scalability and adherence to the **Open-Closed Principle**.
+
+Developers adding new CLI commands to the application do not need to modify the core parsing loop; they only need to register their new command via a `CommandSpec`.
+
+#### 2. Architecture and Usage
+The architecture abstracts the knowledge of *which* command is being requested from *how* that command is parsed and instantiated.
+
+**Key Components:**
+1. `CommandFactory` (Functional Interface): Defines a single `parse(String fullCommand)` method signature. Every command class must implement its own parsing logic that matches this signature (typically as a static method).
+2. `CommandSpec`: A data class that bundles a command's trigger `keyword` (e.g., `"add"`), its usage `format` string (used primarily by the `help` command), and an instance of `CommandFactory`.
+3. `Parser`: Maintains a static, centralized registry (`ArrayList<CommandSpec> commandSpecs`) of all available commands.
+
+**How to Add a New Command:**
+When creating a new feature, a developer must:
+1. Create the new `Command` class.
+2. If the command requires arguments, implement a `public static Command parse(String fullCommand)` method within that class to handle regex validation and argument extraction.
+3. Open `Parser.java` and navigate to the static initialization block.
+4. Register the new command by adding a `CommandSpec` utilizing Java method references.
+
+**Code Snippet: Command Registration**
+```java
+static {
+    // Registering a Complex Command (requires validation and extraction)
+    commandSpecs.add(new CommandSpec("add", "add n/NAME q/QUANTITY...", AddCommand::parse));
+    
+    // Registering a Simple Command (no arguments needed)
+    commandSpecs.add(new CommandSpec("list", "list", fullCommand -> new ListCommand()));
+}
+```
+
+#### 3. UML Class Diagram
+![Parser Class Diagram](images/parser.png)
+
+#### 4. Design Considerations
+* **Command Factory Pattern & Registration**
+    * **Justification:** It provides excellent extensibility. By encapsulating parsing and data validation within the specific command classes themselves (e.g., `AddCommand::parse`), the central `Parser` class remains clean. This entirely eliminates bloated dependencies and monolithic `switch-case` statements, heavily reducing merge conflicts when multiple developers add commands simultaneously.
+
+---
+
 ### SetBufferCommand
 
 Sets a buffer percentage on a named equipment item. The buffer is persisted to storage.
