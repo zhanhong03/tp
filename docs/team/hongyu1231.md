@@ -20,8 +20,8 @@
 * **User Guide (UG):** Authored the *Introduction*, *Quick Start*, and functional instructions for *Module Tracking*, *Find*, and *Aging Reports*. Standardized command formats and provided practical usage examples.
 * **Developer Guide (DG):** 
   * **Technical Architecture:** Documented logic for **Module Tracking**, **Enhanced Find**, and **Aging Reports** via PlantUML Class, Sequence (Update/Report), and Activity (Find algorithm) diagrams.
-    * **Project Scope:** Drafted the *Target User Profile*, *User Stories*, and *Non-Functional Requirements*.
-    * **Quality Assurance:** Authored the *Glossary* and *Manual Testing Instructions* to ensure system reliability and edge-case verification.
+  * **Project Scope:** Drafted the *Target User Profile*, *User Stories*, and *Non-Functional Requirements*.
+  * **Quality Assurance:** Authored the *Glossary* and *Manual Testing Instructions* to ensure system reliability and edge-case verification.
 
 ### Team-Based Tasks
 * **Release Management:** Orchestrated GitHub Issue tracking and enforced **WEEKLY milestones**. Managed the end-to-end Release process (JAR packaging and tagging) for all iterations.

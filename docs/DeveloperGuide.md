@@ -492,7 +492,7 @@ Whether you are managing shared pools of STM32 boards across different modules (
 
 | Version | As a ... | I want to ... | So that I can ... |
 |---------|----------|---------------|-------------------|
-| **v1.0** | first-time user | view document/help information of each command | see the syntax and examples without looking up an external manual. |
+| **v1.0** | first-time user | view document/help information of each command | see the command syntax without looking up an external manual. |
 | **v1.0** | first-time user | receive a clear text error message | know exactly which part of my command was wrong and correct it immediately. |
 | **v1.0** | technician | add a new type of equipment | catalog new inventory arrivals and start tracking them. |
 | **v1.0** | technician | delete a specific quantity of equipment | ensure the inventory reflects the actual physical stock after loss or damage. |
