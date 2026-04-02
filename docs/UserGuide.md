@@ -30,35 +30,6 @@ Registers new physical equipment into your laboratory inventory. You can perform
 * **Adding with a low-stock alert threshold:** `add n/Jumper Wires q/500 min/100`
 * **Adding with all parameters:** `add n/Raspberry Pi 4 q/30 m/CG2111A bought/AY2024/25 Sem1 life/4.0 min/5`
 
-#### Managing equipment loans: `setstatus`
-Updates the availability status of your equipment. When students borrow or return items, use this command to seamlessly shift quantities between your "available" pool and your "loaned" pool, ensuring you always know exactly what is sitting on your lab shelves versus what is checked out.
-
-* **Format (by Index):** `setstatus INDEX q/QUANTITY s/STATUS`
-* **Format (by Name):** `setstatus n/NAME q/QUANTITY s/STATUS`
-
-**Examples:**
-* **Loaning items (by Index):** `setstatus 1 q/5 s/loaned` (Takes 5 available units from the 1st item in your list and marks them as loaned).
-* **Returning items (by Name):** `setstatus n/Multimeter q/2 s/available` (Takes 2 loaned Multimeters and returns them to the available pool).
-
-#### Deleting equipment: `delete`
-Removes a specific quantity of equipment from your inventory. To maintain strict accountability, you must specify whether the items being removed are currently available (e.g., broken in the lab) or loaned (e.g., lost by a student). If the total quantity of an item reaches zero, the system automatically cleans up and removes the equipment record entirely.
-
-* **Format (by Index):** `delete INDEX q/QUANTITY s/STATUS`
-* **Format (by Name):** `delete n/NAME q/QUANTITY s/STATUS`
-
-**Example:**
-* **Delete by Index:** `delete 1 q/5 s/available` (Removes 5 available units from the 1st item in the list)
-* **Delete by Name:** `delete n/Soldering Iron q/2 s/loaned` (Removes 2 loaned units of Soldering Irons)
-
-#### Setting low-stock alerts: `setmin`
-Updates the minimum stock threshold for an existing piece of equipment. If your inventory drops to or below this configured number, the system will trigger a LOW STOCK ALERT to remind you to procure more.
-
-* **Format (by Index):** `setmin INDEX min/QUANTITY`
-* **Format (by Name):** `setmin n/NAME min/QUANTITY`
-
-**Example**
-* **by Index:** `setmin 1 min/20` (Sets the alert threshold of the 1st item in your list to 20 units)
-* **by Name:** `setmin n/Soldering Iron min/5` (Sets the alert threshold for Soldering Irons to 5 units)
 
 ### 2. Module Tracking System
 To accurately forecast laboratory demands, the system allows you to register academic modules, track their student enrollment (pax), and dynamically map equipment requirements to them.
@@ -81,6 +52,17 @@ Updates the student enrollment size of an existing module. The system will autom
 Safely removes a module from the registry. Any equipment previously tagged to this module will be safely untagged (Safe Dereferencing) without deleting the equipment itself.
 * **Format:** `delmod n/NAME`
 * **Example:** `delmod n/CG2111A`
+
+#### Linking equipment to a module: `tag`
+Dynamically maps a piece of physical equipment to an academic module. You must specify a requirement ratio (`req/`) to account for equipment that is shared among groups of students during a lab session. This data is critical for generating accurate procurement forecasts.
+* **Format:** `tag m/MODULE_NAME n/EQUIPMENT_NAME req/FRACTION`
+* **Example:** `tag m/CG2111A n/STM32 req/1.0` (Every 1 student requires 1 STM32 board)
+* **Example:** `tag m/CS2113 n/Soldering Iron req/0.2` (1 Soldering Iron is shared among a group of 5 students)
+
+#### Unlinking equipment from a module: `untag`
+Removes a specific equipment requirement from an academic module. This is useful if a course curriculum changes and a specific item is no longer needed for the classes.
+* **Format:** `untag m/MODULE_NAME n/EQUIPMENT_NAME`
+* **Example:** `untag m/CG2111A n/STM32`
 
 ---
 
@@ -241,9 +223,6 @@ Removes a specific number of units from either the available or loaned pool.
 
 ## Command Summary (Cheat Sheet)
 * **Add Equipment:** `add n/NAME q/QUANTITY [m/MODULE_CODE]... [bought/SEM life/YEARS] [min/MIN_QTY]`
-* **Update Loan Status:** `setstatus [INDEX | n/NAME] q/QTY s/[loaned|available]`
-* **Delete Equipment:** `delete [INDEX | n/NAME] q/QTY s/[available|loaned]`
-* **Set Minimum Alert:** `setmin [INDEX | n/NAME] min/QTY`
 * **Add Module:** `addmod n/NAME pax/QTY`
 * **List Modules:** `listmod`
 * **Update Pax:** `updatemod n/NAME pax/QTY`
