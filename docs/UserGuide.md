@@ -102,7 +102,7 @@ Scans the inventory and generates a report of all equipment whose age (calculate
 Forecast your laboratory equipment needs and proactively identify critical shortages to justify budgeting and purchasing requests.
 
 #### Generating the Low Stock Report: `report lowstock`
-Scans your entire inventory and generates a report of all equipment where the current available quantity has dropped strictly below its configured minimum threshold (`min/`). This allows you to quickly identify immediate shortages before a busy lab session.
+Scans your entire inventory and generates a report of all equipment where the current total quantity (`q/`, including items that may be on loan) is strictly less than its configured minimum threshold (`min/`). This allows you to quickly identify immediate shortages before a busy lab session.
 * **Format:** `report lowstock`
 
 #### Setting a Safety Buffer: `setbuffer`
