@@ -181,7 +181,7 @@ public class SetStatusCommand extends Command {
      * @param context The application context containing the equipment list, UI, and storage.
      */
     @Override
-    public void execute(Context context) {
+    public void execute(Context context) throws EquipmentMasterException {
         Ui ui = context.getUi();
         EquipmentList equipments = context.getEquipments();
         Storage storage = context.getStorage();

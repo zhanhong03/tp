@@ -230,7 +230,7 @@ public class AddCommand extends Command {
      * @param context The application context containing the equipment list, UI, and storage.
      */
     @Override
-    public void execute(Context context) {
+    public void execute(Context context) throws EquipmentMasterException {
         EquipmentList equipments = context.getEquipments();
         Ui ui = context.getUi();
         Storage storage = context.getStorage();
@@ -241,7 +241,18 @@ public class AddCommand extends Command {
         Equipment equipment = new Equipment(name, quantity, quantity, 0, purchaseSem, lifespanYears,
                 moduleCodes, minQuantity, 0.0);
         equipments.addEquipment(equipment);
-        storage.save(equipments.getAllEquipments());
+
+        try {
+            // Using the base class helper or direct storage call
+            storage.save(equipments.getAllEquipments());
+        } catch (EquipmentMasterException e) {
+            // ROLLBACK: Remove the item from memory if the disk save fails.
+            // This prevents "Inconsistent State" where the item exists in RAM but not on Disk.
+            equipments.removeEquipment(equipment);
+
+            // Re-throw the exception so the Main loop can display the error to the user.
+            throw e;
+        }
 
         // Build message
         StringBuilder message = new StringBuilder();

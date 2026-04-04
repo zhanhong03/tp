@@ -1,4 +1,3 @@
-//@@author Hongyu1231
 package seedu.equipmentmaster.commands;
 
 import seedu.equipmentmaster.context.Context;
@@ -7,10 +6,21 @@ import seedu.equipmentmaster.modulelist.ModuleList;
 import seedu.equipmentmaster.ui.Ui;
 import seedu.equipmentmaster.storage.Storage;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * Represents a command to delete an existing course module from the system.
  */
 public class DelModCommand extends Command {
+    private static final Logger logger = Logger.getLogger(DelModCommand.class.getName());
+    private static final String FLAG_NAME = "n/";
+
+    // Using regex for parsing to maintain consistency with other command classes
+    private static final Pattern COMMAND_FORMAT = Pattern.compile("n/(.+)");
+
     private final String moduleName;
 
     /**
@@ -19,54 +29,67 @@ public class DelModCommand extends Command {
      * @param moduleName The name of the module to be deleted.
      */
     public DelModCommand(String moduleName) {
-        this.moduleName = moduleName;
+        String trimmedModuleName = moduleName == null ? null : moduleName.trim();
+        assert trimmedModuleName != null && !trimmedModuleName.isEmpty()
+                : "Module name cannot be null or empty";
+        this.moduleName = trimmedModuleName;
     }
 
     /**
      * Executes the delete module command.
-     * Removes the specified course module from the system and updates the storage file.
      *
-     * @param context The application context containing the module list, UI, and storage.
-     * @throws EquipmentMasterException If the module is not found or saving fails.
+     * @param context The application context.
+     * @throws EquipmentMasterException If the module is not found.
      */
     @Override
     public void execute(Context context) throws EquipmentMasterException {
-        ModuleList moduleList = context.getModuleList();
-        Ui ui = context.getUi();
-        Storage storage = context.getStorage();
+        assert context != null : "Context should not be null during execution";
+        logExecution("DelModCommand");
 
-        // 1. Delete the module. If it doesn't exist, this throws an EquipmentMasterException.
+        ModuleList moduleList = context.getModuleList();
+        logger.log(Level.INFO, "Attempting to delete module: " + moduleName);
+
+        // This call will throw EquipmentMasterException if the module doesn't exist
         moduleList.deleteModule(moduleName);
 
-        // 2. Print success message to the console.
-        ui.showMessage("Successfully deleted module: " + moduleName);
+        context.getUi().showMessage("Successfully deleted module: " + moduleName);
+        saveToStorage(context.getStorage(), moduleList, context.getUi());
+    }
 
-        // 3. Save the updated list to the local text file.
+    /**
+     * Updates the storage file with the latest module list.
+     */
+    private void saveToStorage(Storage storage, ModuleList moduleList, Ui ui) {
         try {
-            storage.saveModules(moduleList);
+            if (storage != null) {
+                storage.saveModules(moduleList);
+                logger.log(Level.INFO, "Storage updated successfully.");
+            }
         } catch (EquipmentMasterException e) {
-            ui.showMessage(e.getMessage());
+            logger.log(Level.SEVERE, "Failed to save module list", e);
+            ui.showMessage("Warning: Data deleted in memory but failed to save to disk.");
         }
     }
 
     /**
-     * Parses the full command string provided by the user to create a {@code DelModCommand}.
-     * Extracts the target module name to be deleted.
+     * Parses the user input to create a {@code DelModCommand}.
      *
-     * @param fullCommand The complete user input string (e.g., "delmod n/CG2111A").
-     * @return A {@code DelModCommand} initialized with the target module name.
-     * @throws EquipmentMasterException If the command format is invalid or the module name is missing.
+     * @param fullCommand The raw user input.
+     * @return A DelModCommand instance.
+     * @throws EquipmentMasterException If the input format is invalid.
      */
     public static DelModCommand parse(String fullCommand) throws EquipmentMasterException {
-        // Strip the starting command word to isolate the arguments
-        String args = fullCommand.replaceFirst("(?i)^delmod\\s*", "").trim();
+        logger.log(Level.INFO, "Parsing DelModCommand.");
 
-        if (!args.startsWith("n/")) {
-            throw new EquipmentMasterException("Invalid command format. \nExpected: delmod n/NAME");
+        String args = fullCommand.replaceFirst("(?i)^delmod\\s*", "").trim();
+        Matcher matcher = COMMAND_FORMAT.matcher(args);
+
+        if (!matcher.matches()) {
+            logger.log(Level.WARNING, "Parse failed: invalid format for delmod.");
+            throw new EquipmentMasterException("Invalid command format.\nExpected: delmod n/NAME");
         }
 
-        String moduleName = args.replace("n/", "").trim();
-
+        String moduleName = matcher.group(1).trim();
         if (moduleName.isEmpty()) {
             throw new EquipmentMasterException("Module name cannot be empty.");
         }

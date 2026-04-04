@@ -19,6 +19,8 @@ public class AcademicSemester {
      * @throws EquipmentMasterException If the format is invalid or years are not consecutive.
      */
     public AcademicSemester(String rawInput) throws EquipmentMasterException {
+        assert rawInput != null : "Raw semester input cannot be null";
+
         Pattern pattern = Pattern.compile(SEM_REGEX);
         Matcher matcher = pattern.matcher(rawInput.trim());
 
@@ -45,11 +47,15 @@ public class AcademicSemester {
      * @param current The reference semester (usually the system's current time).
      * @return The age in years as a double.
      */
-    public double calculateAgeInYears(AcademicSemester current) {
+    public double calculateAgeInYears(AcademicSemester current) throws EquipmentMasterException {
+        assert current != null : "Current reference semester cannot be null";
+
         int elapsedSemesters = (current.startYear - this.startYear) * 2 + (current.semester - this.semester);
-        // Assertion: Age should not be negative in a logical system state.
-        // This helps catch logic errors during development.
-        assert elapsedSemesters >= 0 : "Calculated age cannot be negative!";
+        if (elapsedSemesters < 0) {
+            throw new EquipmentMasterException("Invalid calculation: The target semester ("
+                    + this.toString() + ") is in the future relative to the reference semester ("
+                    + current.toString() + ").");
+        }
         return elapsedSemesters / 2.0;
     }
 
@@ -70,6 +76,9 @@ public class AcademicSemester {
      */
     @Override
     public boolean equals(Object obj) {
+        if (this == obj) {
+            return true; // Optimization: Same object reference
+        }
         if (obj instanceof AcademicSemester) {
             AcademicSemester other = (AcademicSemester) obj;
             return this.startYear == other.startYear && this.semester == other.semester;

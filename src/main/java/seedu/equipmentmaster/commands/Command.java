@@ -3,6 +3,9 @@ package seedu.equipmentmaster.commands;
 import seedu.equipmentmaster.context.Context;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 
 /**
  * Represents an abstract command in the EquipmentMaster application.
@@ -11,7 +14,13 @@ import seedu.equipmentmaster.exception.EquipmentMasterException;
  */
 public abstract class Command {
 
-    // @@author Hongyu1231
+    // 1. LOGGING: Base logger could be used for general command-related traces
+    private static final Logger logger = Logger.getLogger(Command.class.getName());
+
+    protected Logger getLogger() {
+        return logger;
+    }
+
     /**
      * Executes the command using the provided application context.
      *
@@ -20,7 +29,6 @@ public abstract class Command {
      * @throws EquipmentMasterException If an error specific to the command's execution occurs.
      */
     public abstract void execute(Context context) throws EquipmentMasterException;
-    // @@author
     /**
      * Indicates whether this command should terminate the application.
      * By default, commands do not exit the program.
@@ -29,5 +37,13 @@ public abstract class Command {
      */
     public boolean isExit() {
         return false;
+    }
+
+    /**
+     * Optional: A helper method for subclasses to log execution starts consistently.
+     * This reduces code duplication across different Command subclasses.
+     */
+    protected void logExecution(String commandName) {
+        logger.log(Level.INFO, "Executing " + commandName);
     }
 }

@@ -1,4 +1,3 @@
-//@@author Hongyu1231
 package seedu.equipmentmaster.storage;
 
 import seedu.equipmentmaster.equipment.Equipment;
@@ -24,10 +23,12 @@ import java.util.logging.Logger;
  * It reads data from and writes data to a specified .txt file.
  */
 public class Storage {
-    private String equipmentFilePath;
-    private Ui ui;
-    private String settingFilePath;
-    private String moduleFilePath;
+    private static final Logger logger = Logger.getLogger(Storage.class.getName());
+
+    private final String equipmentFilePath;
+    private final Ui ui;
+    private final String settingFilePath;
+    private final String moduleFilePath;
 
     /**
      * Constructor.
@@ -44,25 +45,73 @@ public class Storage {
     }
 
     /**
+     * Ensures the parent directory for a given file exists.
+     */
+    private void ensureDirectoryExists(File file) {
+        File directory = file.getParentFile();
+        if (directory != null && !directory.exists()) {
+            directory.mkdirs();
+        }
+    }
+
+    /**
+     * Saves the current system semester to the settings file.
+     *
+     * @param currentSem The semester to be saved.
+     * @throws EquipmentMasterException If file writing fails. (Fixes the SetSemCommand compilation error)
+     */
+    public void saveSettings(AcademicSemester currentSem) throws EquipmentMasterException {
+        try {
+            File file = new File(settingFilePath);
+            ensureDirectoryExists(file);
+
+            try (FileWriter writer = new FileWriter(settingFilePath)) {
+                writer.write(currentSem.toString());
+            }
+            logger.log(Level.INFO, "Successfully saved semester settings to file.");
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Failed to save settings", e);
+            throw new EquipmentMasterException("Failed to save settings: " + e.getMessage());
+        }
+    }
+
+    public String loadSettings() {
+        File file = new File(settingFilePath);
+        String defaultSem = "AY2024/25 Sem1";
+
+        if (!file.exists()) {
+            return defaultSem;
+        }
+
+        try (Scanner scanner = new Scanner(file)) {
+            if (scanner.hasNextLine()) {
+                return scanner.nextLine().trim();
+            }
+        } catch (FileNotFoundException e) {
+            logger.log(Level.WARNING, "Settings file not found, using default.");
+        }
+        return defaultSem;
+    }
+
+    /**
      * Saves the current list of equipment to the .txt file.
      *
      * @param equipments The current list of equipment.
+     * @throws EquipmentMasterException If file writing fails.
      */
-    public void save(ArrayList<Equipment> equipments) {
+    public void save(ArrayList<Equipment> equipments) throws EquipmentMasterException {
         try {
             File file = new File(equipmentFilePath);
-            File directory = file.getParentFile();
-            if (directory != null && !directory.exists()) {
-                directory.mkdirs();
-            }
+            ensureDirectoryExists(file);
 
             try (FileWriter writer = new FileWriter(equipmentFilePath)) {
                 for (Equipment equipment : equipments) {
                     writer.write(equipment.toFileString() + System.lineSeparator());
                 }
             }
+            logger.log(Level.INFO, "Equipment data successfully saved.");
         } catch (IOException e) {
-            ui.showMessage("Error saving equipment data: " + e.getMessage());
+            throw new EquipmentMasterException("Error saving equipment data: " + e.getMessage());
         }
     }
 
@@ -159,51 +208,6 @@ public class Storage {
     }
 
     /**
-     * Saves the current system semester to the settings file.
-     *
-     * @param currentSem The semester to be saved.
-     */
-    public void saveSettings(AcademicSemester currentSem) {
-        Logger storageLogger = Logger.getLogger(Storage.class.getName());
-        try {
-            File file = new File(settingFilePath);
-            File directory = file.getParentFile();
-            if (directory != null && !directory.exists()) {
-                directory.mkdirs();
-            }
-
-            try (FileWriter writer = new FileWriter(settingFilePath)) {
-                writer.write(currentSem.toString());
-            }
-            storageLogger.log(Level.INFO, "Successfully saved semester settings to file.");
-        } catch (IOException e) {
-            ui.showMessage("Error saving settings: " + e.getMessage());
-            storageLogger.log(Level.SEVERE, "Failed to save settings: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Loads the system semester from the settings file.
-     *
-     * @return The saved semester as a String, or a default value if not found.
-     */
-    public String loadSettings() {
-        File file = new File(settingFilePath);
-        if (!file.exists()) {
-            return "AY2024/25 Sem1"; // Default value
-        }
-
-        try (Scanner scanner = new Scanner(file)) {
-            if (scanner.hasNextLine()) {
-                return scanner.nextLine().trim();
-            }
-        } catch (FileNotFoundException e) {
-            // Fallback to default
-        }
-        return "AY2024/25 Sem1";
-    }
-
-    /**
      * Saves the current collection of modules to the designated text file.
      * Each module is saved on a new line in the format: "ModuleName | Pax".
      * Creates the necessary directories and file if they do not already exist.
@@ -213,31 +217,32 @@ public class Storage {
      */
     public void saveModules(ModuleList moduleList) throws EquipmentMasterException {
         File file = new File(moduleFilePath);
-        File parentDirectory = file.getParentFile();
-        if (parentDirectory != null && !parentDirectory.exists()) {
-            parentDirectory.mkdirs();
-        }
+        ensureDirectoryExists(file);
+
         try (FileWriter fw = new FileWriter(file)) {
             for (Module m : moduleList.getModules()) {
-                StringBuilder reqsBuilder = new StringBuilder();
-                HashMap<String, Double> reqs = m.getEquipmentRequirements();
-
-                if (reqs != null && !reqs.isEmpty()) {
-                    TreeMap<String, Double> sortedReqs = new TreeMap<>(reqs);
-                    for (String eqName : sortedReqs.keySet()) {
-                        reqsBuilder.append(eqName).append("=").append(reqs.get(eqName)).append(",");
-                    }
-                    reqsBuilder.setLength(reqsBuilder.length() - 1);
-                    fw.write(m.getName() + " | " + m.getPax() + " | " +
-                            reqsBuilder.toString() + System.lineSeparator());
-                } else {
-                    fw.write(m.getName() + " | " + m.getPax() + System.lineSeparator());
-                }
+                fw.write(formatModuleForSave(m) + System.lineSeparator());
             }
+            logger.log(Level.INFO, "Module data successfully saved.");
         } catch (IOException e) {
-            throw new EquipmentMasterException("Error saving modules to file: " + moduleFilePath
-                    + " - " + e.getMessage());
+            throw new EquipmentMasterException("Error saving modules: " + e.getMessage());
         }
+    }
+
+    private String formatModuleForSave(Module m) {
+        HashMap<String, Double> reqs = m.getEquipmentRequirements();
+        if (reqs == null || reqs.isEmpty()) {
+            return m.getName() + " | " + m.getPax();
+        }
+
+        StringBuilder reqsBuilder = new StringBuilder();
+        TreeMap<String, Double> sortedReqs = new TreeMap<>(reqs);
+        for (String eqName : sortedReqs.keySet()) {
+            reqsBuilder.append(eqName).append("=").append(reqs.get(eqName)).append(",");
+        }
+        reqsBuilder.setLength(reqsBuilder.length() - 1); // Remove trailing comma
+
+        return m.getName() + " | " + m.getPax() + " | " + reqsBuilder.toString();
     }
 
     /**
@@ -252,80 +257,84 @@ public class Storage {
         ModuleList loadedList = new ModuleList();
         File file = new File(moduleFilePath);
 
-        try {
-            // Check if the file exists. If not, create it.
-            if (!file.exists()) {
-                if (file.getParentFile() != null) {
-                    file.getParentFile().mkdirs();
-                }
-                file.createNewFile();
+        if (!file.exists()) {
+            return loadedList;
+        }
 
-                // Return the empty list since there is no data to read yet
-                return loadedList;
+        try (Scanner scanner = new Scanner(file)) {
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+
+                if (line.trim().isEmpty()) {
+                    continue;
+                }
+
+                parseAndAddModule(line, loadedList); // SLAP: Extracted complex parsing
+            }
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Failed to load module data", e);
+            ui.showMessage("Error loading module data. File might be corrupted.");
+        }
+        return loadedList;
+    }
+
+    /**
+     * Parses a single line from the module text file and adds it to the loaded list.
+     */
+    private void parseAndAddModule(String line, ModuleList loadedList) {
+        String[] parts = line.split(" \\| ", 3);
+
+        if (parts.length < 2) {
+            return;
+        }
+
+        try {
+            String name = parts[0].trim();
+            int pax = Integer.parseInt(parts[1].trim());
+
+            if (name.isEmpty()) {
+                throw new EquipmentMasterException("Module name is missing in line: " + line);
             }
 
-            // Read and parse the data
-            try (Scanner scanner = new Scanner(file);) {
-                while (scanner.hasNextLine()) {
-                    String line = scanner.nextLine();
+            Module newModule = new Module(name, pax);
 
-                    if (line.trim().isEmpty()) {
+            if (parts.length == 3 && !parts[2].trim().isEmpty()) {
+                loadModuleRequirements(newModule, parts[2].trim(), name);
+                // SLAP: Extracted requirement loading
+            }
+            loadedList.addModule(newModule);
+
+        } catch (NumberFormatException e) {
+            ui.showMessage("Data corruption detected: Module pax is not" +
+                    " a valid integer in line: " + line);
+        } catch (EquipmentMasterException e) {
+            ui.showMessage(e.getMessage());
+        }
+    }
+
+    /**
+     * Parses and adds equipment requirements to a newly loaded module.
+     */
+    private void loadModuleRequirements(Module newModule,
+                                        String requirementsStr, String moduleName) {
+        String[] requirements = requirementsStr.split(",");
+        for (String req : requirements) {
+            String[] pair = req.split("=");
+            if (pair.length == 2) {
+                String eqName = pair[0].trim();
+                try {
+                    double ratio = Double.parseDouble(pair[1].trim());
+                    if (ratio <= 0) {
+                        ui.showMessage("Skipping invalid ratio (" + ratio + ") for equipment '"
+                                + eqName + "' in module '" + moduleName + "'.");
                         continue;
                     }
-
-                    String[] parts = line.split(" \\| ", 3);
-
-                    if (parts.length >= 2) {
-                        String name = parts[0].trim();
-                        int pax = Integer.parseInt(parts[1].trim());
-
-                        try {
-                            Module newModule = new Module(name, pax);
-                            //Check if there is a 3rd part containing equipment tags
-                            if (parts.length == 3 && !parts[2].trim().isEmpty()) {
-                                String[] requirements = parts[2].split(",");
-                                for (String req : requirements) {
-                                    String[] pair = req.split("=");
-                                    if (pair.length == 2) {
-                                        String eqName = pair[0].trim();
-                                        try {
-                                            double ratio = Double.parseDouble(pair[1].trim());
-                                            if (ratio <= 0) {
-                                                ui.showMessage("Skipping invalid equipment ratio (" + ratio
-                                                        + ") for equipment '" + eqName
-                                                        + "' in module '" + name + "'.");
-                                                continue;
-                                            }
-                                            newModule.addEquipmentRequirement(eqName, ratio);
-                                        } catch (NumberFormatException | EquipmentMasterException e) {
-                                            ui.showMessage("Skipping invalid equipment requirement '"
-                                                    + req.trim() + "' for module '" + name + "': "
-                                                    + e.getMessage());
-                                        }
-                                    }
-                                }
-                            }
-                            // Add the reconstructed module to the list
-                            loadedList.addModule(newModule);
-                        } catch (EquipmentMasterException e) {
-                            ui.showMessage(e.getMessage());
-                        }
-                    }
+                    newModule.addEquipmentRequirement(eqName, ratio);
+                } catch (NumberFormatException | EquipmentMasterException e) {
+                    ui.showMessage("Skipping invalid equipment requirement '" + req.trim()
+                            + "' for module '" + moduleName + "'.");
                 }
             }
-
-        } catch (IOException e) {
-            // Print the I/O error directly to the console instead of throwing an exception
-            ui.showMessage("Error creating a new module data file: " + e.getMessage());
-            // Return an empty list to adhere to the method contract on errors
-            return new ModuleList();
-        } catch (NumberFormatException e) {
-            // Print the parsing error directly to the console
-            ui.showMessage("Data corruption detected: Module pax is not a valid integer.");
-            // Return an empty list to adhere to the method contract on errors
-            return new ModuleList();
         }
-        // Return the fully loaded list when no errors have occurred
-        return loadedList;
     }
 }

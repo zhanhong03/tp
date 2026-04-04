@@ -15,12 +15,18 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class EquipmentMaster {
+    private static final String DEFAULT_EQUIPMENT_PATH = "data/equipment.txt";
+    private static final String DEFAULT_SETTING_PATH = "data/setting.txt";
+    private static final String DEFAULT_MODULE_PATH = "data/module.txt";
+    private static final String FALLBACK_SEMESTER = "AY2024/25 Sem1";
+
     private static final Logger logger = Logger.getLogger(EquipmentMaster.class.getName());
-    private Storage storage;
+
+    private final Storage storage;
     private AcademicSemester currentSystemSemester;
-    private Ui ui;
-    private EquipmentList equipments;
-    private ModuleList moduleList;
+    private final Ui ui;
+    private final EquipmentList equipments;
+    private final ModuleList moduleList;
 
     /**
      * Initializes the application, loads system settings, and populates the equipment list.
@@ -31,21 +37,11 @@ public class EquipmentMaster {
      */
     public EquipmentMaster(String equipmentFilePath, String settingFilePath, String moduleFilePath) {
         logger.log(Level.INFO, "Starting EquipmentMaster initialization...");
+
         this.ui = new Ui();
         this.storage = new Storage(equipmentFilePath, ui, settingFilePath, moduleFilePath);
 
-        // Load the system time from settings.txt during startup
-        try {
-            String savedSemStr = storage.loadSettings();
-            this.currentSystemSemester = new AcademicSemester(savedSemStr);
-        } catch (EquipmentMasterException e) {
-            // Fallback to default if the saved settings are corrupted
-            try {
-                this.currentSystemSemester = new AcademicSemester("AY2024/25 Sem1");
-            } catch (EquipmentMasterException ignored) {
-                // Should not happen with valid hardcoded default
-            }
-        }
+        this.currentSystemSemester = initializeSemester();
 
         // Load equipment data
         this.equipments = new EquipmentList(storage.load());
@@ -53,33 +49,70 @@ public class EquipmentMaster {
 
         this.moduleList = storage.loadModules();
 
-        // Check loaded commands
-        logger.log(Level.INFO, "Loaded "+Parser.getCommandSpecs().size()+" commands.");
-        assert !Parser.getCommandSpecs().isEmpty() : "No commands loaded! Check Parser initialization.";
+        verifySystemReadiness();
+    }
+
+    /**
+     * Attempts to load the saved semester or falls back to a default.
+     */
+    private AcademicSemester initializeSemester() {
+        try {
+            String savedSemStr = storage.loadSettings();
+            return new AcademicSemester(savedSemStr);
+        } catch (EquipmentMasterException e) {
+            logger.log(Level.WARNING, "Corrupted or missing settings. Falling back to default semester.");
+            try {
+                return new AcademicSemester(FALLBACK_SEMESTER);
+            } catch (EquipmentMasterException fatal) {
+                // This is only triggered if the FALLBACK_SEMESTER constant itself is invalid
+                throw new RuntimeException("Fatal Error: Default semester format is invalid.", fatal);
+            }
+        }
+    }
+
+    /**
+     * Ensures all core components are correctly loaded before starting the loop.
+     */
+    private void verifySystemReadiness() {
+        assert Parser.getCommandSpecs() != null : "Parser must be initialized";
+        assert !Parser.getCommandSpecs().isEmpty() : "No commands loaded in Parser!";
+
+        logger.log(Level.INFO, "System time loaded: " + currentSystemSemester);
+        logger.log(Level.INFO, "Parser ready with " + Parser.getCommandSpecs().size() + " commands.");
     }
 
     public void run() {
         ui.showWelcomeMessage();
+
         Context context = new Context(equipments, moduleList, ui, storage, currentSystemSemester);
         boolean isExit = false;
+
         while (!isExit) {
             try {
                 String fullCommand = ui.readCommand();
+
+                if (fullCommand.trim().isEmpty()) {
+                    continue;
+                }
+
                 ui.showLine();
                 Command c = Parser.parse(fullCommand);
                 c.execute(context);
                 isExit = c.isExit();
             } catch (EquipmentMasterException e) {
                 ui.showMessage(e.getMessage());
+                logger.log(Level.FINE, "Execution error: " + e.getMessage());
             } finally {
                 ui.showLine();
             }
         }
+        logger.log(Level.INFO, "Application shutting down gracefully.");
     }
 
-    public static void main(String[] args) throws EquipmentMasterException{
+    public static void main(String[] args) {
         LogManager.getLogManager().reset();
-        new EquipmentMaster("data/equipment.txt", "data/setting.txt", "data/module.txt").run();
+        new EquipmentMaster(DEFAULT_EQUIPMENT_PATH, DEFAULT_SETTING_PATH,
+                DEFAULT_MODULE_PATH).run();
     }
 
     public EquipmentList getEquipmentList() {

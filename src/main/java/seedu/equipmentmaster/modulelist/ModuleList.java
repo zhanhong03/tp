@@ -4,13 +4,17 @@ import seedu.equipmentmaster.exception.EquipmentMasterException;
 import seedu.equipmentmaster.module.Module;
 
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Manages the collection of all course modules in the system.
  * Provides operations to add, update, delete, and retrieve modules.
  */
 public class ModuleList {
-    private ArrayList<Module> modules;
+    private static final Logger logger = Logger.getLogger(ModuleList.class.getName());
+
+    private final ArrayList<Module> modules;
 
     /**
      * Constructs an empty {@code ModuleList}.
@@ -28,12 +32,15 @@ public class ModuleList {
      */
     public void addModule(Module module) {
         if (module == null) {
+            logger.log(Level.WARNING, "Attempted to add a null module to ModuleList.");
             return;
         }
         if (findModule(module.getName()) != null) {
+            logger.log(Level.INFO, "Duplicate module addition ignored: " + module.getName());
             // A module with this name already exists; do not add a duplicate.
             return;
         }
+        logger.log(Level.INFO, "Successfully added module: " + module.getName());
         modules.add(module);
     }
 
@@ -45,11 +52,16 @@ public class ModuleList {
      * @throws EquipmentMasterException If the specified module does not exist in the list.
      */
     public void updateModule(String moduleName, int newPax) throws EquipmentMasterException {
+        assert moduleName != null && !moduleName.trim().isEmpty() : "Module name cannot be null or empty";
+        assert newPax >= 0 : "Pax cannot be negative";
+
         Module module = findModule(moduleName);
         if (module == null) {
+            logger.log(Level.WARNING, "Update failed. Module not found: " + moduleName);
             throw new EquipmentMasterException("Module not found: " + moduleName);
         }
         module.setPax(newPax);
+        logger.log(Level.INFO, "Updated module " + moduleName + " with new pax: " + newPax);
     }
 
     /**
@@ -59,11 +71,15 @@ public class ModuleList {
      * @throws EquipmentMasterException If the specified module does not exist in the list.
      */
     public void deleteModule(String moduleName) throws EquipmentMasterException {
+        assert moduleName != null && !moduleName.trim().isEmpty() : "Module name cannot be null or empty";
+
         Module module = findModule(moduleName);
         if (module == null) {
+            logger.log(Level.WARNING, "Delete failed. Module not found: " + moduleName);
             throw new EquipmentMasterException("Module not found: " + moduleName);
         }
         modules.remove(module);
+        logger.log(Level.INFO, "Deleted module: " + moduleName);
     }
 
     /**
@@ -73,6 +89,8 @@ public class ModuleList {
      * @return The {@code Module} object if found, or {@code null} if not found.
      */
     private Module findModule(String moduleName) {
+        assert moduleName != null : "Search keyword for module name cannot be null";
+
         for (Module m : modules) {
             if (m.getName().equalsIgnoreCase(moduleName)) {
                 return m;
@@ -82,13 +100,14 @@ public class ModuleList {
     }
 
     /**
-     * Retrieves the entire list of modules.
-     * This is primarily used by the Storage class to save data to the hard disk.
+     * Retrieves a COPY of the entire list of modules.
+     * This prevents Representation Exposure (Rep Exposure), ensuring external classes
+     * cannot modify the internal list without using the proper methods.
      *
-     * @return An {@code ArrayList} containing all current modules.
+     * @return A shallow copy of the {@code ArrayList} containing all current modules.
      */
     public ArrayList<Module> getModules() {
-        return modules;
+        return new ArrayList<>(modules);
     }
 
     public boolean hasModule(String moduleName) {

@@ -16,12 +16,11 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Scanner;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 
 public class StorageTest {
@@ -174,34 +173,202 @@ public class StorageTest {
     }
 
     @Test
-    public void save_ioException_showsErrorMessage() {
-        Path barrierFile = tempDir.resolve("barrier.txt");
-        try {
-            barrierFile.toFile().createNewFile();
-        } catch (IOException e) {
-            fail("Setup failed: " + e.getMessage());
+    public void loadSettings_missingOrEmptyFile_returnsDefault() throws IOException {
+        // Covers the branch returning the default semester when the file is missing or empty
+        Storage storage = createStorage(); // test_set.txt has not been created yet
+        assertEquals("AY2024/25 Sem1", storage.loadSettings(), "Should return default if file is missing");
+
+        // Manually create an empty setting file
+        File emptyFile = tempDir.resolve("empty_set.txt").toFile();
+        emptyFile.createNewFile();
+        Storage storageEmpty = new Storage("eq", ui, emptyFile.getAbsolutePath(), "mod");
+        assertEquals("AY2024/25 Sem1", storageEmpty.loadSettings(), "Should return default if file is empty");
+    }
+
+    @Test
+    public void parseEquipment_fullFieldsWithBuffer_success() throws IOException {
+        // Covers branches for parsing lines with buffer and modules,
+        // as well as lines with completely empty fields (hasBuffer true/false logic)
+        File eqFile = tempDir.resolve("eq_buffer.txt").toFile();
+        try (FileWriter fw = new FileWriter(eqFile)) {
+            // Complete data line (includes buffer 15.0 and tags)
+            fw.write("Oscilloscope | 10 | 8 | 2 | 1 | AY2024/25 Sem1 | 10.0 | EE2026,CG2111A | 15.0\n");
+            // Data line missing some optional fields (tests empty string fallback logic)
+            fw.write("Multimeter | 5 | 5 | 0 | 0 | AY2024/25 Sem1 | 0.0 | \n");
         }
+        Storage storage = new Storage(eqFile.getAbsolutePath(), ui, "set", "mod");
+        ArrayList<Equipment> loaded = storage.load();
 
-        Path invalidPath = barrierFile.resolve("equipment.txt");
+        assertEquals(2, loaded.size());
 
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        PrintStream printStream = new PrintStream(outputStream);
-        Ui testUi = new Ui(System.in, printStream);
+        // Verify first item: with buffer and tags
+        assertEquals("Oscilloscope", loaded.get(0).getName());
+        assertEquals(15.0, loaded.get(0).getBufferPercentage());
+        assertEquals(2, loaded.get(0).getModuleCodes().size());
 
-        Storage storage = new Storage(
-                invalidPath.toString(),
-                testUi,
-                tempDir.resolve("test_set.txt").toString(),
-                tempDir.resolve("test_mod.txt").toString()
+        // Verify second item: no buffer
+        assertEquals("Multimeter", loaded.get(1).getName());
+        assertEquals(0.0, loaded.get(1).getBufferPercentage());
+    }
+
+    @Test
+    public void parseEquipment_corruptedLines_skipped() throws IOException {
+        // Covers isBlank() empty lines, and the catch(Exception e) branch when parsing fails completely
+        File eqFile = tempDir.resolve("eq_corrupted.txt").toFile();
+        try (FileWriter fw = new FileWriter(eqFile)) {
+            fw.write("   \n"); // Empty line with only spaces
+            fw.write("Totally invalid line without pipes\n"); // Corrupted line that cannot be split properly
+        }
+        Storage storage = new Storage(eqFile.getAbsolutePath(), ui, "set", "mod");
+        ArrayList<Equipment> loaded = storage.load();
+
+        // Failed parsing lines are safely caught and skipped, returning an empty list
+        assertTrue(loaded.isEmpty());
+    }
+
+    @Test
+    public void saveAndLoadModules_withRequirements_success() throws Exception {
+        // Covers saving and loading Modules with specific equipmentRequirements (tags)
+        File modFile = tempDir.resolve("mod_req.txt").toFile();
+        Storage storage = new Storage("eq", ui, "set", modFile.getAbsolutePath());
+
+        ModuleList originalList = new ModuleList();
+        Module mod = new Module("CS2113", 100);
+        mod.addEquipmentRequirement("Laptop", 1.0);
+        mod.addEquipmentRequirement("Mouse", 0.5);
+        originalList.addModule(mod);
+
+        storage.saveModules(originalList); // Tests the save branch with tags
+
+        ModuleList loadedList = storage.loadModules(); // Tests the load branch with tags
+        assertEquals(1, loadedList.getModules().size());
+        Module loadedMod = loadedList.getModule("CS2113");
+        assertEquals(1.0, loadedMod.getEquipmentRequirements().get("Laptop"));
+        assertEquals(0.5, loadedMod.getEquipmentRequirements().get("Mouse"));
+    }
+
+    @Test
+    public void loadModules_corruptedTagsAndLines_handlesGracefully() throws IOException {
+        // Covers internal error handling during Module loading:
+        // empty lines, lines with < 2 parts, negative ratios, and non-numeric ratios
+        File modFile = tempDir.resolve("mod_corrupted_tags.txt").toFile();
+        try (FileWriter fw = new FileWriter(modFile)) {
+            fw.write("\n"); // Empty line
+            fw.write("MissingPax\n"); // Line with less than two parts (skipped)
+            fw.write("Mod1 | 10 | Eq1=-1.0,Eq2=abc,Eq3\n"); // Ratios are negative, non-numeric, or malformed
+        }
+        Storage storage = new Storage("eq", ui, "set", modFile.getAbsolutePath());
+        ModuleList loaded = storage.loadModules();
+
+        assertEquals(1, loaded.getModules().size());
+        Module mod = loaded.getModule("Mod1");
+
+        // Since all tags are invalid, they are caught and skipped, resulting in an empty requirements map
+        assertTrue(mod.getEquipmentRequirements().isEmpty());
+    }
+
+    @Test
+    public void saveMethods_ioException_caught() {
+        Ui dummyUi = new Ui();
+        String badPath = tempDir.resolve("bad_dir").toString();
+        File badDir = new File(badPath);
+        badDir.mkdir();
+
+        Storage badStorage = new Storage(badPath, dummyUi, "dummy_set", "dummy_mod");
+
+        EquipmentMasterException thrown = assertThrows(
+                EquipmentMasterException.class,
+                () -> badStorage.save(new java.util.ArrayList<>())
         );
 
-        ArrayList<Equipment> equipments = new ArrayList<>();
-        equipments.add(new Equipment("TestItem", 10, 10, 0));
+        assertTrue(
+                thrown.getMessage().contains("Error saving equipment data")
+        );
+    }
 
-        storage.save(equipments);
+    @Test
+    public void storage_localPathBehavior_handledSafely() throws Exception {
+        // 1. ARRANGE: Define filenames.
+        // We still use "naked" filenames to test the logic, but we resolve them
+        // relative to the @TempDir to ensure isolation.
+        String eqName = "temp_eq.txt";
+        String setName = "temp_set.txt";
+        String modName = "temp_mod.txt";
 
-        String output = outputStream.toString();
-        assertTrue(output.contains("Error saving equipment data:"));
+        // To keep the test hermetic, we resolve these inside the temp directory.
+        // This ensures that even if the parent is "null" in a relative sense,
+        // the physical files are trapped in the JUnit sandbox.
+        File eqFile = tempDir.resolve(eqName).toFile();
+        File setFile = tempDir.resolve(setName).toFile();
+        File modFile = tempDir.resolve(modName).toFile();
+
+        Storage isolatedStorage = new Storage(
+                eqFile.getAbsolutePath(),
+                ui,
+                setFile.getAbsolutePath(),
+                modFile.getAbsolutePath()
+        );
+
+        // 2. ACT: Execute save/load operations.
+        // This exercises the logic that checks if the parent directory exists.
+        isolatedStorage.save(new ArrayList<>());
+        isolatedStorage.saveSettings(new AcademicSemester("AY2024/25 Sem1"));
+        isolatedStorage.loadModules();
+        isolatedStorage.saveModules(new seedu.equipmentmaster.modulelist.ModuleList());
+
+        // 3. ASSERT: Verify files were created in the temp sandbox.
+        assertTrue(eqFile.exists(), "Equipment file should be created in the temp directory.");
+        assertTrue(setFile.exists(), "Settings file should be created in the temp directory.");
+        assertTrue(modFile.exists(), "Module file should be created in the temp directory.");
+
+        // No manual delete needed! @TempDir cleans up everything automatically.
+    }
+
+    @Test
+    public void loadMethods_directoryAsFile_throwsAndCatchesExceptions() {
+        // Covers the red catch (Exception e) and catch (IOException e) blocks.
+        // We force exceptions by passing a DIRECTORY path when the program expects a FILE.
+        File fakeEqFile = tempDir.resolve("fake_eq_dir").toFile();
+        fakeEqFile.mkdir(); // Creates a folder, not a text file!
+
+        File fakeModFile = tempDir.resolve("fake_mod_dir").toFile();
+        fakeModFile.mkdir();
+
+        Storage storage = new Storage(fakeEqFile.getAbsolutePath(), ui, "dummy_set.txt", fakeModFile.getAbsolutePath());
+
+        // 1. load() tries to read the directory using Scanner -> Access Denied Exception
+        // -> hits the catch (Exception e) block on line 90.
+        ArrayList<Equipment> loadedEq = storage.load();
+        assertTrue(loadedEq.isEmpty());
+
+        // 2. loadModules() tries to check/create/read the directory -> Access Denied IOException
+        // -> hits the catch (IOException e) block on line 317.
+        ModuleList loadedMod = storage.loadModules();
+        assertTrue(loadedMod.getModules().isEmpty());
+    }
+
+    @Test
+    public void loadModules_emptyTagsAndInvalidModule_handledSafely() throws IOException {
+        // Covers the yellow `!parts[2].trim().isEmpty()` check and
+        // the red `catch (EquipmentMasterException e)` block.
+        File modFile = tempDir.resolve("mod_edge_cases.txt").toFile();
+        try (FileWriter fw = new FileWriter(modFile)) {
+            // 1. Valid module, but the tags column is just empty spaces.
+            // This tests the false branch of `!parts[2].trim().isEmpty()`.
+            fw.write("CS2113 | 100 |    \n");
+
+            // 2. Invalid module to trigger EquipmentMasterException in the Module constructor.
+            // A blank name or negative pax usually violates constructor validation.
+            fw.write(" | -5 \n");
+        }
+
+        Storage storage = new Storage("dummy_eq.txt", ui, "dummy_set.txt", modFile.getAbsolutePath());
+        ModuleList loaded = storage.loadModules();
+
+        // The valid module with empty tags should be loaded successfully (size = 1).
+        // The invalid module should trigger the Exception, print the message, and be skipped.
+        assertEquals(1, loaded.getModules().size());
+        assertEquals("CS2113", loaded.getModules().get(0).getName());
     }
 
     @Test
@@ -243,39 +410,6 @@ public class StorageTest {
 
         // Should skip corrupted line
         assertEquals(0, loaded.size());
-    }
-
-    @Test
-    public void saveSettings_ioException_showsErrorMessage() {
-        Path barrierFile = tempDir.resolve("settings_barrier.txt");
-        try {
-            barrierFile.toFile().createNewFile();
-        } catch (IOException e) {
-            fail("Setup failed: " + e.getMessage());
-        }
-
-        Path invalidPath = barrierFile.resolve("setting.txt");
-
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        PrintStream printStream = new PrintStream(outputStream);
-        Ui testUi = new Ui(System.in, printStream);
-
-        Storage storage = new Storage(
-                tempDir.resolve("test_eq.txt").toString(),
-                testUi,
-                invalidPath.toString(),
-                tempDir.resolve("test_mod.txt").toString()
-        );
-
-        try {
-            AcademicSemester sem = new AcademicSemester("AY2025/26 Sem1");
-            storage.saveSettings(sem);
-        } catch (EquipmentMasterException e) {
-            fail("Should not throw exception: " + e.getMessage());
-        }
-
-        String output = outputStream.toString();
-        assertTrue(output.contains("Error saving settings:"));
     }
 
     @Test
@@ -436,4 +570,3 @@ public class StorageTest {
         }
     }
 }
-
