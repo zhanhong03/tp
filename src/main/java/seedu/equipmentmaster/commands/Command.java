@@ -44,6 +44,6 @@ public abstract class Command {
      * This reduces code duplication across different Command subclasses.
      */
     protected void logExecution(String commandName) {
-        logger.log(Level.INFO, "Executing " + getClass().getSimpleName());
+        logger.log(Level.INFO, "Executing " + commandName);
     }
 }

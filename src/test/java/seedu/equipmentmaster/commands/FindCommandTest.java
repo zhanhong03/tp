@@ -143,18 +143,34 @@ public class FindCommandTest {
         });
     }
 
+    /**
+     * Tests that FindCommand handles equipment with null module codes gracefully.
+     * This uses a local anonymous stub to bypass the standard Equipment constructor normalization.
+     */
     @Test
-    public void getMatchingEquipments_nullModuleCodes_handlesGracefully() {
-        // Covers the guard clause (line 118) where an equipment has null module codes
+    public void getMatchingEquipments_nullModuleCodes_handledDefensively() {
+        // 1. ARRANGE
         EquipmentList equipments = new EquipmentList();
-        Equipment eq = new Equipment("Oscilloscope", 5);
-        // Assuming your Equipment class initializes moduleCodes as null or we force it
-        equipments.addEquipment(eq);
 
-        FindCommand command = new FindCommand("EE2026");
-        ArrayList<Equipment> matches = command.getMatchingEquipments(equipments);
+        // We create an anonymous subclass (Stub) to force getModuleCodes() to return null,
+        // bypassing any normalization logic in the base Equipment class.
+        Equipment nullModuleEquipment = new Equipment("BrokenItem", 10) {
+            @Override
+            public java.util.ArrayList<String> getModuleCodes() {
+                return null;
+            }
+        };
 
-        assertTrue(matches.isEmpty());
+        equipments.addEquipment(nullModuleEquipment);
+
+        // 2. ACT
+        // Searching for a module when an item has 'null' modules should not throw a NullPointerException.
+        FindCommand command = new FindCommand("CG2111A");
+        java.util.ArrayList<Equipment> matches = command.getMatchingEquipments(equipments);
+
+        // 3. ASSERT
+        // The list should be empty (no match), but most importantly, the execution should be successful.
+        assertTrue(matches.isEmpty(), "Matches should be empty but execution should not crash on null modules.");
     }
 
     @Test

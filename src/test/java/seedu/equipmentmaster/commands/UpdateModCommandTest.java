@@ -3,13 +3,17 @@ package seedu.equipmentmaster.commands;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
 import seedu.equipmentmaster.modulelist.ModuleList;
 import seedu.equipmentmaster.module.Module;
 import seedu.equipmentmaster.ui.Ui;
 
+import java.nio.file.Path;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * JUnit tests for the {@code UpdateModCommand} class.
@@ -70,16 +74,33 @@ public class UpdateModCommandTest {
     }
 
     @Test
-    public void execute_validUpdate_success() throws EquipmentMasterException {
-        // Verifies the successful path of updating a module and saving it
+    public void execute_validUpdate_success(@TempDir Path tempDir) throws EquipmentMasterException {
+        // 1. ARRANGE: Create isolated, temporary paths for this specific test run.
+        // These files will be physically created inside a temporary system folder
+        // and automatically deleted after the test finishes.
+        String eqPath = tempDir.resolve("temp_e.txt").toString();
+        String setPath = tempDir.resolve("temp_s.txt").toString();
+        String modPath = tempDir.resolve("temp_m.txt").toString();
+
         seedu.equipmentmaster.ui.Ui ui = new seedu.equipmentmaster.ui.Ui();
         seedu.equipmentmaster.storage.Storage storage = new seedu.equipmentmaster.storage.Storage(
-                "e.txt", ui, "s.txt", "m.txt");
+                eqPath, ui, setPath, modPath);
+
+        // We assume moduleList is already initialized in your @BeforeEach setup
         seedu.equipmentmaster.context.Context context = new seedu.equipmentmaster.context.Context(
                 null, moduleList, ui, storage, null);
 
+        // 2. ACT: Execute the update command
         UpdateModCommand command = new UpdateModCommand("CG2271", 150);
         command.execute(context);
+
+        // 3. ASSERT: Verify the state change and persistence
+        assertEquals(150, moduleList.getModule("CG2271").getPax(),
+                "The module enrollment (pax) should be updated to 150.");
+
+        // Check if the storage layer actually triggered a write to the temp file
+        java.io.File savedFile = new java.io.File(modPath);
+        assertTrue(savedFile.exists(), "The module list should be successfully persisted to disk.");
     }
 
     @Test

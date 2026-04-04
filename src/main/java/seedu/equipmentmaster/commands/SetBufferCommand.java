@@ -199,9 +199,24 @@ public class SetBufferCommand extends Command {
                 return;
             }
         }
+        double oldPercentage = target.getBufferPercentage();
 
         target.setBufferPercentage(percentage);
-        storage.save(equipments.getAllEquipments());
+        try {
+            // Update in-memory state
+            target.setBufferPercentage(percentage);
+
+            // Attempt to persist to disk
+            storage.save(equipments.getAllEquipments());
+
+        } catch (EquipmentMasterException e) {
+            // ROLLBACK: Revert memory to the previous state if disk save fails
+            target.setBufferPercentage(oldPercentage);
+
+            // Log the failure and re-throw to notify the user via the Main loop
+            getLogger().log(Level.SEVERE, "Failed to update buffer on disk for: " + target.getName(), e);
+            throw e;
+        }
 
         ui.showMessage("Buffer Updated:\n" + target.getName() + " | Safety Buffer: " + percentage + "%");
         logger.log(Level.INFO, "Updated buffer for " + target.getName() + " to " + percentage + "%");

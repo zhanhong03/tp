@@ -29,8 +29,10 @@ public class DelModCommand extends Command {
      * @param moduleName The name of the module to be deleted.
      */
     public DelModCommand(String moduleName) {
-        assert moduleName != null && !moduleName.isEmpty() : "Module name cannot be null or empty";
-        this.moduleName = moduleName;
+        String trimmedModuleName = moduleName == null ? null : moduleName.trim();
+        assert trimmedModuleName != null && !trimmedModuleName.isEmpty()
+                : "Module name cannot be null or empty";
+        this.moduleName = trimmedModuleName;
     }
 
     /**

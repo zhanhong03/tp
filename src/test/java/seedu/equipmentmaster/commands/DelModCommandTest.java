@@ -3,17 +3,22 @@ package seedu.equipmentmaster.commands;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import seedu.equipmentmaster.context.Context;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
 import seedu.equipmentmaster.modulelist.ModuleList;
 import seedu.equipmentmaster.ui.Ui;
 import seedu.equipmentmaster.storage.Storage;
 
+import java.nio.file.Path;
+
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class DelModCommandTest {
+    @TempDir
+    Path tempDir; // JUnit 5 automatically creates and cleans up this directory
 
     private ModuleList moduleList;
     private Ui ui;
@@ -24,9 +29,17 @@ public class DelModCommandTest {
     public void setUp() {
         moduleList = new ModuleList();
         ui = new Ui();
-        // Standard 4-parameter Storage constructor
-        storage = new Storage("e.txt", ui, "s.txt", "m.txt");
-        // Standard Context constructor
+
+        // 1. ARRANGE: Create isolated, temporary paths within the @TempDir sandbox.
+        // These paths are unique to each test run and won't pollute your project root.
+        String tempEqPath = tempDir.resolve("temp_e.txt").toString();
+        String tempSetPath = tempDir.resolve("temp_s.txt").toString();
+        String tempModPath = tempDir.resolve("temp_m.txt").toString();
+
+        // 2. INJECT: Use the temporary paths for the Storage instance.
+        storage = new Storage(tempEqPath, ui, tempSetPath, tempModPath);
+
+        // 3. CONTEXT: Initialize the shared state for the commands.
         context = new Context(null, moduleList, ui, storage, null);
     }
 
