@@ -18,6 +18,8 @@ import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 public class AddCommandTest {
@@ -228,6 +230,37 @@ public class AddCommandTest {
         assertEquals(2, mergedModules.size(), "Module list should contain exactly 2 distinct modules.");
         assertTrue(mergedModules.contains("CG2211"), "Merged modules should contain CG2211.");
         assertTrue(mergedModules.contains("EE2211"), "Merged modules should contain EE2211.");
+    }
+
+    @Test
+    public void parse_missingCompulsoryFlags_throwsException() {
+        assertThrows(EquipmentMasterException.class, () ->
+                AddCommand.parse("add n/Microscope"));
+    }
+
+    @Test
+    public void parse_invalidNameCharacters_throwsException() {
+        assertThrows(EquipmentMasterException.class, () ->
+                AddCommand.parse("add n/Pipe|ette q/10"));
+    }
+
+    @Test
+    public void parse_negativeQuantity_throwsException() {
+        assertThrows(EquipmentMasterException.class, () ->
+                AddCommand.parse("add n/Beaker q/-5"));
+    }
+
+    @Test
+    public void parse_nonIntegerQuantity_throwsException() {
+        assertThrows(EquipmentMasterException.class, () ->
+                AddCommand.parse("add n/Beaker q/abc"));
+    }
+
+    @Test
+    public void parse_validFullInput_success() throws EquipmentMasterException {
+        AddCommand command = AddCommand.parse(
+                "add n/Centrifuge q/2 bought/AY2024/25 Sem1 life/5.5 min/1 m/CS2113 m/CG2023");
+        assertNotNull(command);
     }
 }
 

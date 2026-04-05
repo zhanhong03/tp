@@ -9,12 +9,14 @@ import seedu.equipmentmaster.exception.EquipmentMasterException;
 import seedu.equipmentmaster.modulelist.ModuleList;
 import seedu.equipmentmaster.ui.Ui;
 import seedu.equipmentmaster.storage.Storage;
+import seedu.equipmentmaster.module.Module;
 
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 public class DelModCommandTest {
     @TempDir
@@ -51,10 +53,23 @@ public class DelModCommandTest {
     }
 
     @Test
+    public void parse_caseInsensitive_success() throws EquipmentMasterException {
+        DelModCommand command = DelModCommand.parse("DELMOD n/CG2111A");
+        assertTrue(command instanceof DelModCommand);
+    }
+
+    @Test
     public void parse_invalidPrefix_throwsException() {
         // Ensures the parser rejects inputs missing the "n/" prefix
         assertThrows(EquipmentMasterException.class, () -> {
             DelModCommand.parse("delmod CG2111A");
+        });
+    }
+
+    @Test
+    public void parse_noMatcherMatch_throwsException() {
+        assertThrows(EquipmentMasterException.class, () -> {
+            DelModCommand.parse("delmod random_text");
         });
     }
 
@@ -89,6 +104,16 @@ public class DelModCommandTest {
     }
 
     @Test
+    public void execute_storageIsNull_success() throws EquipmentMasterException {
+        moduleList.addModule(new Module("CG2111A", 150));
+        Context nullStorageContext = new Context(null, moduleList, ui, null, null);
+        DelModCommand command = new DelModCommand("CG2111A");
+
+        assertDoesNotThrow(() -> command.execute(nullStorageContext));
+        assertFalse(moduleList.hasModule("CG2111A"));
+    }
+
+    @Test
     public void execute_storageSaveFailure_handlesGracefully() throws EquipmentMasterException {
         // To cover the catch block for storage failures, we use a stub that throws an exception
         moduleList.addModule(new seedu.equipmentmaster.module.Module("CG2111A", 150));
@@ -108,5 +133,13 @@ public class DelModCommandTest {
 
         // Ensure the module was still removed from memory even if saving to disk failed
         assertFalse(moduleList.hasModule("CG2111A"));
+    }
+
+    @Test
+    public void parse_emptyModuleName_throwsException() {
+        // HITS BRANCH: if (moduleName.isEmpty()) after matching n/
+        assertThrows(EquipmentMasterException.class, () -> {
+            DelModCommand.parse("delmod n/   ");
+        });
     }
 }

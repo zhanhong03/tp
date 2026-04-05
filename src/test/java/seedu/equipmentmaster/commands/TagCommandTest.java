@@ -86,6 +86,22 @@ class TagCommandTest {
         assertTrue(exception.getMessage().contains("valid decimal number"));
     }
 
+    @Test
+    void parse_emptyArguments_throwsException() {
+        EquipmentMasterException exception = assertThrows(EquipmentMasterException.class, () -> {
+            TagCommand.parse("tag m/ n/ req/");
+        });
+        assertTrue(exception.getMessage().contains("Expected: tag m/MOD_NAME n/EQ_NAME req/FRACTION"));
+    }
+
+    @Test
+    void parse_anyOrder_returnsTagCommand() {
+        assertDoesNotThrow(() -> {
+            TagCommand command = TagCommand.parse("tag req/0.2 n/stm32 m/CG2111");
+            assertNotNull(command);
+        });
+    }
+
     // ==========================================
     // EXECUTE METHOD TESTS
     // ==========================================
@@ -100,7 +116,7 @@ class TagCommandTest {
         });
 
         assertTrue(exception.getMessage().contains
-                ("Neither the module 'GhostMod' nor the equipment 'GhostEq' exists."));
+                ("Aborted: Neither the module 'GhostMod' nor the equipment 'GhostEq' exists."));
     }
 
     @Test
@@ -114,7 +130,18 @@ class TagCommandTest {
             command.execute(context);
         });
 
-        assertTrue(exception.getMessage().contains("Module 'GhostMod' does not exist."));
+        assertTrue(exception.getMessage().contains("Aborted: Module 'GhostMod' does not exist."));
+    }
+
+    @Test
+    void execute_equipmentMissing_throwsException() throws EquipmentMasterException {
+        Module testModule = new Module("CG2111", 50);
+        moduleList.addModule(testModule);
+        TagCommand command = new TagCommand("CG2111", "GhostEq", 0.5);
+        EquipmentMasterException exception = assertThrows(EquipmentMasterException.class, () -> {
+            command.execute(context);
+        });
+        assertTrue(exception.getMessage().contains("Aborted: Equipment 'GhostEq' does not exist."));
     }
 
     @Test
@@ -136,5 +163,41 @@ class TagCommandTest {
         // 3. Verify the state changed correctly inside the Module's HashMap!
         assertTrue(testModule.getEquipmentRequirements().containsKey("stm32"));
         assertEquals(0.2, testModule.getEquipmentRequirements().get("stm32"));
+    }
+
+    @Test
+    void execute_storageSaveFails_showsWarningMessage() throws EquipmentMasterException {
+
+        Module testModule = new Module("CG2111", 50);
+        moduleList.addModule(testModule);
+        Equipment testEquipment = new Equipment("stm32", 50, 50, 0, null, 5.0, new ArrayList<>(), 5, 0.0);
+        equipmentList.addEquipment(testEquipment);
+
+        Ui dummyUi = new Ui();
+        Storage brokenStorage = new Storage("test.txt", dummyUi, "s.txt", "m.txt") {
+            @Override
+            public void saveModules(ModuleList modules) throws EquipmentMasterException {
+                throw new EquipmentMasterException("Disk Full");
+            }
+        };
+
+        Context brokenContext = new Context(equipmentList, moduleList, dummyUi,
+                brokenStorage, new AcademicSemester("AY2024/25 Sem1"));
+
+        TagCommand command = new TagCommand("CG2111", "stm32", 0.2);
+
+        assertDoesNotThrow(() -> command.execute(brokenContext));
+    }
+
+    @Test
+    void execute_ratioGreaterThanOne_noRatioDescription() throws EquipmentMasterException {
+        Module testModule = new Module("CG2111", 50);
+        moduleList.addModule(testModule);
+        Equipment testEquipment = new Equipment("stm32", 50, 50, 0, null, 5.0, new ArrayList<>(), 5, 0.0);
+        equipmentList.addEquipment(testEquipment);
+
+        TagCommand command = new TagCommand("CG2111", "stm32", 2.0);
+
+        assertDoesNotThrow(() -> command.execute(context));
     }
 }

@@ -23,6 +23,12 @@ public class ListCommand extends Command {
     public void execute(Context context) {
         EquipmentList equipments = context.getEquipments();
         Ui ui = context.getUi();
+
+        if (equipments.isEmpty()) {
+            ui.showMessage("The equipment list is currently empty.");
+            return;
+        }
+
         UiTable table = new UiTable();
 
         IntStream.range(0, equipments.getSize())
