@@ -257,4 +257,54 @@ public class DeleteCommandTest {
         String output = outputStream.toString();
         assertTrue(!output.contains("!!! LOW STOCK ALERT:"));
     }
+
+    @Test
+    public void parse_missingQOrSFlags_throwsException() {
+        assertThrows(EquipmentMasterException.class, () -> DeleteCommand.parse("delete 1"));
+        assertThrows(EquipmentMasterException.class, () -> DeleteCommand.parse("delete 1 s/available"));
+        assertThrows(EquipmentMasterException.class, () -> DeleteCommand.parse("delete 1 q/5"));
+    }
+
+    @Test
+    public void parse_invalidQuantity_throwsException() {
+        assertThrows(EquipmentMasterException.class, () -> DeleteCommand.parse("delete 1 q/0 s/available"));
+        assertThrows(EquipmentMasterException.class, () -> DeleteCommand.parse("delete 1 q/-5 s/available"));
+        assertThrows(EquipmentMasterException.class, () -> DeleteCommand.parse("delete 1 q/abc s/available"));
+    }
+
+    @Test
+    public void parse_invalidStatus_throwsException() {
+        assertThrows(EquipmentMasterException.class, () -> DeleteCommand.parse("delete 1 q/5 s/destroyed"));
+    }
+
+    @Test
+    public void parse_qAfterS_success() throws EquipmentMasterException {
+        Command cmd = DeleteCommand.parse("delete n/STM32 s/available q/2");
+        assertTrue(cmd instanceof DeleteCommand);
+    }
+
+    @Test
+    public void parse_emptyName_throwsException() {
+        assertThrows(EquipmentMasterException.class, () -> DeleteCommand.parse("delete n/ q/5 s/available"));
+    }
+
+    @Test
+    public void execute_nameNotFound_throwsException() {
+        assertThrows(EquipmentMasterException.class, () -> {
+            DeleteCommand command = new DeleteCommand("Unknown", 1, "available");
+            AcademicSemester currentSystemSemester = new AcademicSemester("AY2024/25 Sem1");
+            Context context = new Context(equipments, new ModuleList(), ui, storage, currentSystemSemester);
+            command.execute(context);
+        });
+    }
+
+    @Test
+    public void execute_negativeIndex_throwsException() {
+        assertThrows(EquipmentMasterException.class, () -> {
+            DeleteCommand command = new DeleteCommand(-1, 1, "available");
+            AcademicSemester currentSystemSemester = new AcademicSemester("AY2024/25 Sem1");
+            Context context = new Context(equipments, new ModuleList(), ui, storage, currentSystemSemester);
+            command.execute(context);
+        });
+    }
 }
