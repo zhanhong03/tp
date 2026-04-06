@@ -11,4 +11,6 @@ public class Messages {
     public static final String MESSAGE_DIVIDER = "===================================================";
     public static final String MESSAGE_INVALID_SETBUFFER_FORMAT =
             "Invalid setbuffer format. Usage: setbuffer n/NAME b/PERCENTAGE or setbuffer i/INDEX b/PERCENTAGE";
+    public static final String MESSAGE_NAME_CONTAINS_RESERVED_CHARS =
+            "Invalid name! Names cannot contain reserved storage characters: '|', ',', or '='";
 }

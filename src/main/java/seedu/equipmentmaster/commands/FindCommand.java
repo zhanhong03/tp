@@ -8,6 +8,8 @@ import seedu.equipmentmaster.exception.EquipmentMasterException;
 import seedu.equipmentmaster.ui.Ui;
 
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static seedu.equipmentmaster.common.Messages.MESSAGE_INVALID_FIND_FORMAT;
 
@@ -16,13 +18,16 @@ import static seedu.equipmentmaster.common.Messages.MESSAGE_INVALID_FIND_FORMAT;
  * This command searches through the inventory and prints all matching equipment.
  */
 public class FindCommand extends Command {
-    private String keyword;
+    private static final Logger logger = Logger.getLogger(FindCommand.class.getName());
+
+    private final String keyword;
 
     /**
      * Constructor.
      * @param keyword The word to be searched.
      */
     public FindCommand(String keyword) {
+        assert keyword != null : "Search keyword cannot be null";
         this.keyword = keyword;
     }
 
@@ -34,10 +39,13 @@ public class FindCommand extends Command {
      * @throws EquipmentMasterException If the user does not provide a keyword after the 'find' command.
      */
     public static Command parse(String fullCommand) throws EquipmentMasterException {
+        logger.log(Level.INFO, "Parsing FindCommand input.");
+
         String[] words = fullCommand.split(" ", 2);
 
         // Check if the user only typed "find" without any keywords
         if (words.length < 2 || words[1].trim().isEmpty()) {
+            logger.log(Level.WARNING, "FindCommand parsing failed: missing keyword.");
             throw new EquipmentMasterException(MESSAGE_INVALID_FIND_FORMAT);
         }
 
@@ -53,7 +61,7 @@ public class FindCommand extends Command {
      */
     public ArrayList<Equipment> getMatchingEquipments(EquipmentList equipments) {
         ArrayList<Equipment> matchingEquipments = new ArrayList<>();
-        String rawKeyword = (this.keyword == null) ? "" : this.keyword.trim();
+        String rawKeyword = this.keyword.trim();
 
         // Preserve original behavior: if keyword is empty, all equipments match
         if (rawKeyword.isEmpty()) {
@@ -132,32 +140,38 @@ public class FindCommand extends Command {
      */
     @Override
     public void execute(Context context) {
+        assert context != null : "Context should not be null during execution"; // ASSERTION
+        logExecution("FindCommand");
+
         EquipmentList equipments = context.getEquipments();
         Ui ui = context.getUi();
 
         if (equipments.isEmpty()) {
+            logger.log(Level.INFO, "Find command executed on an empty inventory.");
             ui.showMessage("There is no equipment in your list.");
             return;
         }
 
+        logger.log(Level.INFO, "Searching for keyword: " + keyword);
         ArrayList<Equipment> matchingEquipments = getMatchingEquipments(equipments);
 
-        if (matchingEquipments.isEmpty()) {
-            ui.showMessage("There is no matching equipment in your list.");
-        } else {
-            if (matchingEquipments.size() == 1) {
-                ui.showMessage("1 equipment listed!");
-            } else {
-                ui.showMessage(matchingEquipments.size() + " equipments listed!");
-            }
+        displayResults(ui, matchingEquipments);
+    }
 
-            for (int i = 0; i < matchingEquipments.size(); i++) {
-                if (matchingEquipments.size() == 1) {
-                    ui.showMessage(matchingEquipments.get(i).toString());
-                } else {
-                    ui.showMessage((i + 1) + ". " + matchingEquipments.get(i).toString());
-                }
-            }
+    /**
+     * Helper method to handle the UI presentation of the search results.
+     */
+    private void displayResults(Ui ui, ArrayList<Equipment> results) {
+        if (results.isEmpty()) {
+            ui.showMessage("There is no matching equipment in your list.");
+            return;
+        }
+
+        ui.showMessage(results.size() + " matching equipment(s) found!");
+
+        // Simplified loop: Always use numbered lists for consistency, even if size is 1.
+        for (int i = 0; i < results.size(); i++) {
+            ui.showMessage((i + 1) + ". " + results.get(i).toString());
         }
     }
 }

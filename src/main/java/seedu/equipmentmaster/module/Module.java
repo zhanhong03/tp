@@ -1,6 +1,7 @@
 package seedu.equipmentmaster.module;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.TreeMap;
 
 import seedu.equipmentmaster.exception.EquipmentMasterException;
@@ -12,7 +13,7 @@ import seedu.equipmentmaster.exception.EquipmentMasterException;
 public class Module {
     private String name;
     private int pax;
-    private HashMap<String, Double> equipmentRequirements;
+    private final HashMap<String, Double> equipmentRequirements;
 
     /**
      * Constructs a {@code Module} with the specified name and enrollment number.
@@ -22,6 +23,9 @@ public class Module {
      * @throws EquipmentMasterException If the provided pax is negative.
      */
     public Module(String name, int pax) throws EquipmentMasterException {
+        // ASSERTION: Defensive programming for data integrity
+        assert name != null && !name.trim().isEmpty() : "Module name cannot be null or empty";
+
         if (pax < 0) {
             throw new EquipmentMasterException("Pax (enrollment number) cannot be negative.");
         }
@@ -54,6 +58,7 @@ public class Module {
      * @param pax The new enrollment number.
      */
     public void setPax(int pax) {
+        assert pax >= 0 : "Pax cannot be negative";
         this.pax = pax;
     }
 
@@ -108,28 +113,31 @@ public class Module {
     @Override
     public String toString() {
         String baseString = name + " | Enrollment: " + pax + " students";
-        // If there are no tags (or the map is null), just return the base string
-        if (this.equipmentRequirements == null || this.equipmentRequirements.isEmpty()) {
+
+        if (this.equipmentRequirements.isEmpty()) {
             return baseString;
         }
 
+        return baseString + formatRequirements();
+    }
+
+    /**
+     * Helper method to format the equipment requirements into an alphabetically sorted string.
+     */
+    private String formatRequirements() {
+        // TreeMap automatically sorts keys alphabetically
         TreeMap<String, Double> sortedReqs = new TreeMap<>(this.equipmentRequirements);
-
-        // If there are tags, format them nicely!
         StringBuilder tagsBuilder = new StringBuilder(" | Required: ");
+
         int count = 0;
+        for (Map.Entry<String, Double> entry : sortedReqs.entrySet()) {
+            tagsBuilder.append(entry.getKey()).append(" (").append(entry.getValue()).append(")");
 
-        for (String eqName : this.equipmentRequirements.keySet()) {
-            double ratio = this.equipmentRequirements.get(eqName);
-            tagsBuilder.append(eqName).append(" (").append(ratio).append(")");
-
-            // Add a comma between items, but not after the last item
             count++;
-            if (count < this.equipmentRequirements.size()) {
+            if (count < sortedReqs.size()) {
                 tagsBuilder.append(", ");
             }
         }
-
-        return baseString + tagsBuilder.toString();
+        return tagsBuilder.toString();
     }
 }

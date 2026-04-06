@@ -8,12 +8,17 @@ import seedu.equipmentmaster.ui.Ui;
 import seedu.equipmentmaster.semester.AcademicSemester;
 import seedu.equipmentmaster.module.Module;
 import seedu.equipmentmaster.modulelist.ModuleList;
+
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Generates specific reports for the equipment inventory.
  */
 public class ReportCommand extends Command {
+    private static final Logger logger = Logger.getLogger(ReportCommand.class.getName());
+
     private final String reportType;
     private final String targetSemStr;
 
@@ -89,49 +94,104 @@ public class ReportCommand extends Command {
     }
 
     //@@author Hongyu1231
+    /**
+     * Executes the aging report generation.
+     * Identifies and displays equipment that has reached or exceeded its designated lifespan.
+     *
+     * @param equipments The inventory list to check.
+     * @param ui         The UI handler for displaying the report.
+     * @param context    The application context containing global states.
+     */
     private void executeAgingReport(EquipmentList equipments, Ui ui, Context context) {
+        assert equipments != null : "EquipmentList must not be null";
+        assert ui != null : "Ui must not be null";
+        assert context != null : "Context must not be null";
+
         AcademicSemester targetSem;
         try {
-            if (!targetSemStr.isEmpty()) {
-                targetSem = new AcademicSemester(targetSemStr);
-            } else {
-                targetSem = context.getCurrentSemester();
-                if (targetSem == null) {
-                    throw new EquipmentMasterException("System semester not set! Use 'setsem' first.");
-                }
-            }
+            targetSem = resolveTargetSemester(context);
         } catch (EquipmentMasterException e) {
+            logger.log(Level.WARNING, "Failed to resolve semester for aging report.", e);
             ui.showMessage(e.getMessage());
             return;
         }
 
+        logger.log(Level.INFO, "Generating Aging Report for semester: " + targetSem);
         ui.showMessage("Aging Equipment Report (Calculated for: " + targetSem + "):");
 
-        boolean foundAging = false;
+        // SLAP: Extract the iteration and printing logic to a helper method
+        int agingCount = displayAgingEquipments(equipments, ui, targetSem);
+
+        if (agingCount == 0) {
+            logger.log(Level.INFO, "No aging equipment found.");
+            ui.showMessage("Great news! No equipment needs replacement for this semester.");
+        }
+    }
+
+    /**
+     * Resolves the target semester for the aging report.
+     * Uses the user-provided semester string if available,
+     * otherwise defaults to the system's current semester.
+     *
+     * @param context The application context.
+     * @return The determined AcademicSemester.
+     * @throws EquipmentMasterException If the user didn't provide a semester
+     *     and the system semester is not set.
+     */
+    private AcademicSemester resolveTargetSemester(Context context)
+            throws EquipmentMasterException {
+        if (targetSemStr != null && !targetSemStr.trim().isEmpty()) {
+            return new AcademicSemester(targetSemStr.trim());
+        }
+
+        AcademicSemester current = context.getCurrentSemester();
+        if (current == null) {
+            throw new EquipmentMasterException("System semester not set! " +
+                    "Use 'setsem' first or provide a semester.");
+        }
+        return current;
+    }
+
+    /**
+     * Iterates through the equipment list and prints those that have reached their lifespan.
+     *
+     * @param equipments The inventory list to check.
+     * @param ui         The UI handler.
+     * @param targetSem  The semester against which the age is calculated.
+     * @return The number of aging equipments found.
+     */
+    private int displayAgingEquipments(EquipmentList equipments, Ui ui, AcademicSemester targetSem) {
+        int agingCount = 0;
 
         for (int i = 0; i < equipments.getSize(); i++) {
             Equipment eq = equipments.getEquipment(i);
             AcademicSemester purchaseSem = eq.getPurchaseSem();
             double lifespan = eq.getLifespanYears();
+
+            // Guard clause: Skip items without purchase date or lifespan setup
             if (purchaseSem == null || lifespan <= 0) {
                 continue;
             }
 
-            double age = purchaseSem.calculateAgeInYears(targetSem);
+            double age = 0;
+            try {
+                age = purchaseSem.calculateAgeInYears(targetSem);
+            } catch (EquipmentMasterException e) {
+                ui.showMessage(String.format("Warning: Skipping equipment '%s' due to invalid purchase semester data.",
+                        eq.getName()));
+                continue;
+            }
             if (age >= lifespan) {
-                foundAging = true;
-                String msg = String.format("%d. %s (Qty: %d, Bought: %s) | Age: %.1f Years | Status: [REPLACE SOON]",
-                        (i + 1), eq.getName(), eq.getQuantity(), purchaseSem, age);
+                agingCount++;
+                String msg = String.format("%d. %s (Qty: %d, Bought: %s) | " +
+                                "Age: %.1f Years | Status: [REPLACE SOON]",
+                        agingCount, eq.getName(), eq.getQuantity(), purchaseSem, age);
                 ui.showMessage(msg);
             }
-
         }
 
-        if (!foundAging) {
-            ui.showMessage("Great news! No equipment needs replacement for this semester.");
-        }
+        return agingCount;
     }
-
     //@@author
 
     private void executeProcurementReport(Context context) {

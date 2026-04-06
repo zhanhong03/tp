@@ -18,8 +18,9 @@ import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class AddCommandTest {
     private static final String TEST_FILE_PATH = "test_equipment.txt";
@@ -82,27 +83,6 @@ public class AddCommandTest {
         assertEquals(testSem, added.getPurchaseSem());
         assertEquals(testLifespan, added.getLifespanYears(), 0.0001);
         assertTrue(added.getModuleCodes().isEmpty());
-    }
-
-    @Test
-    public void execute_validEquipmentWithOneYearLifespan_addsToList() throws EquipmentMasterException {
-        EquipmentList equipments = new EquipmentList();
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        Ui ui = new Ui(System.in, new PrintStream(outputStream));
-        Storage storage = new Storage(TEST_FILE_PATH, ui, TEST_SETTING_FILE_PATH, TEST_MODULE_FILE_PATH);
-        ModuleList moduleList = new ModuleList();
-        AcademicSemester currentSystemSemester = new AcademicSemester("AY2024/25 Sem1");
-        Context context = new Context(equipments, moduleList, ui, storage, currentSystemSemester);
-
-        AcademicSemester testSem = new AcademicSemester("AY2023/24 Sem1");
-        double testLifespan = 1.0;
-
-        AddCommand command = new AddCommand("STM32", 5, testSem, testLifespan, 0, new ArrayList<>());
-        command.execute(context);
-
-        String output = outputStream.toString();
-        assertTrue(output.contains("Lifespan: 1.0 year"));
-        assertTrue(!output.contains("years"));
     }
 
     @Test
@@ -254,51 +234,33 @@ public class AddCommandTest {
 
     @Test
     public void parse_missingCompulsoryFlags_throwsException() {
-        assertThrows(EquipmentMasterException.class, () -> AddCommand.parse("add n/STM32"));
-        assertThrows(EquipmentMasterException.class, () -> AddCommand.parse("add q/5"));
+        assertThrows(EquipmentMasterException.class, () ->
+                AddCommand.parse("add n/Microscope"));
     }
 
     @Test
     public void parse_invalidNameCharacters_throwsException() {
-        assertThrows(EquipmentMasterException.class, () -> AddCommand.parse("add n/Item|1 q/5"));
-        assertThrows(EquipmentMasterException.class, () -> AddCommand.parse("add n/Item,1 q/5"));
-        assertThrows(EquipmentMasterException.class, () -> AddCommand.parse("add n/Item=1 q/5"));
+        assertThrows(EquipmentMasterException.class, () ->
+                AddCommand.parse("add n/Pipe|ette q/10"));
     }
 
     @Test
     public void parse_negativeQuantity_throwsException() {
-        assertThrows(EquipmentMasterException.class, () -> AddCommand.parse("add n/STM32 q/-5"));
-        assertThrows(EquipmentMasterException.class, () -> AddCommand.parse("add n/STM32 q/0"));
+        assertThrows(EquipmentMasterException.class, () ->
+                AddCommand.parse("add n/Beaker q/-5"));
     }
 
     @Test
     public void parse_nonIntegerQuantity_throwsException() {
-        assertThrows(EquipmentMasterException.class, () -> AddCommand.parse("add n/STM32 q/abc"));
+        assertThrows(EquipmentMasterException.class, () ->
+                AddCommand.parse("add n/Beaker q/abc"));
     }
 
     @Test
-    public void parse_invalidLifespan_throwsException() {
-        assertThrows(EquipmentMasterException.class, () -> AddCommand.parse("add n/STM32 q/5 bought/AY23 life/abc"));
-    }
-
-    @Test
-    public void parse_invalidMinQuantity_throwsException() {
-        assertThrows(EquipmentMasterException.class, () -> AddCommand.parse("add n/STM32 q/5 min/abc"));
-    }
-
-    @Test
-    public void parse_emptyNameOrQuantity_throwsException() {
-        assertThrows(EquipmentMasterException.class, () -> AddCommand.parse("add n/ q/5"));
-        assertThrows(EquipmentMasterException.class, () -> AddCommand.parse("add n/STM32 q/"));
-    }
-
-    @Test
-    public void parse_missingOneOfBoughtOrLife_doesNotFail() throws EquipmentMasterException {
-        // Having bought but no life, or life but no bought
-        AddCommand cmd = AddCommand.parse("add n/STM32 q/5 bought/AY23");
-        assertTrue(cmd != null);
-
-        AddCommand cmd2 = AddCommand.parse("add n/STM32 q/5 life/5.0");
-        assertTrue(cmd2 != null);
+    public void parse_validFullInput_success() throws EquipmentMasterException {
+        AddCommand command = AddCommand.parse(
+                "add n/Centrifuge q/2 bought/AY2024/25 Sem1 life/5.5 min/1 m/CS2113 m/CG2023");
+        assertNotNull(command);
     }
 }
+

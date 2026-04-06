@@ -5,10 +5,14 @@ import seedu.equipmentmaster.context.Context;
 import seedu.equipmentmaster.ui.Ui;
 import seedu.equipmentmaster.semester.AcademicSemester;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  * Command to display the current global academic semester set in the system.
  */
 public class GetSemCommand extends Command {
+    private static final Logger logger = Logger.getLogger(GetSemCommand.class.getName());
 
     /**
      * Executes the get semester command.
@@ -18,12 +22,17 @@ public class GetSemCommand extends Command {
      */
     @Override
     public void execute(Context context) {
+        assert context != null : "Context should not be null during execution";
+        logExecution("GetSemCommand");
+
         Ui ui = context.getUi();
         AcademicSemester current = context.getCurrentSemester();
 
         if (current == null) {
+            logger.log(Level.WARNING, "GetSemCommand executed but semester is uninitialized.");
             ui.showMessage("The system time has not been initialized yet.");
         } else {
+            logger.log(Level.INFO, "Successfully displayed current semester: " + current);
             ui.showMessage("The current system time is: " + current);
         }
     }

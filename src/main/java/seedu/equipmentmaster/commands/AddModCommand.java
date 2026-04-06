@@ -1,5 +1,3 @@
-//@@author Hongyu1231
-
 package seedu.equipmentmaster.commands;
 
 import seedu.equipmentmaster.context.Context;
@@ -9,22 +7,26 @@ import seedu.equipmentmaster.module.Module;
 import seedu.equipmentmaster.storage.Storage;
 import seedu.equipmentmaster.ui.Ui;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * Represents a command to add a new course module to the system.
+ * This command handles the validation of module data and updates both memory and storage.
  */
 public class AddModCommand extends Command {
+    private static final Logger logger = Logger.getLogger(AddModCommand.class.getName());
     private final String moduleName;
     private final int pax;
 
     /**
-     * Constructs an {@code AddModCommand} with the extracted module name and pax.
+     * Constructs an {@code AddModCommand} with the specified module name and enrollment.
      *
-     * @param moduleName The name of the new module.
-     * @param pax        The student enrollment number.
-     * @throws EquipmentMasterException If the pax is a negative number.
+     * @param moduleName The unique name/code of the module (e.g., CG2111A).
+     * @param pax The number of students enrolled in this module.
+     * @throws EquipmentMasterException If the pax value is negative.
      */
     public AddModCommand(String moduleName, int pax) throws EquipmentMasterException {
         if (pax < 0) {
@@ -35,43 +37,60 @@ public class AddModCommand extends Command {
     }
 
     /**
-     * Executes the add module command.
-     * Creates a new course module, adds it to the system, and persists the updated module list to storage.
+     * Executes the command to add a module to the system.
+     * It checks for duplicate modules, updates the internal list, and triggers a storage save.
      *
-     * @param context The application context containing the module list, UI, and storage.
+     * @param context The application context containing lists, UI, and storage.
+     * @throws EquipmentMasterException If a module with the same name already exists.
      */
     @Override
-    public void execute(Context context) {
+    public void execute(Context context) throws EquipmentMasterException {
+        assert context != null : "Context should not be null during execution";
+        logExecution("AddModCommand");
+
         ModuleList moduleList = context.getModuleList();
-        Ui ui = context.getUi();
-        Storage storage = context.getStorage();
 
+        if (moduleList.hasModule(moduleName)) {
+            logger.log(Level.WARNING, "Duplicate module addition attempted: " + moduleName);
+            throw new EquipmentMasterException("Module '" + moduleName + "' already exists!");
+        }
+
+        Module newModule = new Module(moduleName, pax);
+        moduleList.addModule(newModule);
+
+        context.getUi().showMessage("Successfully added module: " + newModule);
+        saveToStorage(context.getStorage(), moduleList, context.getUi());
+    }
+
+    /**
+     * Saves the updated module list to the local data file.
+     * Any storage-related exceptions are caught and displayed as warnings to the user.
+     *
+     * @param storage The storage handler used to write data.
+     * @param moduleList The current list of modules to be saved.
+     * @param ui The user interface for displaying error messages.
+     */
+    private void saveToStorage(Storage storage, ModuleList moduleList, Ui ui) {
         try {
-            Module newModule = new Module(moduleName, pax);
-            moduleList.addModule(newModule);
-            ui.showMessage("Successfully added module: " + newModule);
-
-            try {
+            if (storage != null) {
                 storage.saveModules(moduleList);
-            } catch (EquipmentMasterException e) {
-                ui.showMessage("Warning: Failed to save the new module to the data file. " + e.getMessage());
             }
-
-        } catch (EquipmentMasterException e){
-            ui.showMessage(e.getMessage());
+        } catch (EquipmentMasterException e) {
+            logger.log(Level.SEVERE, "Storage synchronization failed", e);
+            ui.showMessage("Warning: Module added to memory but failed to save to disk.");
         }
     }
 
     /**
-     * Parses the full command string provided by the user to create an {@code AddModCommand}.
-     * Extracts the module name and the pax (enrollment number) using regular expressions.
+     * Parses the user input to create a valid {@code AddModCommand}.
+     * The input should follow the format: addmod n/NAME pax/PAX.
      *
-     * @param fullCommand The complete user input string (e.g., "addmod n/CG2111A pax/150").
-     * @return An {@code AddModCommand} initialized with the parsed module name and pax.
-     * @throws EquipmentMasterException If the command format is invalid or the pax is not an integer.
+     * @param fullCommand The complete command string entered by the user.
+     * @return An instance of {@code AddModCommand} ready for execution.
+     * @throws EquipmentMasterException If the format is invalid or values fail validation.
      */
     public static AddModCommand parse(String fullCommand) throws EquipmentMasterException {
-        // Strip the starting command word to isolate the arguments
+        logger.log(Level.INFO, "Parsing AddModCommand parameters.");
         String args = fullCommand.replaceFirst("(?i)^addmod\\s*", "").trim();
 
         Pattern pattern = Pattern.compile("n/(.+?)\\s+pax/(.+)");
@@ -81,26 +100,31 @@ public class AddModCommand extends Command {
             throw new EquipmentMasterException("Invalid command format.\nExpected: addmod n/NAME pax/QTY");
         }
 
-        String moduleName = matcher.group(1).trim();
-        // SECURITY CHECK: Prevent Delimiter Collision in Storage
-        if (moduleName.contains("|") || moduleName.contains(",") || moduleName.contains("=")) {
-            throw new EquipmentMasterException(
-                    "Invalid name! Names cannot contain reserved storage characters: '|', ',', or '='"
-            );
-        }
+        String name = matcher.group(1).trim();
+        validateName(name);
+
         String paxString = matcher.group(2).trim();
-
-        // Add this explicit check to prevent empty module names
-        if (moduleName.isEmpty()) {
-            throw new EquipmentMasterException("Module name cannot be empty. " +
-                    "Please provide a valid name (e.g., n/CG2111A).");
-        }
-
         try {
             int pax = Integer.parseInt(paxString);
-            return new AddModCommand(moduleName, pax);
+            return new AddModCommand(name, pax);
         } catch (NumberFormatException e) {
-            throw new EquipmentMasterException("Invalid pax value. Please enter a valid integer (e.g., pax/150).");
+            logger.log(Level.WARNING, "Invalid pax input: " + paxString);
+            throw new EquipmentMasterException("Invalid pax value. Please enter a valid integer.");
+        }
+    }
+
+    /**
+     * Validates the provided module name against reserved characters.
+     *
+     * @param name The name string to be validated.
+     * @throws EquipmentMasterException If the name is empty or contains '|', ',', or '='.
+     */
+    private static void validateName(String name) throws EquipmentMasterException {
+        if (name.isEmpty()) {
+            throw new EquipmentMasterException("Module name cannot be empty.");
+        }
+        if (name.contains("|") || name.contains(",") || name.contains("=")) {
+            throw new EquipmentMasterException("Name contains reserved characters: '|', ',', '='");
         }
     }
 }

@@ -8,6 +8,7 @@ import seedu.equipmentmaster.storage.Storage;
 import seedu.equipmentmaster.ui.Ui;
 
 import static seedu.equipmentmaster.common.Messages.MESSAGE_INVALID_SET_STATUS_FORMAT;
+import static seedu.equipmentmaster.common.Messages.MESSAGE_NAME_CONTAINS_RESERVED_CHARS;
 
 /**
  * Represents a command to update the status (loaned/available) of equipment.
@@ -98,6 +99,12 @@ public class SetStatusCommand extends Command {
             throw new EquipmentMasterException("Equipment name cannot be empty.");
         }
 
+        if (name.contains("|") || name.contains(",") || name.contains("=")) {
+            throw new EquipmentMasterException(
+                    MESSAGE_NAME_CONTAINS_RESERVED_CHARS
+            );
+        }
+
         int quantity;
         try {
             quantity = Integer.parseInt(quantityStr);
@@ -174,7 +181,7 @@ public class SetStatusCommand extends Command {
      * @param context The application context containing the equipment list, UI, and storage.
      */
     @Override
-    public void execute(Context context) {
+    public void execute(Context context) throws EquipmentMasterException {
         Ui ui = context.getUi();
         EquipmentList equipments = context.getEquipments();
         Storage storage = context.getStorage();

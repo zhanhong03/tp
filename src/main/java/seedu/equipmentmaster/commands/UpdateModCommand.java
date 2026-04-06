@@ -3,6 +3,9 @@ package seedu.equipmentmaster.commands;
 
 import seedu.equipmentmaster.context.Context;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import seedu.equipmentmaster.modulelist.ModuleList;
@@ -13,6 +16,8 @@ import seedu.equipmentmaster.storage.Storage;
  * Represents a command to update the enrollment number (pax) of an existing course module.
  */
 public class UpdateModCommand extends Command {
+    private static final Logger logger = Logger.getLogger(UpdateModCommand.class.getName());
+
     private final String moduleName;
     private final int newPax;
 
@@ -23,6 +28,9 @@ public class UpdateModCommand extends Command {
      * @param newPax     The new student enrollment number.
      */
     public UpdateModCommand(String moduleName, int newPax) {
+        assert moduleName != null && !moduleName.trim().isEmpty() : "Module name cannot be null or empty";
+        assert newPax >= 0 : "Pax cannot be negative";
+
         this.moduleName = moduleName;
         this.newPax = newPax;
     }
@@ -36,9 +44,11 @@ public class UpdateModCommand extends Command {
      */
     @Override
     public void execute(Context context) throws EquipmentMasterException {
+        assert context != null : "Context should not be null during execution";
+        logExecution("UpdateModCommand");
+
         Ui ui = context.getUi();
         ModuleList moduleList = context.getModuleList();
-        Storage storage = context.getStorage();
 
         // 1. Update the module. If it doesn't exist, this will throw an EquipmentMasterException.
         moduleList.updateModule(moduleName, newPax);
@@ -47,11 +57,22 @@ public class UpdateModCommand extends Command {
         ui.showMessage("Successfully updated module:");
         ui.showMessage(moduleName + " | Enrollment: " + newPax + " students");
 
-        // 3. Save the updated list to the local text file.
+        // 3. SLAP: Extract storage saving logic to keep execute() clean
+        saveToStorage(context.getStorage(), moduleList, ui);
+    }
+
+    /**
+     * Helper method to synchronize module updates to the storage file.
+     */
+    private void saveToStorage(Storage storage, ModuleList moduleList, Ui ui) {
         try {
-            storage.saveModules(moduleList);
+            if (storage != null) {
+                storage.saveModules(moduleList);
+                logger.log(Level.INFO, "Storage updated after module pax modification.");
+            }
         } catch (EquipmentMasterException e) {
-            ui.showMessage(e.getMessage());
+            logger.log(Level.SEVERE, "Failed to save module list after update", e);
+            ui.showMessage("Warning: Module updated in memory but failed to save to disk.");
         }
     }
 
@@ -64,6 +85,8 @@ public class UpdateModCommand extends Command {
      * @throws EquipmentMasterException If the command format is invalid or the pax is not an integer.
      */
     public static UpdateModCommand parse(String fullCommand) throws EquipmentMasterException {
+        logger.log(Level.INFO, "Parsing UpdateModCommand input.");
+
         // Strip the starting command word to isolate the arguments
         String args = fullCommand.replaceFirst("(?i)^updatemod\\s*", "").trim();
 
@@ -71,7 +94,8 @@ public class UpdateModCommand extends Command {
         Matcher matcher = pattern.matcher(args);
 
         if (!matcher.matches()) {
-            throw new EquipmentMasterException("Invalid command format. \nExpected: updatemod n/NAME pax/QTY");
+            logger.log(Level.WARNING, "Parse failed: Invalid command format.");
+            throw new EquipmentMasterException("Invalid command format.\nExpected: updatemod n/NAME pax/QTY");
         }
 
         String moduleName = matcher.group(1).trim();
@@ -80,10 +104,12 @@ public class UpdateModCommand extends Command {
         try {
             int pax = Integer.parseInt(paxString);
             if (pax < 0) {
+                logger.log(Level.WARNING, "Parse failed: Negative pax value provided.");
                 throw new EquipmentMasterException("Pax cannot be a negative number.");
             }
             return new UpdateModCommand(moduleName, pax);
         } catch (NumberFormatException e) {
+            logger.log(Level.WARNING, "Parse failed: Non-integer pax value provided.");
             throw new EquipmentMasterException("Invalid pax value. Please enter a valid integer.");
         }
     }

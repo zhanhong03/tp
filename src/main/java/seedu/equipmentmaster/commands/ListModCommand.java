@@ -7,10 +7,14 @@ import seedu.equipmentmaster.modulelist.ModuleList;
 import seedu.equipmentmaster.module.Module;
 import seedu.equipmentmaster.ui.Ui;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  * Represents a command to list all current course modules tracked in the system.
  */
 public class ListModCommand extends Command {
+    private static final Logger logger = Logger.getLogger(ListModCommand.class.getName());
 
     /**
      * Constructs a {@code ListModCommand}.
@@ -29,20 +33,31 @@ public class ListModCommand extends Command {
      */
     @Override
     public void execute(Context context) throws EquipmentMasterException {
+        assert context != null : "Context should not be null during execution";
+        logExecution("ListModCommand");
+
         ModuleList moduleList = context.getModuleList();
         Ui ui = context.getUi();
 
         // 1. Check if the module list is empty
         if (moduleList.getModules().isEmpty()) {
-
+            logger.log(Level.INFO, "ListModCommand executed but module list is empty.");
             ui.showMessage("There are currently no modules tracked in the system.");
             return;
         }
+        logger.log(Level.INFO, "Listing " + moduleList.getModules().size() + " module(s).");
 
-        // 2. Print the header
+        displayModules(ui, moduleList);
+    }
+
+    /**
+     * Helper method to handle the UI presentation of the module list.
+     * @param ui The user interface handler.
+     * @param moduleList The list of modules to display.
+     */
+    private void displayModules(Ui ui, ModuleList moduleList) {
         ui.showMessage("Here are the current course modules in your system:");
 
-        // 3. Iterate through the list and print each module with an index number
         int index = 1;
         for (Module m : moduleList.getModules()) {
             ui.showMessage(index + ". " + m.toString());
