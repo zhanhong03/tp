@@ -1,0 +1,21 @@
+@startuml
+object ":Context" as Context
+object ":EquipmentList" as EqList
+object ":ModuleList" as ModList
+object "e1:Equipment" as E1 {
+    name = "STM32"
+    quantity = 50
+}
+object "m1:Module" as M1 {
+    moduleCode = "CG2111A"
+    pax = 150
+}
+
+Context *-- EqList
+Context *-- ModList
+EqList o-- E1
+ModList o-- M1
+
+E1 ..> M1 : "tagged with >"
+note right of E1 : Equipment points to \nModule Code as a String
+@enduml

@@ -25,6 +25,11 @@ This design choice ensures:
 * **Decoupling**: Command objects only interact with the `Context` rather than knowing how the `Ui` or `Storage` is internally structured.
 * **Testability**: It allows us to pass a "Mock Context" with temporary storage paths during unit testing.
 
+#### Object Snapshot: The Internal State
+To better understand how data is structured in memory during runtime, the following object diagram provides a snapshot of the `Context` object. It shows how `Equipment` items are logically linked to `Module` codes through string-based tagging.
+
+![Object Snapshot Diagram](images/ObjectSnapshot.png)
+
 ---
 
 ### Defensive Programming and Error Handling
@@ -131,6 +136,30 @@ The `AddCommand` is instantiated via its static `parse` method. The execution fl
 -   **Alternative 2: Standard Regex Matching**
 
   -   **Why it was rejected:** Regex becomes exponentially complex and difficult to maintain when dealing with 5+ optional flags that can appear in any order. A single malformed regex string could break the entire ingestion engine.
+
+---
+
+### Delete Feature (Equipment & Module)
+
+#### 1. Overview
+The delete feature allows users to safely remove physical assets or module registries from the system. Because the application maintains relational links between equipment and modules, the deletion process must prevent "dangling references."
+
+#### 2. Component-level implementation (Equipment Deletion)
+When an equipment item is deleted (e.g., `delete n/STM32 q/5 s/AVAILABLE`), the `DeleteCommand` not only updates the quantity but also handles complete removal if the quantity reaches zero.
+
+If an equipment is completely removed from the inventory, the system must perform a reverse-cleanup: it automatically triggers an `untag` operation across all modules to ensure no module still expects a requirement ratio from a non-existent item.
+
+![Delete Equipment Sequence Diagram](images/DeleteCommand.png)
+
+#### 3. Design Considerations
+* **Alternative 1 (Current): Hard Delete with Synchronous Cleanup**
+  * *Justification*: Simplest for the user to understand. It ensures the `Storage` files remain compact, human-readable, and free of "ghost items."
+* **Alternative 2: Soft Delete (Marking as "Inactive")**
+  * *Rejection*: Increases storage complexity and clutters the UI. For a lab TA, "Delete" should mean the physical item is permanently gone from the lab's ledger.
+
+#### 4. Current Limitations & Future Improvements
+* *Limitation*: The command currently lacks an "undo" mechanism. If a user accidentally deletes an item, they must manually re-add and re-tag it.
+* *Improvement*: Implement a recycle bin or an `undo` command stack in future versions to prevent accidental data loss.
 
 ---
 
@@ -629,6 +658,30 @@ Similarly, `HelpCommand` utilizes `UiTable` but enables the `hasHeader` flag, al
 ---
 
 <!-- @@author -->
+### Help Feature
+
+#### 1. Overview
+The Help system provides an in-app reference for command syntax, reducing the user's reliance on external manuals. Instead of hardcoding a massive block of text, it dynamically generates the manual.
+
+#### 2. Component-level implementation
+The `HelpCommand` leverages the `UiTable` utility and the centralized `Parser` registry.
+
+When executed, it retrieves the static list of `CommandSpec` objects from the `Parser`. It iterates through this registry, extracting the keyword and format string of every registered command, and maps them into `UiTableRow` objects to render a perfectly aligned table.
+
+![Help Command Sequence Diagram](images/HelpCommand.png)
+
+#### 3. Design Considerations
+* **Alternative 1 (Current): Dynamic Table Generation**
+  * *Justification*: Highly maintainable. When a developer adds a new command to the `Parser` registry, the `help` menu updates automatically. There is zero risk of the documentation falling out of sync with the codebase.
+* **Alternative 2: Hardcoded String Block**
+  * *Rejection*: Violates the DRY (Don't Repeat Yourself) principle. It would require developers to remember to update the `HelpCommand` string every time they modify a command's syntax elsewhere.
+
+#### 4. Current Limitations & Future Improvements
+* *Limitation*: The help menu displays all commands at once, which may push older messages out of the terminal buffer if the command list grows too large.
+* *Improvement*: Support targeted help queries (e.g., `help add`) to display syntax and detailed examples for a specific command only.
+
+---
+
 ## Product scope
 ### Target user profile
 
@@ -812,6 +865,23 @@ To test the system with pre-populated data without typing everything manually:
 3. **Exiting the Application:**
   * **Test Case:** Type `bye`.
   * **Expected:** System displays a farewell message and the application terminates gracefully.
+
+### 11. Testing Robustness (Negative Cases)
+
+#### 11.1 Invalid Data Input
+* **Test Case**: `add n/Item q/abc` (Invalid quantity type)
+* **Expected**: Error message: "Quantity must be a valid positive integer." No item is added.
+* **Test Case**: `tag m/NON_EXISTENT n/STM32` (Missing module)
+* **Expected**: Error message: "Module NON_EXISTENT not found in registry."
+
+#### 11.2 Storage Corruption Recovery
+1. Open `data/equipment.txt` and add a blank line between two items.
+2. Relaunch the application.
+* **Expected**: The system should skip the blank line, load all valid items, and NOT crash.
+
+#### 11.3 Boundary Values
+* **Test Case**: `setstatus 1 q/999 s/loaned` (Loan more than available)
+* **Expected**: Error message indicating insufficient stock. In-memory quantity remains unchanged.
 
 
 ## Future Roadmap (Beyond v2.1)
