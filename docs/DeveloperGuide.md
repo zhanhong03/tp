@@ -1,10 +1,12 @@
 # Developer Guide
 
+
 ## Acknowledgements
 
 * **AddressBook-Level3 (AB3):** This project was initially inspired by and adapted from the AddressBook-Level3 project created by the [SE-EDU initiative](https://se-education.org). We thank the AB3 team for providing a robust architectural template for Java-based CLI applications.
 * **Libraries Used:** 
   * [JUnit 5](https://junit.org/junit5/) - For comprehensive unit and integration testing.
+
 
 ## Design & implementation
 
@@ -463,6 +465,27 @@ The following sequence diagrams illustrate the execution flow for the `TagComman
 
 ---
 
+### Implementation: Safe Dereferencing (Data Integrity)
+
+A critical challenge in the Academic Mapping system is maintaining data integrity when a primary entity (Equipment or Module) is deleted. The system employs a **Safe Dereferencing** strategy to prevent "Orphaned Tags" or `NullPointerExceptions` during report generation.
+
+#### 1. Execution Logic
+When a module is deleted (e.g., `delmod n/CG2111A`), the system ensures that no equipment remains "tagged" to a non-existent entity.
+
+![Safe Dereferencing Sequence Diagram](images/SafeDereferencing.png)
+
+1.  **Identification**: The `DelModCommand` queries the `EquipmentList` for any items containing the module code.
+2.  **Cleanup**: It invokes `equipment.removeTag("CG2111A")` on each match.
+3.  **Finalization**: Only after the `EquipmentList` is sanitized is the `Module` removed from the `ModuleList`.
+
+#### 2. Design Considerations
+* **Alternative 1 (Current): Synchronous Cleanup**
+  * **Justification**: Guarantees that the `Procurement Report` will never encounter a missing reference. This "Eager" approach keeps the data files clean and easy to read manually.
+* **Alternative 2: Lazy Cleanup (Cleanup during Report generation)**
+  * **Rejection**: Increases the risk of inconsistent data if the reporting logic is interrupted. It also complicates the `Storage` component as it would have to handle "Ghost Tags" during loading.
+
+---
+
 ### Aging Equipment Report
 
 #### 1. Overview
@@ -552,6 +575,23 @@ _(Note: The `getModuleByName` logic is represented as a self-invocation within t
 *   **How it works:** `To Buy = Required - Available_Quantity`.
 *   **Why it was rejected:** As mentioned above, this leads to double-purchasing. If an item is temporarily loaned, it is still an asset we own. Procurement budgets should only be spent on actual inventory deficits, not temporary shortages.
 
+--- 
+
+### Procurement Report (Calculation Engine)
+
+The Procurement Report is the most mathematically intensive feature of Equipment Master. It translates academic enrollment data into physical purchase requirements.
+
+#### 1. The Calculation Pipeline
+The system avoids floating-point errors and ensures realistic procurement values by following a strict rounding-up policy.
+
+![Procurement Calculation Activity Diagram](images/ProcurementCalculation.png)
+
+**The Formula:**
+`Recommended = ceil(Sum(Module_Pax * Requirement_Ratio) * (1 + Buffer)) - Total_Owned`
+
+* **Indivisibility Rule**: The system applies `Math.ceil()` because lab equipment cannot be purchased in fractions.
+* **Ownership Offset**: It subtracts `Total_Quantity` (Available + Loaned) because procurement represents long-term asset acquisition, not immediate shelf availability.
+
 ---
 
 ### `UiTable`: Dynamic UI Table Generation Utility
@@ -612,6 +652,7 @@ Whether you are managing shared pools of STM32 boards across different modules (
 * **Module-Specific Tracking:** Easily associate equipment with specific academic modules to track usage and allocations accurately.
 * **100% Accountability:** Precisely track borrower identities and monitor equipment availability to eliminate the loss of high-value lab assets.
 
+
 ## User Stories
 
 | Version | As a ... | I want to ... | So that I can ... |
@@ -655,13 +696,16 @@ Whether you are managing shared pools of STM32 boards across different modules (
 | **v3.0** | expert user | auto-generate a Budget Request email text | simply copy-paste the system's procurement data directly into an email to the boss. |
 | **v3.0** | expert user | filter inventory by "Remaining Lifespan" (e.g., `list --eol-soon`) | identify exactly which batch of boards needs to be phased out by next year. |
 
-## Non-Functional Requirements
+
+## Non-Functional Requirements (NFR)
 
 1.  **Platform Independence**: The application must run on Windows, macOS, and Linux with **Java 17** or higher installed.
 2.  **Performance**: The system must respond to any search or list command within **100ms**, even with an inventory size of 1,000+ items.
-3.  **No Network Reliance**: The system must be 100% functional without an internet connection to ensure data security within lab environments.
-4.  **Robustness**: The application should handle manual corruption of the data files without crashing, by either skipping the corrupted entries or resetting to a fresh state.
-5.  **Auditability**: Every save operation must overwrite the file atomically to prevent data loss in case of a power failure during the write process.
+3.  **Resilience**: The system must not crash upon encountering a corrupted line in the storage file; it should log a warning and skip the line.
+4.  **Hermetic Testing**: All automated tests must use JUnit 5 `@TempDir` to ensure zero impact on the user's actual data files.
+5.  **No Network Dependency**: The system must function 100% offline to ensure data privacy in secure lab environments.
+6.  **Atomic Persistence**: Every save operation must overwrite the storage file entirely to prevent partial-write corruption.
+
 
 ## Glossary
 
@@ -671,6 +715,7 @@ Whether you are managing shared pools of STM32 boards across different modules (
 * **Pax:** The total number of students enrolled in a specific module.
 * **Academic Semester (AY):** The semantic time format used to track equipment age (e.g., `AY24/25 Sem1`).
 * **Safe Dereferencing:** The automated process of unlinking an equipment from a module when that module is deleted, ensuring the equipment record itself is not accidentally destroyed.
+
 
 ## Instructions for Manual Testing
 
@@ -767,3 +812,11 @@ To test the system with pre-populated data without typing everything manually:
 3. **Exiting the Application:**
   * **Test Case:** Type `bye`.
   * **Expected:** System displays a farewell message and the application terminates gracefully.
+
+
+## Future Roadmap (Beyond v2.1)
+
+1.  **Automated Audit Logs**: Implement a `history` command to track every transaction with a timestamp to enhance lab accountability.
+2.  **Fuzzy Search**: Enhance the `find` command with Levenshtein Distance algorithms to suggest the correct equipment name if the user makes a minor typo.
+3.  **Batch Processing**: Support for reading multiple commands from a `.csv` file for high-volume start-of-semester equipment intake.
+4.  **Export Utility**: Add a command to export reports (Aging/Procurement) into `.csv` format for integration with University financial systems.

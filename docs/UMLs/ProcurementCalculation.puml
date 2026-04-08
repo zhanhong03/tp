@@ -1,0 +1,25 @@
+@startuml
+start
+:Initialize Total_Required = 0;
+:Get all Equipment associated with Module;
+
+repeat
+  :Get Module Pax;
+  :Get Equipment Requirement Ratio;
+  :Demand = Pax * Ratio;
+  :Total_Required += Demand;
+backward:Next Module;
+repeat while (more modules?) is (yes)
+
+:Apply Safety Buffer (Total_Required * (1 + Buffer));
+:Round Up using Math.ceil();
+:Subtract Total_Owned (Available + Loaned);
+
+if (To_Buy > 0) then (yes)
+  :Add Item to Procurement Report;
+else (no)
+  :Skip Item;
+endif
+
+stop
+@enduml
