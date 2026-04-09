@@ -683,13 +683,14 @@ When a module is deleted (e.g., `delmod n/CG2111A`), the system ensures that no 
 The Aging Equipment Report feature empowers lab technicians to proactively audit inventory that has exceeded its expected lifespan. It calculates age dynamically based on the semantic university timeline (Academic Semesters) rather than absolute calendar dates.
 
 #### 2. Implementation Details
-Driven by the `ReportCommand`, this feature relies heavily on the `AcademicSemester` class to perform semantic time-difference calculations.
+Driven by the `ReportCommand`, this feature relies heavily on the `AcademicSemester` class to perform semantic time-difference calculations via the integrated `Context`.
 
 During execution:
-1. The command retrieves the current `AcademicSemester` from the environment.
-2. It iterates through the `EquipmentList`.
-3. For items with a `purchaseSemester`, it calculates the elapsed time.
-4. Equipments exceeding their designated `lifespan` are compiled into a report.
+1.  The command retrieves the currently set `AcademicSemester` offset from the `Context` object.
+2.  It iterates through the full `EquipmentList` in memory.
+3.  For each item containing a `purchaseSemester`, the command invokes **`AcademicSemester#calculateAge(currentSemester)`** to resolve the elapsed time offset.
+4.  If the resolved age is greater than or equal to the equipment’s designated `lifespan`, the command calls **`ReportCommand#addToReportList(equipment)`** to buffer the item.
+5.  After the full iteration, the resulting results list is passed to the `UiTable` utility for dynamic rendering.
 
 #### 3. UML Diagrams
 **Sequence Diagram: Report Generation**
