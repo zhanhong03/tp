@@ -298,7 +298,8 @@ public class DeleteCommandTest {
         assertThrows(EquipmentMasterException.class, () -> DeleteCommand.parse("delete n/ q/5 s/available"));
 
         // Targets createDeleteCommand() catch(NumberFormatException) for identifier
-        assertThrows(EquipmentMasterException.class, () -> DeleteCommand.parse("delete notAValidNumber q/5 s/available"));
+        assertThrows(EquipmentMasterException.class, () ->
+                DeleteCommand.parse("delete notAValidNumber q/5 s/available"));
     }
 
     @Test
@@ -327,7 +328,7 @@ public class DeleteCommandTest {
     }
 
     @Test
-    public void execute_nullStorage_skipsSave_success() throws EquipmentMasterException {
+    public void execute_nullStorage_success() throws EquipmentMasterException {
         // Targets saveToStorage() branch: if (storage != null) -> False
         equipments.addEquipment(new Equipment("Laptop", 5));
         DeleteCommand command = new DeleteCommand(1, 1, "available");

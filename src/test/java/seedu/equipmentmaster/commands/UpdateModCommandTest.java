@@ -136,7 +136,7 @@ public class UpdateModCommandTest {
     }
 
     @Test
-    public void execute_nullStorage_skipsSave_success() throws EquipmentMasterException {
+    public void execute_nullStorage_success() throws EquipmentMasterException {
         // TARGET: Line 54 - Triggers the implicit 'else' branch of "if (storage != null)"
         seedu.equipmentmaster.ui.Ui ui = new seedu.equipmentmaster.ui.Ui();
         // Context with null storage handler
@@ -181,24 +181,6 @@ public class UpdateModCommandTest {
             UpdateModCommand.parse(input);
         });
         assertTrue(thrown.getMessage().contains("Invalid pax value"), "Expected overflow warning.");
-    }
-
-    /**
-     * Verifies that the command executes and updates the memory state successfully
-     * even if the storage handler is not initialized.
-     * This specifically targets the implicit 'else' branch of the "if (storage != null)" check.
-     */
-    @Test
-    public void execute_nullStorage_success() throws EquipmentMasterException {
-        Ui ui = new Ui();
-        // Context initialized with a null storage object
-        Context contextWithNullStorage = new Context(null, moduleList, ui, null, null);
-
-        UpdateModCommand command = new UpdateModCommand("CG2271", 110);
-        command.execute(contextWithNullStorage);
-
-        assertEquals(110, moduleList.getModule("CG2271").getPax(),
-                "The module list in memory should be updated regardless of storage availability.");
     }
 
     /**

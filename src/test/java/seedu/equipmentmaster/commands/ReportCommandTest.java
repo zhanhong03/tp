@@ -296,7 +296,7 @@ public class ReportCommandTest {
      * Targets resolveTargetSemester(): Exercises the branch where targetSemStr is explicitly null.
      */
     @Test
-    public void execute_agingReport_nullTargetSemString_usesSystemSemester() throws EquipmentMasterException {
+    public void execute_nullTargetSem_success() throws EquipmentMasterException {
         AcademicSemester systemSem = new AcademicSemester("AY2024/25 Sem1");
         // Bypass parse() to directly inject a null string
         ReportCommand command = new ReportCommand("aging", null);
@@ -310,7 +310,7 @@ public class ReportCommandTest {
      * Targets resolveTargetSemester(): Exercises the branch where targetSemStr is only spaces.
      */
     @Test
-    public void execute_agingReport_blankTargetSemString_usesSystemSemester() throws EquipmentMasterException {
+    public void execute_blankTargetSem_success() throws EquipmentMasterException {
         AcademicSemester systemSem = new AcademicSemester("AY2024/25 Sem1");
         // String containing only spaces to trigger !targetSemStr.trim().isEmpty() == false
         ReportCommand command = new ReportCommand("aging", "   ");
@@ -324,7 +324,7 @@ public class ReportCommandTest {
      * Targets displayAgingEquipments(): Exercises the catch(EquipmentMasterException) block.
      */
     @Test
-    public void execute_agingReport_calculateAgeThrowsException_caughtAndSkipped() {
+    public void execute_calcAgeException_caught() {
         // We use an anonymous subclass to FORCE calculateAgeInYears to throw an exception
         Equipment faultyEq = new Equipment("FaultyEq", 10) {
             @Override
@@ -353,14 +353,15 @@ public class ReportCommandTest {
         command.execute(context);
 
         // Verifies the catch block (around line 130) is executed and logs the warning
-        assertTrue(outContent.toString().contains("Warning: Skipping equipment 'FaultyEq' due to invalid purchase semester data."));
+        assertTrue(outContent.toString().contains("Warning: Skipping equipment 'FaultyEq' " +
+                "due to invalid purchase semester data."));
     }
 
     /**
      * Targets the assertions at the start of executeAgingReport().
      */
     @Test
-    public void execute_agingReport_nullEquipments_assertionFails() {
+    public void execute_nullEquipments_assertionFails() {
         ReportCommand command = new ReportCommand("aging", "AY2024/25 Sem1");
         // Null equipments
         Context context = new Context(null, new ModuleList(), ui, null, null);
@@ -375,7 +376,7 @@ public class ReportCommandTest {
      * Targets the assertions at the start of executeAgingReport().
      */
     @Test
-    public void execute_agingReport_nullUi_assertionFails() {
+    public void execute_nullUi_assertionFails() {
         ReportCommand command = new ReportCommand("aging", "AY2024/25 Sem1");
         // Null UI
         Context context = new Context(equipments, new ModuleList(), null, null, null);
