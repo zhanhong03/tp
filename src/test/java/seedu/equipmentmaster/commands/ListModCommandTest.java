@@ -9,6 +9,7 @@ import seedu.equipmentmaster.module.Module;
 import seedu.equipmentmaster.modulelist.ModuleList;
 import seedu.equipmentmaster.ui.Ui;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
@@ -51,12 +52,9 @@ public class ListModCommandTest {
     @Test
     public void execute_nullContext_assertionFails() {
         ListModCommand command = new ListModCommand();
-
-        try {
+        AssertionError thrown = assertThrows(AssertionError.class, () -> {
             command.execute(null);
-        } catch (AssertionError | EquipmentMasterException e) {
-            // Expected to fail the assertion before doing anything else
-            assertTrue(e.getMessage().contains("Context should not be null during execution"));
-        }
+        });
+        assertTrue(thrown.getMessage().contains("Context should not be null during execution"));
     }
 }

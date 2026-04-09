@@ -114,11 +114,10 @@ public class ModuleListTest {
 
     @Test
     public void updateModule_nullModuleName_assertionFails() {
-        try {
+        AssertionError thrown = assertThrows(AssertionError.class, () -> {
             moduleList.updateModule(null, 150);
-        } catch (AssertionError | EquipmentMasterException e) {
-            assertTrue(e.getMessage().contains("Module name cannot be null or empty"));
-        }
+        });
+        assertTrue(thrown.getMessage().contains("Module name cannot be null or empty"));
     }
 
     @Test

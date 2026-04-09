@@ -376,10 +376,21 @@ public class FindCommandTest {
     @Test
     public void execute_nullContext_assertionFails() {
         FindCommand command = new FindCommand("stm32");
-        try {
+        AssertionError thrown = assertThrows(AssertionError.class, () -> {
             command.execute(null);
-        } catch (AssertionError e) {
-            assertTrue(e.getMessage().contains("Context should not be null"));
-        }
+        });
+        assertTrue(thrown.getMessage().contains("Context should not be null during execution"));
+    }
+
+    @Test
+    public void getMatchingEquipments_handlingSpaces_success() {
+        EquipmentList equipments = new EquipmentList();
+        equipments.addEquipment(new Equipment("STM32", 10));
+
+        // Testing that leading/multiple spaces are handled by trim and regex split
+        FindCommand command = new FindCommand("   stm32");
+        ArrayList<Equipment> matches = command.getMatchingEquipments(equipments);
+
+        assertEquals(1, matches.size());
     }
 }

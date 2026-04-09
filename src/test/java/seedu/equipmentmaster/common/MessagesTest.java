@@ -52,6 +52,4 @@ public class MessagesTest {
         Messages messages = new Messages();
         assertNotNull(messages);
     }
-
-
 }

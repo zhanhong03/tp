@@ -174,11 +174,10 @@ public class ModuleTest {
      */
     @Test
     public void constructor_nullName_assertionFails() {
-        try {
+        AssertionError thrown = assertThrows(AssertionError.class, () -> {
             new Module(null, 150);
-        } catch (AssertionError | EquipmentMasterException e) {
-            assertTrue(e.getMessage().contains("Module name cannot be null or empty"));
-        }
+        });
+        assertTrue(thrown.getMessage().contains("Module name cannot be null or empty"));
     }
 
     /**

@@ -149,11 +149,10 @@ public class DelModCommandTest {
      */
     @Test
     public void constructor_nullName_assertionFails() {
-        try {
+        AssertionError thrown = assertThrows(AssertionError.class, () -> {
             new DelModCommand(null);
-        } catch (AssertionError e) {
-            assertTrue(e.getMessage().contains("Module name cannot be null or empty"));
-        }
+        });
+        assertTrue(thrown.getMessage().contains("Module name cannot be null or empty"));
     }
 
     /**
@@ -162,11 +161,10 @@ public class DelModCommandTest {
      */
     @Test
     public void constructor_emptyName_assertionFails() {
-        try {
-            new DelModCommand("   ");
-        } catch (AssertionError e) {
-            assertTrue(e.getMessage().contains("Module name cannot be null or empty"));
-        }
+        AssertionError thrown = assertThrows(AssertionError.class, () -> {
+            new DelModCommand(" ");
+        });
+        assertTrue(thrown.getMessage().contains("Module name cannot be null or empty"));
     }
 
     /**
@@ -175,11 +173,10 @@ public class DelModCommandTest {
     @Test
     public void execute_nullContext_assertionFails() {
         DelModCommand command = new DelModCommand("CG2111A");
-        try {
+        AssertionError thrown = assertThrows(AssertionError.class, () -> {
             command.execute(null);
-        } catch (AssertionError | EquipmentMasterException e) {
-            // Expected to fail the assertion before throwing any other exception
-        }
+        });
+        assertTrue(thrown.getMessage().contains("Context should not be null during execution"));
     }
 
     /**

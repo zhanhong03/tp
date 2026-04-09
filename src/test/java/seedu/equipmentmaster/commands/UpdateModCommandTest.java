@@ -12,10 +12,7 @@ import seedu.equipmentmaster.ui.Ui;
 
 import java.nio.file.Path;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * JUnit tests for the {@code UpdateModCommand} class.
@@ -438,12 +435,11 @@ public class UpdateModCommandTest {
      */
     @Test
     public void execute_nullContext_assertionFails() {
-        UpdateModCommand command = new UpdateModCommand("CG2271", 100);
-        try {
+        UpdateModCommand command = new UpdateModCommand("CG2111A", 150);
+        AssertionError thrown = assertThrows(AssertionError.class, () -> {
             command.execute(null);
-        } catch (AssertionError | EquipmentMasterException e) {
-            // Success: branch covered
-        }
+        });
+        assertTrue(thrown.getMessage().contains("Context should not be null during execution"));
     }
 
     @Test
@@ -518,5 +514,19 @@ public class UpdateModCommandTest {
         Context context = new Context(null, moduleList, new Ui(), noOpStorage, null);
         UpdateModCommand command = new UpdateModCommand("CG2271", 100);
         command.execute(context);
+    }
+
+    // Consolidated null storage test
+    @Test
+    public void execute_nullStorage_skipsSave_success() throws EquipmentMasterException {
+        moduleList.addModule(new Module("CG2271", 100));
+        Ui ui = new Ui();
+        // Context with explicitly null storage handler
+        Context contextWithNullStorage = new Context(null, moduleList, ui, null, null);
+        UpdateModCommand command = new UpdateModCommand("CG2271", 110);
+
+        // Execute should succeed in memory, skipping disk save
+        assertDoesNotThrow(() -> command.execute(contextWithNullStorage));
+        assertEquals(110, moduleList.getModule("CG2271").getPax());
     }
 }

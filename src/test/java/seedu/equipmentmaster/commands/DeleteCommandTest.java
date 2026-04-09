@@ -376,10 +376,9 @@ public class DeleteCommandTest {
     @Test
     public void execute_nullContext_assertionFails() {
         DeleteCommand command = new DeleteCommand(1, 1, "available");
-        try {
+        AssertionError thrown = assertThrows(AssertionError.class, () -> {
             command.execute(null);
-        } catch (AssertionError | EquipmentMasterException e) {
-            // Expected assertion failure
-        }
+        });
+        assertTrue(thrown.getMessage().contains("Context should not be null"));
     }
 }

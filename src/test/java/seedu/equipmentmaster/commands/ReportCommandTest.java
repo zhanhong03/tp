@@ -363,13 +363,12 @@ public class ReportCommandTest {
     @Test
     public void execute_nullEquipments_assertionFails() {
         ReportCommand command = new ReportCommand("aging", "AY2024/25 Sem1");
-        // Null equipments
         Context context = new Context(null, new ModuleList(), ui, null, null);
-        try {
+
+        AssertionError thrown = assertThrows(AssertionError.class, () -> {
             command.execute(context);
-        } catch (AssertionError e) {
-            assertTrue(e.getMessage().contains("EquipmentList must not be null"));
-        }
+        });
+        assertTrue(thrown.getMessage().contains("EquipmentList must not be null"));
     }
 
     /**
@@ -378,12 +377,20 @@ public class ReportCommandTest {
     @Test
     public void execute_nullUi_assertionFails() {
         ReportCommand command = new ReportCommand("aging", "AY2024/25 Sem1");
-        // Null UI
         Context context = new Context(equipments, new ModuleList(), null, null, null);
-        try {
+
+        // Catching either AssertionError or NPE based on which guard hits first
+        assertThrows(Throwable.class, () -> {
             command.execute(context);
-        } catch (AssertionError | NullPointerException e) {
-            // Success: handled by assertion or upstream NPE
-        }
+        });
+    }
+
+    @Test
+    public void execute_nullContext_assertionFails() {
+        ReportCommand command = new ReportCommand("aging", "AY2024/25 Sem1");
+        AssertionError thrown = assertThrows(AssertionError.class, () -> {
+            command.execute(null);
+        });
+        assertTrue(thrown.getMessage().contains("Context should not be null during execution"));
     }
 }

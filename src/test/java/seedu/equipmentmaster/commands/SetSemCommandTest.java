@@ -229,11 +229,10 @@ public class SetSemCommandTest {
     @Test
     public void execute_nullContext_assertionFails() {
         SetSemCommand command = new SetSemCommand("AY2025/26 Sem1");
-        try {
+        AssertionError thrown = assertThrows(AssertionError.class, () -> {
             command.execute(null);
-        } catch (AssertionError | EquipmentMasterException e) {
-            assertTrue(e.getMessage().contains("Context should not be null during execution"));
-        }
+        });
+        assertTrue(thrown.getMessage().contains("Context should not be null during execution"));
     }
 
     /**

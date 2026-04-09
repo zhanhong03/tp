@@ -130,11 +130,10 @@ public class AcademicSemesterTest {
      */
     @Test
     public void constructor_nullInput_assertionFails() {
-        try {
+        AssertionError thrown = assertThrows(AssertionError.class, () -> {
             new AcademicSemester(null);
-        } catch (AssertionError | EquipmentMasterException e) {
-            assertTrue(e.getMessage().contains("Raw semester input cannot be null"));
-        }
+        });
+        assertTrue(thrown.getMessage().contains("Raw semester input cannot be null"));
     }
 
     /**
@@ -143,11 +142,10 @@ public class AcademicSemesterTest {
     @Test
     public void calculateAge_nullCurrentSemester_assertionFails() throws EquipmentMasterException {
         AcademicSemester sem = new AcademicSemester("AY2024/25 Sem1");
-        try {
+        AssertionError thrown = assertThrows(AssertionError.class, () -> {
             sem.calculateAgeInYears(null);
-        } catch (AssertionError e) {
-            assertTrue(e.getMessage().contains("Current reference semester cannot be null"));
-        }
+        });
+        assertTrue(thrown.getMessage().contains("Current reference semester cannot be null"));
     }
 
     /**

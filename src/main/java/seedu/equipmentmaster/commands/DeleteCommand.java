@@ -122,7 +122,7 @@ public class DeleteCommand extends Command {
             throw new EquipmentMasterException("Equipment '" + name + "' not found.");
         }
 
-        if (index > equipments.getSize()) {
+        if (index < 1 || index > equipments.getSize()) {
             throw new EquipmentMasterException("Invalid index. Please check the list again.");
         }
         return equipments.getEquipment(index - 1);
