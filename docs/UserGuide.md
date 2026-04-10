@@ -175,18 +175,18 @@ Scans your entire inventory and generates a report of all equipment where the cu
 * **Format:** `report lowstock`
 
 * **Example Output:**
+
 ```text
 !!! CRITICAL LOW STOCK WARNING !!!
-
 +----+--------------------+-------+--------+-------+-----+
 | ID | Equipment Name     | Avail | Loaned | Total | Min |
 +----+--------------------+-------+--------+-------+-----+
 | 2  | Oscilloscope       | 0     | 1      | 1     | 2   |
 | 4  | Basys3 FPGA        | 2     | 5      | 7     | 10  |
 +----+--------------------+-------+--------+-------+-----+
-
 Action Required: Please arrange for immediate equipment recovery or procurement.
 ```
+
 
 #### Setting a Safety Buffer: `setbuffer`
 Sets a percentage safety buffer on specific equipment. This ensures you buy slightly more than the baseline module enrollments to account for potential damage, loss, or unexpected student increases.
@@ -200,7 +200,6 @@ Calculates the exact total number of items needed for the upcoming semester by c
 
 ```text
 Generating Procurement Report for upcoming semester...
-
 +----+--------------------+-------+--------+----------+--------+
 | ID | Equipment Name     | Owned | Buffer | Required | To Buy |
 +----+--------------------+-------+--------+----------+--------+
@@ -209,6 +208,7 @@ Generating Procurement Report for upcoming semester...
 | 3  | Soldering Iron     | 25    | 0.0%   | 30       | 5      |
 +----+--------------------+-------+--------+----------+--------+
 ```
+
 
 *Note: 'Required' is calculated based on module enrollment pax, mapped ratios, and the safety buffer (rounded up).*
 
@@ -261,6 +261,7 @@ Displays your entire equipment inventory in a cleanly aligned, responsive table 
 | 5  | Jumper Wires       | 480   | 20     | 500   | 100 | CG2111A          |
 +----+--------------------+-------+--------+-------+-----+------------------+
 ```
+
 
 #### Viewing the interactive manual: `help`
 Provides a comprehensive, in-application guide to all available commands, their parameters, and usage examples.
