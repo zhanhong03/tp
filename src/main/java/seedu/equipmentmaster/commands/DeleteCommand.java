@@ -6,6 +6,8 @@ import seedu.equipmentmaster.equipmentlist.EquipmentList;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
 import seedu.equipmentmaster.storage.Storage;
 import seedu.equipmentmaster.ui.Ui;
+import seedu.equipmentmaster.modulelist.ModuleList;
+import seedu.equipmentmaster.module.Module;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -101,10 +103,12 @@ public class DeleteCommand extends Command {
         EquipmentList equipments = context.getEquipments();
         Ui ui = context.getUi();
 
+        ModuleList moduleList = context.getModuleList();
+
         Equipment target = findTarget(equipments);
 
         updateInternalQuantities(target);
-        processDeletionResult(target, equipments, ui);
+        processDeletionResult(target, equipments, ui, moduleList);
 
         saveToStorage(context.getStorage(), equipments, ui);
     }
@@ -145,11 +149,20 @@ public class DeleteCommand extends Command {
         target.setQuantity(target.getQuantity() - quantity);
     }
 
-    private void processDeletionResult(Equipment target, EquipmentList list, Ui ui) {
+    private void processDeletionResult(Equipment target, EquipmentList list, Ui ui, ModuleList moduleList) {
         ui.showMessage("Deleted " + quantity + " " + status + " unit(s) of " + target.getName() + ".");
         if (target.getQuantity() == 0) {
             list.removeEquipment(target);
             ui.showMessage("Notice: Item completely removed (Total reached 0).");
+            if (moduleList != null) {
+                // Iterate through every module in the system
+                for (Module module : moduleList.getModules()) {
+                    // Attempt to remove the equipment from the module.
+                    // If the equipment wasn't tagged to this specific module,
+                    // this method safely does nothing and returns false.
+                    module.removeEquipmentRequirement(target.getName());
+                }
+            }
         } else if (target.getQuantity() <= target.getMinQuantity()) {
             ui.showMessage("!!! LOW STOCK ALERT: " + target.getName() + " is below threshold!");
         }

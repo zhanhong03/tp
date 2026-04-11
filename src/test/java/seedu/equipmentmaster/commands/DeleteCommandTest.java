@@ -12,12 +12,14 @@ import seedu.equipmentmaster.semester.AcademicSemester;
 import seedu.equipmentmaster.storage.Storage;
 import seedu.equipmentmaster.ui.Ui;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
+import seedu.equipmentmaster.module.Module;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -37,14 +39,18 @@ public class DeleteCommandTest {
     private EquipmentList equipments;
     private Ui ui;
     private Storage storage;
+    private ModuleList moduleList;
+    private Context context;
 
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws EquipmentMasterException {
         equipments = new EquipmentList();
+        moduleList  = new ModuleList();
         ui = new Ui();
         // Use a temporary file so we don't overwrite real data during tests
         storage = new Storage(tempDir.resolve("test_equipment.txt").toString(),
                 ui, tempDir.resolve("test_setting.txt").toString(), tempDir.resolve("test_module.txt").toString());
+        context = new Context(equipments, moduleList, ui, storage, new AcademicSemester("AY2024/25 Sem1"));
     }
 
     //@@author Hongyu1231
@@ -380,5 +386,35 @@ public class DeleteCommandTest {
             command.execute(null);
         });
         assertTrue(thrown.getMessage().contains("Context should not be null"));
+    }
+
+    @Test
+    public void execute_deleteCompletely_removesDanglingReferencesFromModules() throws EquipmentMasterException {
+        // Bug Fix #5: When an item reaches 0, untag it from all modules
+
+        String itemName = "Beer";
+        String moduleName = "CS2113";
+
+        // 1. Setup Initial State (Item exists, Module exists, Item is tagged to Module)
+        Equipment beer = new Equipment(itemName, 5, 5, 0, null, 0.0, null, 0, 0.0);
+        equipments.addEquipment(beer);
+
+        Module cs2113 = new Module(moduleName, 100);
+        cs2113.addEquipmentRequirement(itemName, 1.0);
+        moduleList.addModule(cs2113);
+
+        // Verify initial setup is correct
+        assertTrue(moduleList.getModule(moduleName).getEquipmentRequirements().containsKey(itemName));
+
+        // 2. Execute deletion of ALL units (5 available units)
+        DeleteCommand deleteCommand = new DeleteCommand(itemName, 5, "available");
+        deleteCommand.execute(context);
+
+        // 3. Verify the item is gone from the main equipment list
+        assertEquals(0, equipments.getSize());
+
+        // 4. THE CRITICAL CHECK: Verify it was automatically untagged from the module
+        assertFalse(moduleList.getModule(moduleName).getEquipmentRequirements().containsKey(itemName),
+                "Dangling reference detected! Item was not removed from the module.");
     }
 }

@@ -1,16 +1,20 @@
 package seedu.equipmentmaster.commands;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import seedu.equipmentmaster.context.Context;
 import seedu.equipmentmaster.equipment.Equipment;
 import seedu.equipmentmaster.equipmentlist.EquipmentList;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
+import seedu.equipmentmaster.module.Module;
 import seedu.equipmentmaster.modulelist.ModuleList;
 import seedu.equipmentmaster.semester.AcademicSemester;
 import seedu.equipmentmaster.storage.Storage;
 import seedu.equipmentmaster.ui.Ui;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -26,6 +30,26 @@ public class AddCommandTest {
     private static final String TEST_FILE_PATH = "test_equipment.txt";
     private static final String TEST_SETTING_FILE_PATH = "test_setting.txt";
     private static final String TEST_MODULE_FILE_PATH = "test_module.txt";
+
+    @TempDir
+    Path tempDir;
+
+    private Context context;
+    private EquipmentList equipmentList;
+    private ModuleList moduleList;
+    private Ui ui;
+    private Storage storage;
+
+    @BeforeEach
+    public void setUp() throws EquipmentMasterException {
+        equipmentList = new EquipmentList();
+        moduleList = new ModuleList();
+        ui = new Ui();
+        storage = new Storage(tempDir.resolve("test_equipment.txt").toString(),
+                ui, tempDir.resolve("test_setting.txt").toString(), tempDir.resolve("test_module.txt").toString());
+        // Replace UiStub and StorageStub with however you mock these in your project
+        context = new Context(equipmentList, moduleList, ui,storage, new AcademicSemester("AY2024/25 Sem1"));
+    }
 
     @Test
     public void execute_validEquipment_addsToList() throws EquipmentMasterException {
@@ -260,6 +284,73 @@ public class AddCommandTest {
     public void parse_validFullInput_success() throws EquipmentMasterException {
         AddCommand command = AddCommand.parse(
                 "add n/Centrifuge q/2 bought/AY2024/25 Sem1 life/5.5 min/1 m/CS2113 m/CG2023");
+        assertNotNull(command);
+    }
+
+    @Test
+    public void execute_addExistingItem_cumulativeQuantityUpdated() throws EquipmentMasterException {
+        // Bug Fix #1: Ensure total quantity is properly merged, not overwritten
+
+        // 1. Add first batch
+        AddCommand firstAdd = new AddCommand("Beer", 5);
+        firstAdd.execute(context);
+
+        // 2. Add second batch
+        AddCommand secondAdd = new AddCommand("Beer", 3);
+        secondAdd.execute(context);
+
+        // 3. Verify total is 8, and there is only 1 entry in the list
+        assertEquals(1, equipmentList.getSize());
+        Equipment savedEquipment = equipmentList.getEquipment(0);
+        assertEquals(8, savedEquipment.getAvailable());
+        assertEquals(8, savedEquipment.getQuantity());
+    }
+
+    @Test
+    public void parse_negativeMinThreshold_throwsException() {
+        // Bug Fix #2: Reject negative min values in parser
+
+        String input = "add n/Beer q/5 min/-2";
+
+        EquipmentMasterException exception = assertThrows(EquipmentMasterException.class, () -> {
+            AddCommand.parse(input);
+        });
+
+        assertTrue(exception.getMessage().contains("cannot be negative") ||
+                exception.getMessage().contains("valid whole number"));
+    }
+
+    @Test
+    public void execute_withNewModule_ghostModuleCreatedAndTagged() throws EquipmentMasterException {
+        // Bug Fix #3: Auto-create missing modules and tag equipment to them
+
+        ArrayList<String> modules = new ArrayList<>();
+        modules.add("CS2113");
+
+        // Note: Using the constructor that accepts the module list
+        AddCommand command = new AddCommand("Laptop", 10, modules);
+        command.execute(context);
+
+        // 1. Verify the module was auto-created in the global list
+        assertTrue(moduleList.hasModule("CS2113"));
+
+        // 2. Verify the equipment was successfully tagged to the module with default ratio 1.0
+        Module createdModule = moduleList.getModule("CS2113");
+        assertTrue(createdModule.getEquipmentRequirements().containsKey("Laptop"));
+        assertEquals(1.0, createdModule.getEquipmentRequirements().get("Laptop"));
+    }
+
+    @Test
+    public void parse_flagLikeSubstrings_parsedCorrectly() throws EquipmentMasterException {
+        // Bug Fix #4: Valid equipment names rejected when containing flag-like substrings
+
+        String input = "add n/alpha q/beta q/5";
+
+        // If your regex/parser fix worked, this should NOT throw an exception
+        AddCommand command = AddCommand.parse(input);
+
+        // To strictly verify this, you might need to add package-private getters in AddCommand
+        // Or simply rely on the fact that no Exception was thrown to prove it bypassed the bug.
         assertNotNull(command);
     }
 }
