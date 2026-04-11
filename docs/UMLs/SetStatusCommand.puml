@@ -33,6 +33,14 @@ activate Eq
 Eq --> Command
 deactivate Eq
 
+opt available < minQuantity
+    Command -> Eq : getMinQuantity()
+    activate Eq
+    Eq --> Command : minQuantity
+    deactivate Eq
+    Command -> Command : showMessage(warning)
+end
+
 Command -> Storage : save(equipments)
 activate Storage
 Storage --> Command
