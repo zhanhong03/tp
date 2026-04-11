@@ -1,0 +1,40 @@
+@startuml
+participant ":DeleteCommand" as Command
+participant ":EquipmentList" as EqList
+participant "target:Equipment" as Eq
+participant ":ModuleList" as ModList
+participant ":Storage" as Storage
+
+[-> Command : execute(context)
+activate Command
+
+Command -> EqList : findEquipment(name)
+activate EqList
+EqList --> Command : target
+deactivate EqList
+
+Command -> Eq : reduceQuantity(amount)
+activate Eq
+Eq --> Command : remainingQty
+deactivate Eq
+
+opt if remainingQty == 0
+    Command -> ModList : removeEquipmentFromAllModules(name)
+    activate ModList
+    ModList --> Command
+    deactivate ModList
+
+    Command -> EqList : remove(target)
+    activate EqList
+    EqList --> Command
+    deactivate EqList
+end
+
+Command -> Storage : save()
+activate Storage
+Storage --> Command
+deactivate Storage
+
+[<-- Command : successMessage
+deactivate Command
+@enduml

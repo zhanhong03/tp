@@ -1,18 +1,205 @@
 # Developer Guide
 
+## Table of Contents<!-- TOC -->
+* [Developer Guide](#developer-guide)
+  * [Table of Contents](#table-of-contents)
+  * [Acknowledgements](#acknowledgements)
+  * [Design & implementation](#design--implementation)
+    * [Architecture Interaction: The Context Object Pattern](#architecture-interaction-the-context-object-pattern)
+      * [Object Snapshot: The Internal State](#object-snapshot-the-internal-state)
+    * [Defensive Programming and Error Handling](#defensive-programming-and-error-handling)
+      * [1. Centralized Exception Handling](#1-centralized-exception-handling)
+      * [2. Guard Clauses in Parsing](#2-guard-clauses-in-parsing)
+      * [3. Use of Assertions](#3-use-of-assertions)
+      * [4. Safe Data Persistence](#4-safe-data-persistence)
+    * [Parser Component (Command Factory Pattern)](#parser-component-command-factory-pattern)
+      * [1. Overview](#1-overview)
+      * [2. Architecture and Usage](#2-architecture-and-usage)
+      * [3. UML Class Diagram](#3-uml-class-diagram)
+      * [4. Design Considerations](#4-design-considerations)
+    * [Core Inventory Ingestion (`AddCommand`)](#core-inventory-ingestion-addcommand)
+      * [1. Overview](#1-overview-1)
+      * [2. Implementation Details](#2-implementation-details)
+      * [3. UML Diagrams](#3-uml-diagrams)
+      * [4. Design Considerations](#4-design-considerations-1)
+      * [5. Current Limitations & Future Improvements](#5-current-limitations--future-improvements)
+    * [Delete Feature (Equipment & Module)](#delete-feature-equipment--module)
+      * [1. Overview](#1-overview-2)
+      * [2. Component-level implementation (Equipment Deletion)](#2-component-level-implementation-equipment-deletion)
+      * [3. Design Considerations](#3-design-considerations)
+      * [4. Current Limitations & Future Improvements](#4-current-limitations--future-improvements)
+    * [Storage Implementation](#storage-implementation)
+      * [1. Data Format](#1-data-format)
+      * [2. Loading Logic (The "Robust Loader")](#2-loading-logic-the-robust-loader)
+      * [3. Design Considerations](#3-design-considerations-1)
+    * [SetBufferCommand](#setbuffercommand)
+      * [1. Overview](#1-overview-3)
+      * [2. Implementation Details](#2-implementation-details-1)
+      * [3. Sequence Diagram](#3-sequence-diagram)
+      * [4. Design Considerations](#4-design-considerations-2)
+    * [SetStatusCommand](#setstatuscommand)
+      * [1. Overview](#1-overview-4)
+      * [2. Implementation Details](#2-implementation-details-2)
+      * [3. Sequence Diagram](#3-sequence-diagram-1)
+      * [4. Design Considerations](#4-design-considerations-3)
+    * [Low Stock Alert System](#low-stock-alert-system)
+      * [1. Overview](#1-overview-5)
+      * [2. Implementation Details](#2-implementation-details-3)
+      * [3. Sequence Diagram](#3-sequence-diagram-2)
+      * [4. Design Considerations](#4-design-considerations-4)
+    * [Enhanced Find Feature](#enhanced-find-feature)
+      * [1. Overview](#1-overview-6)
+      * [2. Implementation Details](#2-implementation-details-4)
+      * [3. UML Diagrams](#3-uml-diagrams-1)
+      * [4. Design Considerations](#4-design-considerations-5)
+      * [5. Current Limitations & Future Improvements](#5-current-limitations--future-improvements-1)
+    * [Module Tracking System](#module-tracking-system)
+      * [1. Overview](#1-overview-7)
+      * [2. Implementation Details](#2-implementation-details-5)
+      * [3. UML Diagrams](#3-uml-diagrams-2)
+      * [4. Design Considerations](#4-design-considerations-6)
+      * [5. Future Implementations (Beyond v2.1)](#5-future-implementations-beyond-v21)
+    * [Academic Dependency Mapping (`TagCommand` & `UntagCommand`)](#academic-dependency-mapping-tagcommand--untagcommand)
+      * [1. Overview](#1-overview-8)
+      * [2. Implementation Details](#2-implementation-details-6)
+      * [3. Sequence Diagrams: Tag and Untag Execution](#3-sequence-diagrams-tag-and-untag-execution)
+      * [4. Design Considerations](#4-design-considerations-7)
+    * [Implementation: Safe Dereferencing (Data Integrity)](#implementation-safe-dereferencing-data-integrity)
+      * [1. Execution Logic](#1-execution-logic)
+      * [2. Design Considerations](#2-design-considerations)
+    * [Aging Equipment Report](#aging-equipment-report)
+      * [1. Overview](#1-overview-9)
+      * [2. Implementation Details](#2-implementation-details-7)
+      * [3. UML Diagrams](#3-uml-diagrams-3)
+      * [4. Design Considerations](#4-design-considerations-8)
+      * [5. Future Implementations (Beyond v2.1)](#5-future-implementations-beyond-v21-1)
+    * [Implementation: Academic Semester Normalization](#implementation-academic-semester-normalization)
+      * [1. The Normalization Algorithm](#1-the-normalization-algorithm)
+      * [2. Usage in Aging Calculation](#2-usage-in-aging-calculation)
+    * [Procurement Report (Automated Restocking)](#procurement-report-automated-restocking)
+      * [1. Overview](#1-overview-10)
+      * [2. Implementation Details](#2-implementation-details-8)
+      * [3. Sequence Diagram: Procurement Report Execution](#3-sequence-diagram-procurement-report-execution)
+      * [4. Design Considerations](#4-design-considerations-9)
+      * [5. The Calculation Pipeline](#5-the-calculation-pipeline)
+      * [6. Current Limitations & Future Improvements](#6-current-limitations--future-improvements)
+    * [`UiTable`: Dynamic UI Table Generation Utility](#uitable-dynamic-ui-table-generation-utility)
+      * [1. Overview](#1-overview-11)
+      * [2. Implementation Details](#2-implementation-details-9)
+      * [Rendering Flow (Sequence Diagram)](#rendering-flow-sequence-diagram)
+      * [3. Class Diagram](#3-class-diagram)
+      * [4. Design Considerations](#4-design-considerations-10)
+    * [Help Feature](#help-feature)
+      * [1. Overview](#1-overview-12)
+      * [2. Component-level implementation](#2-component-level-implementation)
+      * [3. Design Considerations](#3-design-considerations-2)
+      * [4. Current Limitations & Future Improvements](#4-current-limitations--future-improvements-1)
+    * [Logging Architecture](#logging-architecture)
+      * [1. Implementation](#1-implementation)
+      * [2. Design Considerations](#2-design-considerations-1)
+  * [Product scope](#product-scope)
+    * [Target user profile](#target-user-profile)
+    * [Value proposition](#value-proposition)
+  * [User Stories](#user-stories)
+    * [Use Cases](#use-cases)
+  * [Non-Functional Requirements (NFR)](#non-functional-requirements-nfr)
+  * [Glossary](#glossary)
+  * [Instructions for Manual Testing](#instructions-for-manual-testing)
+    * [1. Launch and Initialization](#1-launch-and-initialization)
+    * [2. Loading Sample Data](#2-loading-sample-data)
+    * [3. Testing the Enhanced Find Feature](#3-testing-the-enhanced-find-feature)
+    * [4. Testing the Aging Equipment Report](#4-testing-the-aging-equipment-report)
+    * [5. Testing the Module Tracking System](#5-testing-the-module-tracking-system)
+    * [6. Testing Equipment Core Operations (CRUD)](#6-testing-equipment-core-operations-crud)
+    * [7. Testing Status, Thresholds, and Buffers](#7-testing-status-thresholds-and-buffers)
+    * [8. Testing Additional Reports](#8-testing-additional-reports)
+    * [9. Testing Relational Mapping](#9-testing-relational-mapping)
+    * [10. Testing Utilities and Context](#10-testing-utilities-and-context)
+    * [11. Testing Robustness (Negative Cases)](#11-testing-robustness-negative-cases)
+      * [11.1 Invalid Data Input](#111-invalid-data-input)
+      * [11.2 Storage Corruption Recovery](#112-storage-corruption-recovery)
+      * [11.3 Boundary Values](#113-boundary-values)
+  * [Future Roadmap (Beyond v2.1)](#future-roadmap-beyond-v21)
+  * [Appendix: Project Effort](#appendix-project-effort)
+<!-- TOC --> 
+
+---
+
 ## Acknowledgements
 
 * **AddressBook-Level3 (AB3):** This project was initially inspired by and adapted from the AddressBook-Level3 project created by the [SE-EDU initiative](https://se-education.org). We thank the AB3 team for providing a robust architectural template for Java-based CLI applications.
 * **Libraries Used:** 
   * [JUnit 5](https://junit.org/junit5/) - For comprehensive unit and integration testing.
 
+---
+
 ## Design & implementation
+
+This section describes the overall design of the application and how its main components interact.
+
+**Core Components**
+The system is structured into several key components, adhering to the separation of concerns principle:
+* **UI**: Manages all user inputs and outputs, formatting text for the Command Line Interface.
+* **Parser**: Interprets user input, validates syntax, and constructs the appropriate `Command` objects.
+* **Command**: Encapsulates the specific business logic to execute user operations.
+* **Model**: Represented internally by `EquipmentList` and `ModuleList`, it stores the runtime inventory data.
+* **Storage**: Handles data persistence, reading from and writing to the local `.txt` files.
+
+This modular structure ensures that parsing logic is isolated from execution logic, and data storage is handled independently from the runtime model.
+
 
 **Architecture: High-Level System Components**
 The following diagram illustrates the high-level architecture of the Equipment Master application.
 The `EquipmentMaster` class acts as the main entry point. Upon initialization, it utilizes the `Storage` component to load existing data (equipment, modules, and system settings) into memory (`EquipmentList` and `ModuleList`). During execution, it bundles these instantiated components into a single `Context` object.
 The application then enters a continuous loop: the `Ui` reads user input, the `Parser` translates this string into a specific executable `Command`, and the `Command` executes its logic by interacting with the shared `Context`.
-![Equipment Master Diagram](images/EquipmentMaster.png)
+
+<div align="center">
+  <img src="images/EquipmentMaster.png" width="100%" />
+  <p><em>Figure 1: High-level architecture diagram illustrating the core components and their interactions.</em></p>
+</div>
+
+---
+
+### Architecture Interaction: The Context Object Pattern
+To ensure a clean separation of concerns, the application utilizes a **Context Object Pattern**. Upon startup, all major components (`EquipmentList`, `ModuleList`, `Ui`, `Storage`, `UserPreferences`) are instantiated and bundled into a single `Context` object.
+
+This design choice ensures:
+* **Decoupling**: Command objects only interact with the `Context` rather than knowing how the `Ui` or `Storage` is internally structured.
+* **Testability**: It allows us to pass a "Mock Context" with temporary storage paths during unit testing.
+
+#### Object Snapshot: The Internal State
+To better understand how data is structured in memory during runtime, the following object diagram provides a snapshot of the `Context` object. It shows how `Equipment` items are logically linked to `Module` codes through string-based tagging.
+
+<div align="center">
+  <img src="images/ObjectSnapshot.png" width="800" />
+  <p><em>Figure 2: Object diagram snapshot of the Context pattern, showing in-memory data references.</em></p>
+</div>
+
+---
+
+### Defensive Programming and Error Handling
+
+To ensure system stability, the application adopts a **Defensive Programming** strategy. The goal is to catch invalid states as early as possible—either during input parsing or immediately before command execution—to prevent the application from entering an inconsistent state.
+
+#### 1. Centralized Exception Handling
+The application utilizes a single custom checked exception: **`EquipmentMasterException`**.
+* **Role**: It acts as the primary signal for any controlled failure within the application's logic (e.g., malformed user input, missing arguments, or file I/O errors).
+* **Execution Flow**: When a `Command` or `Parser` detects an error, it throws an `EquipmentMasterException`. This exception is propagated back to the `Main` execution loop, where the `Ui` catches it and displays a user-friendly error message. This prevents a single error from terminating the entire program.
+
+#### 2. Guard Clauses in Parsing
+Before a `Command` object is even instantiated, the `Parser` component utilizes **Guard Clauses** to validate the raw input string.
+* **Example**: In `UpdateModCommand#parse`, the system checks for the presence of mandatory flags (`n/`, `pax/`) and validates data types (e.g., ensuring `pax` is a positive integer). If these checks fail, an exception is thrown immediately, ensuring that no "junk" command objects are ever created.
+
+#### 3. Use of Assertions
+The application uses **Java Assertions** to document and verify internal assumptions about the program's state during development.
+* **Usage**: Assertions are used at the beginning of `execute()` methods to ensure that critical dependencies (like `EquipmentList` or `Ui`) have been correctly injected via the `Context`.
+* **Example**: `assert equipments != null : "EquipmentList dependency cannot be null";`
+* **Purpose**: Unlike exceptions, these are used to catch **programmer errors** rather than user errors, helping developers identify bugs during the integration phase.
+
+#### 4. Safe Data Persistence
+The `Storage` component is designed to be "Fail-Safe." During the loading phase, if a specific line in the save file is corrupted (e.g., contains an illegal character `|`), the system catches the error, logs a warning, and skips only that specific line. This ensures that a single corrupted record does not prevent the user from accessing the rest of their inventory.
+
+---
 
 ### Parser Component (Command Factory Pattern)
 
@@ -49,7 +236,11 @@ static {
 
 #### 3. UML Class Diagram
 **Class Diagram: Parser Component**
-![Parser Class Diagram](images/parser.png)
+
+<div align="center">
+  <img src="images/parser.png" width="100%" />
+  <p><em>Figure 3: Class diagram of the Parser component utilizing the Command Factory pattern.</em></p>
+</div>
 
 #### 4. Design Considerations
 * **Command Factory Pattern & Registration**
@@ -78,12 +269,19 @@ The `AddCommand` is instantiated via its static `parse` method. The execution fl
 #### 3. UML Diagrams
 **Class Diagram: AddCommand**
 (Note: This diagram focuses strictly on the internal structure of `AddCommand` and its inheritance from `Command`. Associated domain classes like `Context`, `Equipment`, and `AcademicSemester` are shown as data types, but their full class definitions are omitted here for clarity.)
-![AddCommand Class Diagram](images/AddCommandClass.png)
+
+<div align="center">
+  <img src="images/AddCommandClass.png" width="100%" />
+  <p><em>Figure 4: Class diagram detailing the internal structure of the AddCommand.</em></p>
+</div>
 
 **Sequence Diagram: Execution Flow**
 (Note: This diagram illustrates the `execute()` phase of the command. The initial string parsing and validation steps are handled prior to execution and are omitted for brevity. Storage file I/O operations are shown at a high level.)
-![AddCommand Sequence Diagram](images/AddCommand.png)
 
+<div align="center">
+  <img src="images/AddCommand.png" width="100%" />
+  <p><em>Figure 5: Sequence diagram showing the execution flow of the Core Inventory Ingestion process.</em></p>
+</div>
 
 #### 4. Design Considerations
 
@@ -94,6 +292,66 @@ The `AddCommand` is instantiated via its static `parse` method. The execution fl
 -   **Alternative 2: Standard Regex Matching**
 
   -   **Why it was rejected:** Regex becomes exponentially complex and difficult to maintain when dealing with 5+ optional flags that can appear in any order. A single malformed regex string could break the entire ingestion engine.
+
+#### 5. Current Limitations & Future Improvements
+* *Limitation*: The command currently requires all inputs to be typed in a single line, which can be prone to typos for items with many attributes.
+* *Improvement*: Support an interactive "wizard" mode (`add --interactive`) that prompts the user step-by-step for each field.
+
+---
+
+### Delete Feature (Equipment & Module)
+
+#### 1. Overview
+The delete feature allows users to safely remove physical assets or module registries from the system. Because the application maintains relational links between equipment and modules, the deletion process must prevent "dangling references."
+
+#### 2. Component-level implementation (Equipment Deletion)
+When an equipment item is deleted (e.g., `delete n/STM32 q/5 s/AVAILABLE`), the `DeleteCommand` not only updates the quantity but also handles complete removal if the quantity reaches zero.
+
+If an equipment is completely removed from the inventory, the system must perform a reverse-cleanup: it automatically triggers an `untag` operation across all modules to ensure no module still expects a requirement ratio from a non-existent item.
+
+<div align="center">
+  <img src="images/DeleteCommand.png" width="100%" />
+  <p><em>Figure 6: Sequence diagram of the Delete feature, highlighting the synchronous reverse-cleanup mechanism.</em></p>
+</div>
+
+#### 3. Design Considerations
+* **Alternative 1 (Current): Hard Delete with Synchronous Cleanup**
+  * *Justification*: Simplest for the user to understand. It ensures the `Storage` files remain compact, human-readable, and free of "ghost items."
+* **Alternative 2: Soft Delete (Marking as "Inactive")**
+  * *Rejection*: Increases storage complexity and clutters the UI. For a lab TA, "Delete" should mean the physical item is permanently gone from the lab's ledger.
+
+#### 4. Current Limitations & Future Improvements
+* *Limitation*: The command currently lacks an "undo" mechanism. If a user accidentally deletes an item, they must manually re-add and re-tag it.
+* *Improvement*: Implement a recycle bin or an `undo` command stack in future versions to prevent accidental data loss.
+
+---
+
+### Storage Implementation
+
+The Storage component manages data persistence using human-readable text files. This ensures that lab data is preserved across sessions without requiring a database engine.
+
+#### 1. Data Format
+Each entity is stored in a dedicated `.txt` file using the **Pipe-Delimited Format**.
+* **Equipment (`equipment.txt`)**: `Name|Quantity|Loaned|MinQuantity|PurchaseSem|Lifespan|Buffer|ModuleTags`
+* **Modules (`module.txt`)**: `ModuleCode|Pax`
+
+#### 2. Loading Logic (The "Robust Loader")
+
+<div align="center">
+  <img src="images/StorageLoadingSequence.png" width="100%" />
+  <p><em>Figure 7: Sequence diagram demonstrating the "Silent Recovery" mechanism during Storage loading.</em></p>
+</div>
+
+During the initialization phase, the `Storage` class reads files line-by-line. To ensure system stability, it employs a **Silent Recovery** mechanism:
+1.  It attempts to parse a line into a data object.
+2.  If a line is malformed (e.g., missing a field or contains illegal characters), it catches the exception.
+3.  The specific corrupted line is skipped, and a warning is issued via the `Ui`, but the rest of the file continues to load.
+
+#### 3. Design Considerations
+* **Alternative 1 (Current): Plain Text with Custom Delimiters**
+  * **Justification**: It is extremely lightweight and requires zero external dependencies. Lab technicians can manually inspect or fix data using a simple text editor if necessary.
+* **Alternative 2: JSON or XML**
+  * **Rejection**: While more structured, these formats would require an external library (like Jackson or GSON) which adds complexity to the build process. For the current inventory scale, the overhead is not justified.
 
 ---
 
@@ -134,7 +392,10 @@ setbuffer i/1 b/10
 #### 3. Sequence Diagram
 *(Note: Storage persistence and UI confirmation steps are shown at a high level. The name/index-lookup logic within `EquipmentList` is abstracted for brevity.)*
 
-![SetBufferCommand Sequence Diagram](images/SetBufferCommand.png)
+<div align="center">
+  <img src="images/SetBufferCommand.png" width="100%" />
+  <p><em>Figure 8: Sequence diagram showing the dual-targeting (name/index) execution flow for SetBufferCommand.</em></p>
+</div>
 
 #### 4. Design Considerations
 * **Alternative 1 (Current Implementation): Dual Targeting (Name or Index)**
@@ -183,7 +444,10 @@ setstatus 1 q/3 s/available
 #### 3. Sequence Diagram
 *(Note: The index-resolution and name-resolution paths share the same downstream logic once the target `Equipment` is identified. The diagram abstracts the branching lookup into a single `resolveTarget()` call for clarity.)*
 
-![SetStatusCommand Sequence Diagram](images/SetStatusCommand.png)
+<div align="center">
+  <img src="images/SetStatusCommand.png" width="100%" />
+  <p><em>Figure 9: Sequence diagram illustrating the loan/available status update process.</em></p>
+</div>
 
 #### 4. Design Considerations
 * **Alternative 1 (Current Implementation): Dual Targeting (Name or Index)**
@@ -213,7 +477,10 @@ The execution flow follows these steps:
 #### 3. Sequence Diagram
 The following sequence diagram illustrates the interaction between the `DeleteCommand`, the `Equipment` model, and the `Ui` during a stock breach:
 
-![LowStockAlert Sequence Diagram](./images/LowStockAlert.png)
+<div align="center">
+  <img src="images/LowStockAlert.png" width="100%" />
+  <p><em>Figure 10: Sequence diagram of the Low Stock Alert system triggering a UI warning post-transaction.</em></p>
+</div>
 
 #### 4. Design Considerations
 **Alternative 1 (Current Implementation): Logic-Driven Alerts**
@@ -291,11 +558,19 @@ To illustrate this feature without cluttering a single diagram, the logic is div
 
 **Activity Diagram: Iteration and Early Return**
 *(This diagram omits UI rendering steps to focus purely on the search algorithm's fast-fail mechanism.)*
-![FindCommand Activity Diagram](images/find_activity.png)
+
+<div align="center">
+  <img src="images/find_activity.png" width="600" />
+  <p><em>Figure 11: Activity diagram showcasing the "Early Return" matching logic in the Find feature.</em></p>
+</div>
 
 **Sequence Diagram: Execution Flow**
 *(Note: Minor parameter details are omitted as `...` for brevity. The low-level matching logic is abstracted into a `ref` frame.)*
-![FindCommand Sequence Diagram](images/find.png)
+
+<div align="center">
+  <img src="images/find.png" width="100%" />
+  <p><em>Figure 12: Sequence diagram detailing the iteration and abstraction levels of the FindCommand.</em></p>
+</div>
 
 #### 4. Design Considerations
 * **Alternative 1 (Current Implementation): Extracted Helpers & Early Returns**
@@ -304,6 +579,10 @@ To illustrate this feature without cluttering a single diagram, the logic is div
 * **Alternative 2: Nested Iteration with `break` and `List.contains()`**
     * **Pros:** Keeps all logic inside a single method block.
     * **Cons:** Rejected due to the "Arrow Anti-Pattern". Relying on `ArrayList.contains(eq)` introduces an unnecessary $O(N)$ overhead per matched item.
+
+#### 5. Current Limitations & Future Improvements
+* *Limitation*: The search logic currently uses strict substring matching. It cannot handle minor spelling mistakes (e.g., searching for "oscilloscope" with a typo).
+* *Improvement*: Implement fuzzy matching using Levenshtein distance to suggest closely named equipment when no exact match is found.
 
 ---
 
@@ -367,11 +646,19 @@ To illustrate the data structure and execution flow of the Module Tracking Syste
 
 **Class Diagram: System Architecture**
 *(Note: Minor exception classes and standard Java libraries are omitted. The diagram highlights the inheritance of commands and the normalized separation between the `ModuleList` and `Context`.)*
-![Module System Class Diagram](images/module_class.png)
+
+<div align="center">
+  <img src="images/module_class.png" width="100%" />
+  <p><em>Figure 13: Class diagram of the Module Tracking System architecture.</em></p>
+</div>
 
 **Sequence Diagram: Update Module Execution Flow**
 *(Note: UI rendering steps and generic self-calls have been abstracted to focus on the core Model interactions during an update operation.)*
-![UpdateMod Sequence Diagram](images/updatemod.png)
+
+<div align="center">
+  <img src="images/updatemod.png" width="100%" />
+  <p><em>Figure 14: Sequence diagram for updating academic module metadata (e.g., student pax).</em></p>
+</div>
 
 #### 4. Design Considerations
 * **Alternative 1 (Current Implementation): Normalized Entity Structure**
@@ -417,10 +704,18 @@ The following sequence diagrams illustrate the execution flow for the `TagComman
 *(Note: The initial parsing of user input is omitted for clarity. Standard operations, such as index bounds-checking within the `EquipmentList` and the internal file writing mechanics of the `Storage` class, are abstracted to a high level.)*
 
 **Tag Command Flow**
-![Tag Command Sequence Diagrams](images/TagCommand.png)
+
+<div align="center">
+  <img src="images/TagCommand.png" width="100%" />
+  <p><em>Figure 15: Sequence diagram illustrating the Academic Dependency Mapping (Tagging) process.</em></p>
+</div>
 
 **Untag Command Flow**
-![Untag Command Sequence Diagrams](images/UntagCommand.png)
+
+<div align="center">
+  <img src="images/UntagCommand.png" width="100%" />
+  <p><em>Figure 16: Sequence diagram showing the removal of a requirement ratio link.</em></p>
+</div>
 
 #### 4. Design Considerations
 
@@ -431,6 +726,30 @@ The following sequence diagrams illustrate the execution flow for the `TagComman
 -   **Alternative 2: Lazy Tagging (Create on Demand)**
 
   -   **Why it was rejected:** If a user made a typo (e.g., `tag m/CG2111A n/STM33`), a "lazy" system might automatically create a blank equipment profile for "STM33". This would pollute the lab's inventory database with ghost items and typos, completely destroying the integrity of the tracking system.
+
+---
+
+### Implementation: Safe Dereferencing (Data Integrity)
+
+A critical challenge in the Academic Mapping system is maintaining data integrity when a primary entity (Equipment or Module) is deleted. The system employs a **Safe Dereferencing** strategy to prevent "Orphaned Tags" or `NullPointerExceptions` during report generation.
+
+#### 1. Execution Logic
+When a module is deleted (e.g., `delmod n/CG2111A`), the system ensures that no equipment remains "tagged" to a non-existent entity.
+
+<div align="center">
+  <img src="images/SafeDereferencing.png" width="100%" />
+  <p><em>Figure 17: Sequence diagram of the Safe Dereferencing protocol during module deletion.</em></p>
+</div>
+
+1.  **Identification**: The `DelModCommand` queries the `EquipmentList` for any items containing the module code.
+2.  **Cleanup**: It invokes `equipment.removeTag("CG2111A")` on each match.
+3.  **Finalization**: Only after the `EquipmentList` is sanitized is the `Module` removed from the `ModuleList`.
+
+#### 2. Design Considerations
+* **Alternative 1 (Current): Synchronous Cleanup**
+  * **Justification**: Guarantees that the `Procurement Report` will never encounter a missing reference. This "Eager" approach keeps the data files clean and easy to read manually.
+* **Alternative 2: Lazy Cleanup (Cleanup during Report generation)**
+  * **Rejection**: Increases the risk of inconsistent data if the reporting logic is interrupted. It also complicates the `Storage` component as it would have to handle "Ghost Tags" during loading.
 
 ---
 
@@ -456,18 +775,23 @@ Boundary Value Analysis: The parser is tested against boundary inputs like empty
 The Aging Equipment Report feature empowers lab technicians to proactively audit inventory that has exceeded its expected lifespan. It calculates age dynamically based on the semantic university timeline (Academic Semesters) rather than absolute calendar dates.
 
 #### 2. Implementation Details
-Driven by the `ReportCommand`, this feature relies heavily on the `AcademicSemester` class to perform semantic time-difference calculations.
+Driven by the `ReportCommand`, this feature relies heavily on the `AcademicSemester` class to perform semantic time-difference calculations via the integrated `Context`.
 
 During execution:
-1. The command retrieves the current `AcademicSemester` from the environment.
-2. It iterates through the `EquipmentList`.
-3. For items with a `purchaseSemester`, it calculates the elapsed time.
-4. Equipments exceeding their designated `lifespan` are compiled into a report.
+1.  The command retrieves the currently set `AcademicSemester` offset from the `Context` object.
+2.  It iterates through the full `EquipmentList` in memory.
+3.  For each item containing a `purchaseSemester`, the command invokes **`AcademicSemester#calculateAge(currentSemester)`** to resolve the elapsed time offset.
+4.  If the resolved age is greater than or equal to the equipment’s designated `lifespan`, the command calls **`ReportCommand#addToReportList(equipment)`** to buffer the item.
+5.  After the full iteration, the resulting results list is passed to the `UiTable` utility for dynamic rendering.
 
 #### 3. UML Diagrams
 **Sequence Diagram: Report Generation**
 *(Note: Pseudocode like `calculate age` is used in place of exact mathematical method calls like `calculateAgeInYears()` to keep the diagram abstracted and focused on object interactions.)*
-![ReportAging Sequence Diagram](images/reportAging.png)
+
+<div align="center">
+  <img src="images/reportAging.png" width="100%" />
+  <p><em>Figure 18: Sequence diagram for generating the Aging Equipment Report.</em></p>
+</div>
 
 #### 4. Design Considerations
 * **Alternative 1 (Current Implementation): Semantic Academic Timekeeping (`AY2024/25 Sem1`)**
@@ -479,6 +803,36 @@ During execution:
 To further enhance the automated lab management experience, the following feature is planned for future iterations:
 * **Automated Procurement Generation:** Building upon the Aging Equipment Report and the Module Tracking System (pax sizes), the system will hypothetically cross-reference aging items with next semester's expected student intake to automatically generate a formatted PDF "Purchase Request Form", detailing exactly how many new boards are needed to replace dead stock and meet student quotas.
 <!-- @@author XiaoGeNekidora -->
+
+---
+
+### Implementation: Academic Semester Normalization
+
+A core challenge in the `Aging Report` and `Procurement Report` is performing mathematical calculations on non-standard time formats like `AY2024/25 Sem1`.
+
+#### 1. The Normalization Algorithm
+
+<div align="center">
+  <img src="images/AcademicSemesterLogic.png" width="700" />
+  <p><em>Figure 19: Class and logic diagram outlining the Academic Semester normalization algorithm.</em></p>
+</div>
+
+To compare two semesters or calculate the age of an item, the `AcademicSemester` class converts strings into a **Numeric Offset**.
+
+**The Formula:**
+`NormalizedValue = StartYear + (Semester == 2 ? 0.5 : 0.0)`
+
+**Examples:**
+* `AY2020/21 Sem1` -> `2020.0`
+* `AY2020/21 Sem2` -> `2020.5`
+* `AY2024/25 Sem1` -> `2024.0`
+
+#### 2. Usage in Aging Calculation
+To determine if an equipment is "Aged", the system calculates:
+`CurrentAge = CurrentSemesterOffset - PurchaseSemesterOffset`
+If `CurrentAge >= EquipmentLifespan`, the item is flagged.
+
+This design converts a complex string-parsing problem into simple floating-point subtraction, ensuring the system is both performant and logically sound.
 
 ---
 
@@ -501,7 +855,11 @@ The calculation follows this strict algorithm for each equipment item:
 
 #### 3. Sequence Diagram: Procurement Report Execution
 _(Note: The `getModuleByName` logic is represented as a self-invocation within the `ReportCommand`, and standard math calculations for demand are abstracted to focus on object interactions.)_
-![Procurement Report Diagram](images/ProcurementReport.png)
+
+<div align="center">
+  <img src="images/ProcurementReport.png" width="100%" />
+  <p><em>Figure 20: Sequence diagram showing the object interactions for generating the Procurement Report.</em></p>
+</div>
 
 #### 4. Design Considerations
 **Alternative 1 (Current Implementation): Total Ownership vs. Demand**
@@ -511,6 +869,24 @@ _(Note: The `getModuleByName` logic is represented as a self-invocation within t
 **Alternative 2: Available Stock vs. Demand**
 *   **How it works:** `To Buy = Required - Available_Quantity`.
 *   **Why it was rejected:** As mentioned above, this leads to double-purchasing. If an item is temporarily loaned, it is still an asset we own. Procurement budgets should only be spent on actual inventory deficits, not temporary shortages.
+
+#### 5. The Calculation Pipeline
+The Procurement Report is the most mathematically intensive feature of Equipment Master. It avoids floating-point errors and ensures realistic procurement values by following a strict rounding-up policy.
+
+<div align="center">
+  <img src="images/ProcurementCalculation.png" width="700" />
+  <p><em>Figure 21: Activity diagram detailing the mathematical pipeline for the procurement calculation engine.</em></p>
+</div>
+
+**The Formula:**
+`Recommended = ceil(Sum(Module_Pax * Requirement_Ratio) * (1 + Buffer)) - Total_Owned`
+
+* **Indivisibility Rule**: The system applies `Math.ceil()` because lab equipment cannot be purchased in fractions.
+* **Ownership Offset**: It subtracts `Total_Quantity` (Available + Loaned) because procurement represents long-term asset acquisition, not immediate shelf availability.
+
+#### 6. Current Limitations & Future Improvements
+* *Limitation*: The calculation assumes that all modules require the equipment simultaneously. It does not account for staggered lab schedules (e.g., Module A uses it in Weeks 1-6, Module B uses it in Weeks 7-13).
+* *Improvement*: Introduce a "Usage Schedule" attribute to modules, allowing the procurement engine to calculate peak concurrent demand rather than absolute sum demand.
 
 ---
 
@@ -533,9 +909,21 @@ When `ListCommand` is executed:
 
 Similarly, `HelpCommand` utilizes `UiTable` but enables the `hasHeader` flag, allowing it to render a title row ("Command" | "Format") without the auto-generated numeric index.
 
-#### 3. Class Diagram
-![UiTable Class Diagram](images/uiTable.png)
 
+#### Rendering Flow (Sequence Diagram)
+The following sequence diagram illustrates how `ListCommand` utilizes `UiTable` to dynamically construct and format the inventory output before passing it to the `Ui` for display.
+
+<div align="center">
+  <img src="images/UiTableSequence.png" width="100%" />
+  <p><em>Figure 22: Sequence diagram illustrating how ListCommand utilizes UiTable for dynamic rendering.</em></p>
+</div>
+
+#### 3. Class Diagram
+
+<div align="center">
+  <img src="images/uiTable.png" width="700" />
+  <p><em>Figure 23: Class diagram of the Dynamic UI Table Generation utility.</em></p>
+</div>
 
 #### 4. Design Considerations
 **Alternative 1 (Current Implementation): Dynamic Column Width Calculation**
@@ -549,6 +937,51 @@ Similarly, `HelpCommand` utilizes `UiTable` but enables the `hasHeader` flag, al
 ---
 
 <!-- @@author -->
+### Help Feature
+
+#### 1. Overview
+The Help system provides an in-app reference for command syntax, reducing the user's reliance on external manuals. Instead of hardcoding a massive block of text, it dynamically generates the manual.
+
+#### 2. Component-level implementation
+The `HelpCommand` leverages the `UiTable` utility and the centralized `Parser` registry.
+
+When executed, it retrieves the static list of `CommandSpec` objects from the `Parser`. It iterates through this registry, extracting the keyword and format string of every registered command, and maps them into `UiTableRow` objects to render a perfectly aligned table.
+
+<div align="center">
+  <img src="images/HelpCommand.png" width="100%" />
+  <p><em>Figure 24: Sequence diagram showing the dynamic generation of the Help menu from the Parser registry.</em></p>
+</div>
+
+#### 3. Design Considerations
+* **Alternative 1 (Current): Dynamic Table Generation**
+  * *Justification*: Highly maintainable. When a developer adds a new command to the `Parser` registry, the `help` menu updates automatically. There is zero risk of the documentation falling out of sync with the codebase.
+* **Alternative 2: Hardcoded String Block**
+  * *Rejection*: Violates the DRY (Don't Repeat Yourself) principle. It would require developers to remember to update the `HelpCommand` string every time they modify a command's syntax elsewhere.
+
+#### 4. Current Limitations & Future Improvements
+* *Limitation*: The help menu displays all commands at once, which may push older messages out of the terminal buffer if the command list grows too large.
+* *Improvement*: Support targeted help queries (e.g., `help add`) to display syntax and detailed examples for a specific command only.
+
+---
+
+### Logging Architecture
+
+To facilitate debugging and system monitoring without polluting the user's Command Line Interface, Equipment Master utilizes the `java.util.logging.Logger` package.
+
+#### 1. Implementation
+* **Log File**: All log records are appended to a dedicated file (e.g., `equipment_master.log`), ensuring that the CLI remains clean for the user.
+* **Initialization**: The logger is initialized globally upon application startup.
+* **Log Levels Used**:
+  * `INFO`: Used for tracking major system state changes (e.g., "Application started", "Storage file loaded successfully", "Procurement report generated").
+  * `WARNING`: Used for recoverable errors (e.g., "Skipped corrupted line 4 in equipment.txt").
+  * `SEVERE`: Used for critical failures that require application termination (e.g., "Failed to create data directory due to OS permission denial").
+
+#### 2. Design Considerations
+* **Why not use `System.out.println` for debugging?**
+  * *Justification*: `System.out` mixes diagnostic data with the actual UI output, ruining the user experience. By routing diagnostic data to a `.log` file, developers can trace execution flows and post-mortem crashes asynchronously without breaking the CLI layout.
+
+---
+
 ## Product scope
 ### Target user profile
 
@@ -572,56 +1005,115 @@ Whether you are managing shared pools of STM32 boards across different modules (
 * **Module-Specific Tracking:** Easily associate equipment with specific academic modules to track usage and allocations accurately.
 * **100% Accountability:** Precisely track borrower identities and monitor equipment availability to eliminate the loss of high-value lab assets.
 
+---
+
 ## User Stories
 
-| Version | As a ... | I want to ... | So that I can ... |
-|---------|----------|---------------|-------------------|
-| **v1.0** | first-time user | view document/help information of each command | see the command syntax without looking up an external manual. |
-| **v1.0** | first-time user | receive a clear text error message | know exactly which part of my command was wrong and correct it immediately. |
-| **v1.0** | technician | add a new type of equipment | catalog new inventory arrivals and start tracking them. |
-| **v1.0** | technician | delete a specific quantity of equipment | ensure the inventory reflects the actual physical stock after loss or damage. |
-| **v1.0** | technician | see a list of all equipment items | view data that is aligned and readable even in a terminal window. |
-| **v1.0** | technician | update the quantity of a specific item | reflect the current physical stock after a shipment or inventory adjustment. |
-| **v1.0** | technician | set the status of equipment to available/loaned | check what items are currently with students and what are still in the lab. |
-| **v1.0** | technician | exit the application safely using a command | ensure the application closes gracefully after I finish my work. |
-| **v2.0** | beginner user | input student numbers (pax) for each module | allow the system to establish the baseline for equipment demand forecasting. |
-| **v2.0** | technician | update the student enrollment (pax) of an existing module | adjust to changing class sizes without re-entering all the module data. |
-| **v2.0** | technician | view a summary list of all registered modules | quickly verify which courses the lab is supporting this semester. |
-| **v2.0** | intermediate user | tag equipment with Module Codes (e.g., EE2026) | calculate stock shortages specific to each course, rather than just total count. |
-| **v2.0** | intermediate user | untag equipment from a module | accurately reflect syllabus changes if a course stops using a specific hardware. |
-| **v2.0** | technician | delete a module from the registry | clean up the database safely without accidentally deleting physical equipment records. |
-| **v2.0** | intermediate user | use the search command with a keyword or module code | locate specific items or all items assigned to a module (e.g., `CG2111A`) instantly. |
-| **v2.0** | technician | set a "minimum quantity" threshold for critical items | receive immediate alerts when stock runs low before I completely run out. |
-| **v2.0** | technician | set the current academic semester (e.g., `AY25/26 Sem1`) | ensure all aging and procurement reports are calculated against a correct timeline. |
-| **v2.0** | technician | view the currently set academic semester | verify the system's time context before generating reports. |
-| **v2.0** | intermediate user | view an "Aging Report" based on purchase date and lifespan | identify "High Risk" boards that are likely to fail and need replacement. |
-| **v2.0** | technician | generate a "Low Stock Report" | get a filtered view of all items that are currently below their safety threshold. |
-| **v2.0** | lab manager | set a "Safety Buffer" percentage for procurement | ensure the purchase recommendation includes extra spares for unexpected damage. |
-| **v2.0** | lab manager | generate a "Procurement Report" | mathematically prove to the department how many new units we need to buy for the next semester. |
-| **v3.0** | technician | link an item to a specific student ID | keep a strict record and never forget which student loaned which specific piece of equipment. |
-| **v3.0** | technician | link an item to a specific lab or physical place | easily remember where the equipment is physically located in the real world. |
-| **v3.0** | technician | add, rename, or delete labs/places in the system | maintain an accurate digital map of the lab's physical logistics infrastructure. |
-| **v3.0** | technician | bulk move all items from one lab to another lab | quickly reflect large-scale physical equipment relocations in the software. |
-| **v3.0** | technician | view a history of repairs for a specific board type | identify if a specific batch of boards is defective and should be returned to the vendor. |
-| **v3.0** | technician | record all operations in an audit log and view the log | ensure accountability by tracking who performed which action and when. |
-| **v3.0** | technician | start a "Stocktake Mode" to verify items shelf-by-shelf | reconcile the system's data with actual physical inventory annually. |
-| **v3.0** | intermediate user | use flags (e.g., `list --available --stm32`) to filter the list | refine the inventory view instantly without seeing irrelevant items. |
-| **v3.0** | Excel user | export data to an Excel or CSV sheet | generate files compatible with department-level reporting and archiving. |
-| **v3.0** | intermediate user | view and use command history | quickly repeat the last transaction without re-typing the entire command. |
-| **v3.0** | expert user | Use shortcuts or aliases to execute commands | skip confirmation prompts and perform routine actions much faster. |
-| **v3.0** | expert user | Batch process loans via barcode scanning or file input | handle 50+ loans at once during peak hours without manual entry. |
-| **v3.0** | expert user | Perform multiple actions using chain commands | execute complex operational sequences in a single line of instruction. |
-| **v3.0** | expert user | toggle verbose mode off (Quiet Mode) | keep the terminal screen clean and focused during rapid, repetitive tasks. |
-| **v3.0** | expert user | auto-generate a Budget Request email text | simply copy-paste the system's procurement data directly into an email to the boss. |
-| **v3.0** | expert user | filter inventory by "Remaining Lifespan" (e.g., `list --eol-soon`) | identify exactly which batch of boards needs to be phased out by next year. |
+| Priority | As a ... | I want to ... | So that I can ... |
+|----------|----------|---------------|-------------------|
+| *** | first-time user | view document/help information of each command | see the command syntax without looking up an external manual. |
+| *** | first-time user | receive a clear text error message | know exactly which part of my command was wrong and correct it immediately. |
+| *** | technician | add a new type of equipment | catalog new inventory arrivals and start tracking them. |
+| *** | technician | delete a specific quantity of equipment | ensure the inventory reflects the actual physical stock after loss or damage. |
+| *** | technician | see a list of all equipment items | view data that is aligned and readable even in a terminal window. |
+| *** | technician | update the quantity of a specific item | reflect the current physical stock after a shipment or inventory adjustment. |
+| *** | technician | set the status of equipment to available/loaned | check what items are currently with students and what are still in the lab. |
+| *** | technician | exit the application safely using a command | ensure the application closes gracefully after I finish my work. |
+| *** | technician | input student numbers (pax) for each module | allow the system to establish the baseline for equipment demand forecasting. |
+| *** | technician | update the student enrollment (pax) of an existing module | adjust to changing class sizes without re-entering all the module data. |
+| *** | technician | delete a module from the registry | clean up the database safely without accidentally deleting physical equipment records. |
+| ** | technician | view a summary list of all registered modules | quickly verify which courses the lab is supporting this semester. |
+| ** | lab manager | tag equipment with Module Codes (e.g., EE2026) | calculate stock shortages specific to each course, rather than just total count. |
+| ** | lab manager | untag equipment from a module | accurately reflect syllabus changes if a course stops using a specific hardware. |
+| ** | technician | use the search command with a keyword or module code | locate specific items or all items assigned to a module (e.g., `CG2111A`) instantly. |
+| ** | technician | set a "minimum quantity" threshold for critical items | receive immediate alerts when stock runs low before I completely run out. |
+| ** | technician | generate a "Low Stock Report" | get a filtered view of all items that are currently below their safety threshold. |
+| ** | technician | set the current academic semester (e.g., `AY25/26 Sem1`) | ensure all aging and procurement reports are calculated against a correct timeline. |
+| ** | technician | view the currently set academic semester | verify the system's time context before generating reports. |
+| ** | lab manager | view an "Aging Report" based on purchase date and lifespan | identify "High Risk" boards that are likely to fail and need replacement. |
+| ** | lab manager | set a "Safety Buffer" percentage for procurement | ensure the purchase recommendation includes extra spares for unexpected damage. |
+| ** | lab manager | generate a "Procurement Report" | mathematically prove to the department how many new units we need to buy for the next semester. |
+| * | technician | link an item to a specific student ID | keep a strict record and never forget which student loaned which specific piece of equipment. |
+| * | technician | link an item to a specific lab or physical place | easily remember where the equipment is physically located in the real world. |
+| * | technician | add, rename, or delete labs/places in the system | maintain an accurate digital map of the lab's physical logistics infrastructure. |
+| * | technician | bulk move all items from one lab to another lab | quickly reflect large-scale physical equipment relocations in the software. |
+| * | technician | view a history of repairs for a specific board type | identify if a specific batch of boards is defective and should be returned to the vendor. |
+| * | lab manager | record all operations in an audit log and view the log | ensure accountability by tracking who performed which action and when. |
+| * | technician | start a "Stocktake Mode" to verify items shelf-by-shelf | reconcile the system's data with actual physical inventory annually. |
+| * | expert user | use flags (e.g., `list --available --stm32`) to filter the list | refine the inventory view instantly without seeing irrelevant items. |
+| * | lab manager | export data to an Excel or CSV sheet | generate files compatible with department-level reporting and archiving. |
+| * | expert user | view and use command history | quickly repeat the last transaction without re-typing the entire command. |
+| * | expert user | use shortcuts or aliases to execute commands | skip confirmation prompts and perform routine actions much faster. |
+| * | expert user | batch process loans via barcode scanning or file input | handle 50+ loans at once during peak hours without manual entry. |
+| * | expert user | perform multiple actions using chain commands | execute complex operational sequences in a single line of instruction. |
+| * | expert user | toggle verbose mode off (Quiet Mode) | keep the terminal screen clean and focused during rapid, repetitive tasks. |
+| * | lab manager | auto-generate a Budget Request email text | simply copy-paste the system's procurement data directly into an email to the boss. |
+| * | lab manager | filter inventory by "Remaining Lifespan" | identify exactly which batch of boards needs to be phased out by next year. |
 
-## Non-Functional Requirements
+**Note on Priorities:**
+* `***` = **High** (Core CRUD operations and fundamental tracking, must-have for basic lab operations).
+* `**` = **Medium** (Relational tagging and analytical reports, should-have for semester planning).
+* `*` = **Low** (Advanced utilities and Future Roadmap features, nice-to-have for expert efficiency).
 
-1. **Environment:** The system should work seamlessly on any mainstream Operating System (Windows, macOS, Linux) that has **Java 17** or above installed.
-2. **Performance:** The system should respond to standard user commands (e.g., adding, finding, or listing items) within 100 milliseconds to support rapid typing during busy lab hours.
-3. **Data Storage:** Data should be stored locally in human-editable text files (e.g., `.txt` or `.json`). The system should not rely on an external Database Management System (DBMS) or require an active internet connection, ensuring the lab can operate even during network outages.
-4. **Data Integrity:** If the local data file is manually corrupted by a user (e.g., invalid formatting), the system should gracefully detect the error on startup and load an empty inventory rather than crashing outright.
-5. **Usability:** A user with above-average typing speed should be able to accomplish standard inventory tasks noticeably faster using the CLI than they would using a traditional mouse-driven GUI.
+---
+
+### Use Cases
+
+(For all use cases below, the **System** is `Equipment Master` and the **Actor** is the `Lab Technician`, unless specified otherwise)
+
+**Use case: UC01 - Tag equipment to an academic module**
+
+**MSS (Main Success Scenario)**
+1. User requests to tag an equipment to a module by providing the module code, equipment name, and requirement ratio.
+2. System checks the `ModuleList` and verifies the module exists.
+3. System checks the `EquipmentList` and verifies the equipment exists.
+4. System calculates and formats the official canonical names.
+5. System registers the requirement ratio inside the target module.
+6. System saves the updated module registry to storage.
+7. System displays a success confirmation message.
+   Use case ends.
+
+**Extensions**
+* 2a. The given module code does not exist in the registry.
+  * 2a1. System displays a "Module Not Found" error.
+  * Use case ends.
+* 3a. The given equipment name does not exist in the inventory.
+  * 3a1. System displays an "Equipment Not Found" error.
+  * Use case ends.
+
+**Use case: UC02 - Generate Procurement Report**
+
+**MSS**
+1. User requests to generate the procurement report.
+2. System iterates through all equipment in the inventory.
+3. For each equipment, System cross-references tagged modules and fetches their student enrollment (pax).
+4. System calculates the base demand and applies the equipment's safety buffer.
+5. System rounds up the demand to the nearest whole integer.
+6. System subtracts the total owned physical stock from the required demand.
+7. System formats all items with a "To Buy" value > 0 into a `UiTable`.
+8. System displays the formatted report.
+   Use case ends.
+
+**Extensions**
+* 2a. The inventory is completely empty.
+  * 2a1. System displays an empty inventory message.
+  * Use case ends.
+* 7a. No equipment falls below the required threshold (nothing to buy).
+  * 7a1. System displays a "No procurement needed" message.
+  * Use case ends.
+
+---
+
+## Non-Functional Requirements (NFR)
+
+1.  **Platform Independence**: The application must run on Windows, macOS, and Linux with **Java 17** or higher installed.
+2.  **Performance**: The system must respond to any search or list command within **100ms**, even with an inventory size of 1,000+ items.
+3.  **Resilience**: The system must not crash upon encountering a corrupted line in the storage file; it should log a warning and skip the line.
+4.  **Hermetic Testing**: All automated tests must use JUnit 5 `@TempDir` to ensure zero impact on the user's actual data files.
+5.  **No Network Dependency**: The system must function 100% offline to ensure data privacy in secure lab environments.
+6.  **Atomic Persistence**: Every save operation must overwrite the storage file entirely to prevent partial-write corruption.
+
+---
 
 ## Glossary
 
@@ -631,6 +1123,8 @@ Whether you are managing shared pools of STM32 boards across different modules (
 * **Pax:** The total number of students enrolled in a specific module.
 * **Academic Semester (AY):** The semantic time format used to track equipment age (e.g., `AY24/25 Sem1`).
 * **Safe Dereferencing:** The automated process of unlinking an equipment from a module when that module is deleted, ensuring the equipment record itself is not accidentally destroyed.
+
+---
 
 ## Instructions for Manual Testing
 
@@ -733,7 +1227,45 @@ To test the system with pre-populated data without typing everything manually:
   * **Test Case:** Type `bye`.
   * **Expected:** System displays a farewell message and the application terminates gracefully.
 
-### 11. Testing Defensive Parsing & Storage Failures
+### 11. Testing Robustness (Negative Cases)
+
+#### 11.1 Invalid Data Input
+* **Test Case**: `add n/Item q/abc` (Invalid quantity type)
+* **Expected**: Error message: "Quantity must be a valid positive integer." No item is added.
+* **Test Case**: `tag m/NON_EXISTENT n/STM32` (Missing module)
+* **Expected**: Error message: "Module NON_EXISTENT not found in registry."
+
+#### 11.2 Storage Corruption Recovery
+1. Open `data/equipment.txt` and add a blank line between two items.
+2. Relaunch the application.
+* **Expected**: The system should skip the blank line, load all valid items, and NOT crash.
+
+#### 11.3 Boundary Values
+* **Test Case**: `setstatus 1 q/999 s/loaned` (Loan more than available)
+* **Expected**: Error message indicating insufficient stock. In-memory quantity remains unchanged.
+
+---
+
+## Future Roadmap (Beyond v2.1)
+
+1.  **Automated Audit Logs**: Implement a `history` command to track every transaction with a timestamp to enhance lab accountability.
+2.  **Fuzzy Search**: Enhance the `find` command with Levenshtein Distance algorithms to suggest the correct equipment name if the user makes a minor typo.
+3.  **Batch Processing**: Support for reading multiple commands from a `.csv` file for high-volume start-of-semester equipment intake.
+4.  **Export Utility**: Add a command to export reports (Aging/Procurement) into `.csv` format for integration with University financial systems.
+
+---
+
+## Appendix: Project Effort
+
+While this project was built upon the architectural foundations taught in CS2113, the development of **Equipment Master** required significant effort to move beyond a simple "flat-list" address book into a **relational database management tool**.
+
+Key technical challenges our team overcame include:
+1. **Relational Data Mapping (Many-to-Many)**: Unlike standard address books where an item exists in isolation, our system links physical `Equipment` to abstract `Modules`. We had to engineer a safe cross-referencing system (Safe Dereferencing) to ensure data integrity during deletions, preventing ghost references.
+2. **Dynamic UI Rendering**: Creating the `UiTable` utility required developing an algorithm that pre-scans all generic row data to calculate dynamic column widths. This ensures perfect alignment in the CLI without hardcoding string lengths.
+3. **Advanced Algorithmic Forecasting**: The `Procurement Report` is not a simple filter. It is an algorithmic engine that aggregates pax, ratios, applies percentage buffers, handles mathematical ceiling logic, and offsets against total ownership.
+4. **Semantic Time Parsing**: We replaced standard `java.time` libraries with a custom `AcademicSemester` parser to evaluate equipment aging based on university lifecycles (e.g., `AY24/25 Sem1`), requiring custom string extraction and floating-point normalization.
+
+### 12. Testing Defensive Parsing & Storage Failures
 1.  **Ghost Reference Prevention:**
   * **Test Case:** Type `tag m/NON_EXISTENT n/STM32 req/0.5`.
   * **Expected:** Execution is aborted with: `Aborted: Module 'NON_EXISTENT' does not exist.`

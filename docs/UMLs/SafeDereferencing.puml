@@ -1,0 +1,34 @@
+@startuml
+participant ":DelModCommand" as Command
+participant ":ModuleList" as ModList
+participant ":EquipmentList" as EqList
+participant "target:Equipment" as Eq
+
+[-> Command : execute(context)
+activate Command
+
+Command -> ModList : findModule(name)
+activate ModList
+ModList --> Command : module
+deactivate ModList
+
+Command -> EqList : getEquipmentsWithTag(name)
+activate EqList
+EqList --> Command : matchingEquipments
+deactivate EqList
+
+loop for each equipment in matchingEquipments
+    Command -> Eq : removeTag(name)
+    activate Eq
+    Eq --> Command
+    deactivate Eq
+end
+
+Command -> ModList : removeModule(name)
+activate ModList
+ModList --> Command
+deactivate ModList
+
+[<-- Command : successMessage
+deactivate Command
+@enduml

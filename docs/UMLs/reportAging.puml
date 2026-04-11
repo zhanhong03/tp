@@ -1,0 +1,80 @@
+@startuml
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam LifelineBackgroundColor #FFFFFF
+skinparam ActorBackgroundColor #FFFFFF
+
+actor Technician
+participant ":MainExecution" as Main
+participant ":Parser" as Parser
+participant "r:ReportCommand" as ReportCommand
+participant ":Context" as Context
+participant "list:EquipmentList" as EquipmentList
+participant "eq:Equipment" as Equipment
+
+technician -> Main : types "report aging"
+activate Main
+
+Main -> Parser : parse("report aging")
+activate Parser
+
+create ReportCommand
+Parser -> ReportCommand : ReportCommand(null)
+activate ReportCommand
+ReportCommand --> Parser : r
+deactivate ReportCommand
+
+Parser --> Main : r
+deactivate Parser
+
+Main -> ReportCommand : execute(context)
+activate ReportCommand
+
+ReportCommand -> Context : getCurrentSemester()
+activate Context
+Context --> ReportCommand : currentSemester
+deactivate Context
+
+ReportCommand -> Context : getEquipmentList()
+activate Context
+Context --> ReportCommand : list
+deactivate Context
+
+' The SLAP-aligned iteration logic
+loop [for each equipment in list]
+    ReportCommand -> EquipmentList : getEquipment(index)
+    activate EquipmentList
+    EquipmentList --> ReportCommand : eq
+    deactivate EquipmentList
+
+    ' Replacing "descriptive call" with "real code invocation"
+    ReportCommand -> Equipment : calculateAge(currentSemester)
+    activate Equipment
+    Equipment --> ReportCommand : ageInYears
+    deactivate Equipment
+
+    ' explicitly show how results are buffered
+    opt if ageInYears >= lifespan
+        ReportCommand -> ReportCommand : addToReportList(eq)
+        activate ReportCommand
+        ReportCommand --> ReportCommand :
+        deactivate ReportCommand
+    end
+end
+
+ReportCommand -> Context : getUi()
+activate Context
+Context --> ReportCommand : ui
+deactivate Context
+
+ReportCommand -> ui : showAgingReport(reportList)
+activate ui
+ui --> ReportCommand :
+deactivate ui
+
+ReportCommand --> Main :
+deactivate ReportCommand
+
+Main --> technician :
+deactivate Main
+
+@enduml
