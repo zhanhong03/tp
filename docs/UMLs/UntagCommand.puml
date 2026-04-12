@@ -1,0 +1,119 @@
+@startuml
+!theme plain
+skinparam maxMessageSize 150
+
+actor User
+participant "Logic/Main" as Logic
+participant "<<class>>\nUntagCommand" as UntagCommandClass
+participant "command:UntagCommand" as UntagCommand
+participant "context:Context" as Context
+participant "modules:ModuleList" as ModuleList
+participant "equipments:EquipmentList" as EquipmentList
+participant "targetModule:Module" as Module
+participant "targetEquipment:Equipment" as Equipment
+participant "ui:Ui" as Ui
+participant "storage:Storage" as Storage
+
+== Parsing Phase ==
+User -> Logic : input("untag m/MOD n/EQ")
+activate Logic
+
+Logic -> UntagCommandClass : parse(fullCommand)
+activate UntagCommandClass
+
+UntagCommandClass -> UntagCommandClass : extractArgument()
+activate UntagCommandClass
+UntagCommandClass --> UntagCommandClass
+deactivate UntagCommandClass
+
+create UntagCommand
+UntagCommandClass -> UntagCommand : new UntagCommand(...)
+activate UntagCommand
+UntagCommand --> UntagCommandClass
+deactivate UntagCommand
+
+UntagCommandClass --> Logic : command
+deactivate UntagCommandClass
+
+== Execution Phase ==
+Logic -> UntagCommand : execute(context)
+activate UntagCommand
+
+UntagCommand -> Context : getModuleList()
+activate Context
+Context --> UntagCommand : modules
+deactivate Context
+
+UntagCommand -> Context : getEquipments()
+activate Context
+Context --> UntagCommand : equipments
+deactivate Context
+
+UntagCommand -> Context : getUi()
+activate Context
+Context --> UntagCommand : ui
+deactivate Context
+
+UntagCommand -> Context : getStorage()
+activate Context
+Context --> UntagCommand : storage
+deactivate Context
+
+UntagCommand -> ModuleList : hasModule(moduleName)
+activate ModuleList
+ModuleList --> UntagCommand : true
+deactivate ModuleList
+
+UntagCommand -> EquipmentList : hasEquipment(equipmentName)
+activate EquipmentList
+EquipmentList --> UntagCommand : true
+deactivate EquipmentList
+
+UntagCommand -> ModuleList : getModule(moduleName)
+activate ModuleList
+ModuleList --> UntagCommand : targetModule
+deactivate ModuleList
+
+UntagCommand -> EquipmentList : findByName(equipmentName)
+activate EquipmentList
+EquipmentList --> UntagCommand : targetEquipment
+deactivate EquipmentList
+
+== Bidirectional Removal ==
+UntagCommand -> Module : removeEquipmentRequirement(name)
+activate Module
+Module --> UntagCommand : isRemovedFromModule
+deactivate Module
+
+UntagCommand -> Equipment : removeModuleCode(name)
+activate Equipment
+Equipment --> UntagCommand
+deactivate Equipment
+
+== Conditional Saving ==
+alt isRemovedFromModule == true
+    UntagCommand -> Ui : showMessage("Successfully untagged...")
+    activate Ui
+    Ui --> UntagCommand
+    deactivate Ui
+
+    UntagCommand -> Storage : saveModules(modules)
+    activate Storage
+    Storage --> UntagCommand
+    deactivate Storage
+
+    UntagCommand -> Storage : saveEquipments(equipments)
+    activate Storage
+    Storage --> UntagCommand
+    deactivate Storage
+else isRemovedFromModule == false
+    UntagCommand -> UntagCommand : throw EquipmentMasterException
+end
+
+UntagCommand --> Logic
+deactivate UntagCommand
+
+Logic --> User : display result or error
+deactivate Logic
+
+@enduml
