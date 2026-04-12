@@ -1,0 +1,113 @@
+@startuml
+!theme plain
+skinparam maxMessageSize 150
+
+actor User
+participant "Logic/Main" as Logic
+participant "<<class>>\nTagCommand" as TagCommandClass
+participant "command:TagCommand" as TagCommand
+participant "context:Context" as Context
+participant "modules:ModuleList" as ModuleList
+participant "equipments:EquipmentList" as EquipmentList
+participant "targetModule:Module" as Module
+participant "targetEquipment:Equipment" as Equipment
+participant "ui:Ui" as Ui
+participant "storage:Storage" as Storage
+
+== Parsing Phase ==
+User -> Logic : input("tag m/MOD n/EQ req/0.2")
+activate Logic
+
+Logic -> TagCommandClass : parse(fullCommand)
+activate TagCommandClass
+
+TagCommandClass -> TagCommandClass : extractArgument()
+activate TagCommandClass
+TagCommandClass --> TagCommandClass
+deactivate TagCommandClass
+
+create TagCommand
+TagCommandClass -> TagCommand : new TagCommand(...)
+activate TagCommand
+TagCommand --> TagCommandClass
+deactivate TagCommand
+
+TagCommandClass --> Logic : command
+deactivate TagCommandClass
+
+== Execution Phase ==
+Logic -> TagCommand : execute(context)
+activate TagCommand
+
+TagCommand -> Context : getModuleList()
+activate Context
+Context --> TagCommand : modules
+deactivate Context
+
+TagCommand -> Context : getEquipments()
+activate Context
+Context --> TagCommand : equipments
+deactivate Context
+
+TagCommand -> Context : getUi()
+activate Context
+Context --> TagCommand : ui
+deactivate Context
+
+TagCommand -> Context : getStorage()
+activate Context
+Context --> TagCommand : storage
+deactivate Context
+
+TagCommand -> ModuleList : hasModule(moduleName)
+activate ModuleList
+ModuleList --> TagCommand : true
+deactivate ModuleList
+
+TagCommand -> EquipmentList : hasEquipment(equipmentName)
+activate EquipmentList
+EquipmentList --> TagCommand : true
+deactivate EquipmentList
+
+TagCommand -> ModuleList : getModule(moduleName)
+activate ModuleList
+ModuleList --> TagCommand : targetModule
+deactivate ModuleList
+
+TagCommand -> EquipmentList : findByName(equipmentName)
+activate EquipmentList
+EquipmentList --> TagCommand : targetEquipment
+deactivate EquipmentList
+
+TagCommand -> Module : addEquipmentRequirement(name, ratio)
+activate Module
+Module --> TagCommand
+deactivate Module
+
+TagCommand -> Equipment : addModuleCode(moduleName)
+activate Equipment
+Equipment --> TagCommand
+deactivate Equipment
+
+TagCommand -> Ui : showMessage(successMessage)
+activate Ui
+Ui --> TagCommand
+deactivate Ui
+
+TagCommand -> Storage : saveModules(modules)
+activate Storage
+Storage --> TagCommand
+deactivate Storage
+
+TagCommand -> Storage : saveEquipments(equipments)
+activate Storage
+Storage --> TagCommand
+deactivate Storage
+
+TagCommand --> Logic
+deactivate TagCommand
+
+Logic --> User : display success
+deactivate Logic
+
+@enduml

@@ -706,14 +706,14 @@ The following sequence diagrams illustrate the execution flow for the `TagComman
 **Tag Command Flow**
 
 <div align="center">
-  <img src="images/TagCommand.png" width="100%" />
+  <img src="images/TagCommandSequence.png" width="100%" />
   <p><em>Figure 15: Sequence diagram illustrating the Academic Dependency Mapping (Tagging) process.</em></p>
 </div>
 
 **Untag Command Flow**
 
 <div align="center">
-  <img src="images/UntagCommand.png" width="100%" />
+  <img src="images/UntagCommandSequence.png" width="100%" />
   <p><em>Figure 16: Sequence diagram showing the removal of a requirement ratio link.</em></p>
 </div>
 
