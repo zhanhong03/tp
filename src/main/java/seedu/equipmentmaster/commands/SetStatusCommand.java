@@ -7,15 +7,19 @@ import seedu.equipmentmaster.exception.EquipmentMasterException;
 import seedu.equipmentmaster.storage.Storage;
 import seedu.equipmentmaster.ui.Ui;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import static seedu.equipmentmaster.common.Messages.MESSAGE_INVALID_SET_STATUS_FORMAT;
 import static seedu.equipmentmaster.common.Messages.MESSAGE_NAME_CONTAINS_RESERVED_CHARS;
 
 /**
  * Represents a command to update the status (loaned/available) of equipment.
- * This command can identify equipment by either its index in the list or its name.
- * It updates the available and loaned quantities accordingly and saves changes to storage.
+ * This command supports identifying equipment by either its index in the list or its name.
+ * It features a flexible parser that allows flags (n/, q/, s/) to be in any order.
  */
 public class SetStatusCommand extends Command {
+    private static final Logger logger = Logger.getLogger(SetStatusCommand.class.getName());
 
     private final Integer index;
     private final String name;
@@ -23,11 +27,11 @@ public class SetStatusCommand extends Command {
     private final String status;
 
     /**
-     * Constructor for index-based identification.
+     * Constructs a SetStatusCommand using an index-based identifier.
      *
-     * @param index The position of the equipment in the list (1-based).
-     * @param quantity The number of units to update.
-     * @param status The new status to apply ("loaned" or "available").
+     * @param index    The 1-based index of the equipment in the list.
+     * @param quantity The number of units to be updated.
+     * @param status   The target status ("loaned" or "available").
      */
     public SetStatusCommand(Integer index, int quantity, String status) {
         this.index = index;
@@ -37,11 +41,11 @@ public class SetStatusCommand extends Command {
     }
 
     /**
-     * Constructor for name-based identification.
+     * Constructs a SetStatusCommand using a name-based identifier.
      *
-     * @param name The name of the equipment to update.
-     * @param quantity The number of units to update.
-     * @param status The new status to apply ("loaned" or "available").
+     * @param name     The exact name of the equipment.
+     * @param quantity The number of units to be updated.
+     * @param status   The target status ("loaned" or "available").
      */
     public SetStatusCommand(String name, int quantity, String status) {
         this.index = null;
@@ -50,220 +54,175 @@ public class SetStatusCommand extends Command {
         this.status = status;
     }
 
-    //@@author JovianJosh
     /**
-     * Parses the arguments for the 'setstatus' command.
-     * Determines whether the command uses name-based or index-based identification.
+     * Parses the raw command string into a SetStatusCommand.
+     * Supports both name-based (n/) and index-based identification.
      *
-     * @param fullCommand The complete input string containing the 'setstatus' command and its arguments.
-     * @return A SetStatusCommand object ready to be executed.
-     * @throws EquipmentMasterException If the command format is invalid.
+     * @param fullCommand The complete user input.
+     * @return A ready-to-execute SetStatusCommand.
+     * @throws EquipmentMasterException If the format is invalid or values are illegal.
      */
     public static Command parse(String fullCommand) throws EquipmentMasterException {
-        fullCommand = fullCommand.trim();
-        if (fullCommand.isEmpty()) {
-            throw new EquipmentMasterException("Empty command.");
-        }
+        logger.log(Level.INFO, "Parsing SetStatusCommand arguments.");
+        String args = " " + fullCommand.replaceFirst("(?i)^setstatus", "").trim() + " ";
 
-        // Check if name-based (contains "n/") or index-based
-        if (fullCommand.contains("n/")) {
-            return parseSetStatusByName(fullCommand);
-        } else {
-            return parseSetStatusByIndex(fullCommand);
-        }
-    }
-
-    /**
-     * Parses a name-based setstatus command.
-     * Expected format: setstatus n/NAME q/QUANTITY s/STATUS
-     *
-     * @param fullCommand The complete input string containing name-based arguments.
-     * @return A SetStatusCommand configured with the parsed name, quantity, and status.
-     * @throws EquipmentMasterException If any argument is missing, invalid, or incorrectly formatted.
-     */
-    private static Command parseSetStatusByName(String fullCommand) throws EquipmentMasterException {
-        // Enforce strict order: n/ then q/ then s/
-        if (!fullCommand.matches(".*n/.*q/.*s/.*")) {
-            throw new EquipmentMasterException(MESSAGE_INVALID_SET_STATUS_FORMAT);
-        }
-        String[] parts = fullCommand.split("n/|q/|s/");
-        if (parts.length < 4) { // first part before n/, then name, quantity, status
+        if (args.trim().isEmpty()) {
             throw new EquipmentMasterException(MESSAGE_INVALID_SET_STATUS_FORMAT);
         }
 
-        String name = parts[1].trim();
-        String quantityStr = parts[2].trim();
-        String status = parts[3].trim().toLowerCase();
-
-        if (name.isEmpty()) {
-            throw new EquipmentMasterException("Equipment name cannot be empty.");
+        if (args.contains("n/")) {
+            return parseByName(args);
         }
-
-        if (name.contains("|") || name.contains(",") || name.contains("=")) {
-            throw new EquipmentMasterException(
-                    MESSAGE_NAME_CONTAINS_RESERVED_CHARS
-            );
-        }
-
-        int quantity;
-        try {
-            quantity = Integer.parseInt(quantityStr);
-            if (quantity <= 0) {
-                throw new EquipmentMasterException("Quantity must be greater than 0.");
-            }
-        } catch (NumberFormatException e) {
-            throw new EquipmentMasterException("Please enter a valid whole number for quantity");
-        }
-
-        if (!status.equals("loaned") && !status.equals("available")) {
-            throw new EquipmentMasterException("Status must be 'loaned' or 'available'.");
-        }
-
-        return new SetStatusCommand(name, quantity, status);
+        return parseByIndex(args);
     }
 
-    /**
-     * Parses an index-based setstatus command.
-     * Expected format: setstatus INDEX q/QUANTITY s/STATUS
-     *
-     * @param fullCommand The complete input string containing index-based arguments.
-     * @return A SetStatusCommand configured with the parsed index, quantity, and status.
-     * @throws EquipmentMasterException If any argument is missing, invalid, or incorrectly formatted.
-     */
-    private static Command parseSetStatusByIndex(String fullCommand) throws EquipmentMasterException {
-        String[] words = fullCommand.trim().split("\\s+");
-        if (words.length < 2) {
-            throw new EquipmentMasterException(
-                    "Missing index. Use: setstatus INDEX q/QUANTITY s/STATUS");
-        }
+    private static Command parseByName(String args) throws EquipmentMasterException {
+        String name = extractValue(args, "n/");
+        String qStr = extractValue(args, "q/");
+        String sStr = extractValue(args, "s/").toLowerCase();
 
+        validateCommonInputs(name, qStr, sStr);
+        int quantity = parseQuantity(qStr);
+
+        return new SetStatusCommand(name, quantity, sStr);
+    }
+
+    private static Command parseByIndex(String args) throws EquipmentMasterException {
+        String[] words = args.trim().split("\\s+");
         int index;
         try {
-            index = Integer.parseInt(words[1]);
+            index = Integer.parseInt(words[0]);
             if (index < 1) {
-                throw new EquipmentMasterException("Index must be greater than 0.");
+                throw new NumberFormatException();
             }
         } catch (NumberFormatException e) {
-            throw new EquipmentMasterException("Please enter a valid whole number for index");
+            throw new EquipmentMasterException("Please provide a valid 1-based index or use n/NAME.");
         }
 
-        String[] parts = fullCommand.split("q/|s/");
-        if (parts.length < 3) { // first part before q/, quantity, status
-            throw new EquipmentMasterException(
-                    "Invalid setstatus format. Use: setstatus INDEX q/QUANTITY s/STATUS");
-        }
+        String qStr = extractValue(args, "q/");
+        String sStr = extractValue(args, "s/").toLowerCase();
 
-        String quantityStr = parts[1].trim();
-        String status = parts[2].trim().toLowerCase();
+        validateCommonInputs("placeholder", qStr, sStr);
+        int quantity = parseQuantity(qStr);
 
-        int quantity;
-        try {
-            quantity = Integer.parseInt(quantityStr);
-            if (quantity <= 0) {
-                throw new EquipmentMasterException("Quantity must be greater than 0.");
-            }
-        } catch (NumberFormatException e) {
-            throw new EquipmentMasterException("Please enter a valid whole number for quantity");
-        }
-
-        if (!status.equals("loaned") && !status.equals("available")) {
-            throw new EquipmentMasterException("Status must be 'loaned' or 'available'.");
-        }
-
-        return new SetStatusCommand(index, quantity, status);
+        return new SetStatusCommand(index, quantity, sStr);
     }
-    //@@author
 
     /**
-     * Executes the set status command.
-     * Updates the loaned or available status of a specific equipment and saves the updated state.
+     * Safely extracts the value following a specific flag by finding the start of the next flag.
+     * This allows parameters to be provided in any order as per the User Guide.
+     */
+    private static String extractValue(String input, String flag) {
+        int start = input.indexOf(flag);
+        if (start == -1) {
+            return "";
+        }
+        start += flag.length();
+
+        int end = input.length();
+        String[] possibleNextFlags = {" n/", " q/", " s/"};
+        for (String f : possibleNextFlags) {
+            int nextIdx = input.indexOf(f, start);
+            if (nextIdx != -1 && nextIdx < end) {
+                end = nextIdx;
+            }
+        }
+        return input.substring(start, end).trim();
+    }
+
+    private static void validateCommonInputs(String name, String qStr, String sStr) throws EquipmentMasterException {
+        if (name.isEmpty() || qStr.isEmpty() || sStr.isEmpty()) {
+            throw new EquipmentMasterException(MESSAGE_INVALID_SET_STATUS_FORMAT);
+        }
+        if (name.contains("|") || name.contains(",") || name.contains("=")) {
+            throw new EquipmentMasterException(MESSAGE_NAME_CONTAINS_RESERVED_CHARS);
+        }
+        if (!sStr.equals("loaned") && !sStr.equals("available")) {
+            throw new EquipmentMasterException("Status must be either 'loaned' or 'available'.");
+        }
+    }
+
+    private static int parseQuantity(String qStr) throws EquipmentMasterException {
+        try {
+            int q = Integer.parseInt(qStr);
+            if (q <= 0) {
+                throw new NumberFormatException();
+            }
+            return q;
+        } catch (NumberFormatException e) {
+            throw new EquipmentMasterException("Quantity must be a positive whole number.");
+        }
+    }
+
+    /**
+     * Executes the status update logic.
+     * Updates available and loaned counts in memory and immediately synchronizes with Storage.
      *
-     * @param context The application context containing the equipment list, UI, and storage.
+     * @param context The application context containing lists and storage.
+     * @throws EquipmentMasterException If stock is insufficient or saving fails.
      */
     @Override
     public void execute(Context context) throws EquipmentMasterException {
-        Ui ui = context.getUi();
+        assert context != null : "Context should not be null during execution";
+        logExecution("SetStatusCommand");
+
         EquipmentList equipments = context.getEquipments();
-        Storage storage = context.getStorage();
-        if (quantity <= 0) {
-            ui.showMessage("Quantity must be greater than 0.");
-            return;
-        }
+        Equipment target = findTarget(equipments);
 
-        if (!status.equalsIgnoreCase("loaned") && !status.equalsIgnoreCase("available")) {
-            ui.showMessage("Invalid status. Status must be 'loaned' or 'available'.");
-            return;
-        }
+        int currentAvail = target.getAvailable();
+        int currentLoaned = target.getLoaned();
 
-        Equipment targetEquipment = null;
-
-        // Search by index
-        if (index != null) {
-            if (index > 0 && index <= equipments.getSize()) {
-                targetEquipment = equipments.getEquipment(index - 1);
-            } else {
-                ui.showMessage("Invalid index. Please provide an index between 1 and "
-                        + equipments.getSize() + ".");
-                return;
-            }
-            // Search by name
-        } else if (name != null) {
-            for (int i = 0; i < equipments.getSize(); i++) {
-                Equipment eq = equipments.getEquipment(i);
-                if (eq.getName().equalsIgnoreCase(name)) {
-                    targetEquipment = eq;
-                    break;
-                }
-            }
-            if (targetEquipment == null) {
-                ui.showMessage("Equipment with name '" + name + "' not found.");
-                return;
-            }
+        if (status.equals("loaned")) {
+            processLoan(target, currentAvail, currentLoaned, context.getUi());
         } else {
-            ui.showMessage("No equipment identifier provided (index or name).");
-            return;
+            processReturn(target, currentAvail, currentLoaned, context.getUi());
         }
 
-        // Get current values
-        String equipmentName = targetEquipment.getName();
-        int available = targetEquipment.getAvailable();
-        int loaned = targetEquipment.getLoaned();
-
-        switch (status.toLowerCase()) {
-        case "loaned":
-            if (quantity > available) {
-                ui.showMessage("Insufficient available units. Only "
-                        + available + " units available.");
-                return;
+        // PERSISTENCE: Save to disk immediately to prevent data loss or desync
+        try {
+            Storage storage = context.getStorage();
+            if (storage != null) {
+                storage.save(equipments.getAllEquipments());
+                logger.log(Level.INFO, "Successfully saved equipment status to storage.");
             }
-            targetEquipment.setAvailable(available - quantity);
-            targetEquipment.setLoaned(loaned + quantity);
-            ui.showMessage(quantity + " units of " + equipmentName + " are now LOANED.");
-
-            if (targetEquipment.getAvailable() < targetEquipment.getMinQuantity()) {
-                ui.showMessage("Warning: " + equipmentName + " is now below minimum threshold of "
-                        + targetEquipment.getMinQuantity() + ". Consider restocking.");
-            }
-
-            break;
-
-        case "available":
-            if (quantity > loaned) {
-                ui.showMessage("Cannot return more than currently loaned. Only "
-                        + loaned + " units on loan.");
-                return;
-            }
-            targetEquipment.setAvailable(available + quantity);
-            targetEquipment.setLoaned(loaned - quantity);
-            ui.showMessage(quantity + " units of " + equipmentName + " are now AVAILABLE.");
-            break;
-
-        default:
-            ui.showMessage("Invalid status.");
-            return;
+        } catch (EquipmentMasterException e) {
+            context.getUi().showMessage("Warning: Memory updated, but failed to save to disk: " + e.getMessage());
         }
+    }
 
-        // Save changes to file
-        storage.save(equipments.getAllEquipments());
+    private Equipment findTarget(EquipmentList list) throws EquipmentMasterException {
+        if (index != null) {
+            if (index < 1 || index > list.getSize()) {
+                throw new EquipmentMasterException("Invalid index. List size is " + list.getSize());
+            }
+            return list.getEquipment(index - 1);
+        }
+        Equipment e = list.findByName(name);
+        if (e == null) {
+            throw new EquipmentMasterException("Equipment '" + name + "' not found.");
+        }
+        return e;
+    }
+
+    private void processLoan(Equipment target, int avail, int loan, Ui ui) throws EquipmentMasterException {
+        if (quantity > avail) {
+            throw new EquipmentMasterException("Insufficient stock. Only " + avail + " units available.");
+        }
+        target.setAvailable(avail - quantity);
+        target.setLoaned(loan + quantity);
+        ui.showMessage("Successfully LOANED " + quantity + " units of " + target.getName() + ".");
+
+        if (target.getAvailable() < target.getMinQuantity()) {
+            ui.showMessage("!!! LOW STOCK ALERT: " + target.getName() + " is below minimum threshold!");
+        }
+    }
+
+    private void processReturn(Equipment target, int avail, int loan, Ui ui) throws EquipmentMasterException {
+        if (quantity > loan) {
+            throw new EquipmentMasterException("Return error. Only " + loan + " units are currently on loan.");
+        }
+        target.setAvailable(avail + quantity);
+        target.setLoaned(loan - quantity);
+        ui.showMessage("Successfully returned " + quantity + " units of " + target.getName() + " to AVAILABLE.");
     }
 }

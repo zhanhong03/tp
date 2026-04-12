@@ -20,3 +20,4 @@ text-ui-test/EXPECTED-UNIX.TXT
 data/*
 test_equipment.txt
 test_modules.txt
+test_module.txt

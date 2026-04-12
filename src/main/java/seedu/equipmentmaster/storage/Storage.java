@@ -102,12 +102,7 @@ public class Storage {
      * @throws EquipmentMasterException If file writing fails.
      */
     public void saveEquipments(EquipmentList equipmentList) throws EquipmentMasterException {
-        // We extract the underlying ArrayList to pass it to the existing save method
-        ArrayList<Equipment> extractedList = new ArrayList<>();
-        for (int i = 0; i < equipmentList.getSize(); i++) {
-            extractedList.add(equipmentList.getEquipment(i));
-        }
-        this.save(extractedList);
+        this.save(equipmentList.getAllEquipments());
     }
 
     /**
@@ -228,7 +223,7 @@ public class Storage {
 
         } catch (Exception e) {
             // FIX: Warn the user instead of silently deleting their data
-            logger.log(Level.WARNING, "Corrupted equipment data skipped at line " + lineNumber);
+            logger.log(Level.WARNING, "Corrupted equipment data skipped at line " + lineNumber, e);
             ui.showMessage("Warning: Skipping corrupted equipment data at line " + lineNumber);
             return null;
         }
@@ -363,5 +358,13 @@ public class Storage {
                 }
             }
         }
+    }
+
+    /**
+     * Checks if the user has explicitly saved a semester setting.
+     * @return true if the settings file exists, false otherwise.
+     */
+    public boolean hasSettingsFile() {
+        return new File(settingFilePath).exists();
     }
 }

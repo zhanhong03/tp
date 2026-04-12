@@ -153,14 +153,16 @@ Sets the current academic semester of the system, which is used as the baseline 
 * **Example:** `setsem AY2025/26 Sem1`
 * **Smart Reminder:** If the semester changes and modules exist in the system, a warning will remind you to update enrollment numbers (`pax`) using `updatemod` to maintain report accuracy.
 
-> **Note on Default Semester:** > Upon a fresh installation, the system automatically initializes with a default semester of **AY2024/25 Sem1**. It is highly recommended to use the `setsem` command to update this to your actual current semester before generating Aging or Procurement reports.
+> **Note on Default Semester:**
+> Upon a fresh installation, the system automatically initializes with a default semester of **AY2024/25 Sem1**. It is highly recommended to use the `setsem` command to update this to your actual current semester before generating Aging or Procurement reports.
 
 #### Viewing the current academic semester: `getsem`
 Displays the currently configured academic semester of the system. This is highly useful to verify the baseline timeline the system is using before you generate an aging report.
 * **Format:** `getsem`
 * **Example:** `getsem`
 
-> **Note on Default Semester:** > Upon a fresh installation, the system automatically initializes with a default semester of **AY2024/25 Sem1**. It is highly recommended to use the `setsem` command to update this to your actual current semester before generating Aging or Procurement reports.
+> **Note on Default Semester:**
+> Upon a fresh installation, the system automatically initializes with a default semester of **AY2024/25 Sem1**. It is highly recommended to use the `setsem` command to update this to your actual current semester before generating Aging or Procurement reports.
 
 #### Generating the Aging Report: `report aging`
 Scans the inventory and generates a report of all equipment whose age (calculated from their purchase semester to the current semester) meets or exceeds their defined lifespan.
