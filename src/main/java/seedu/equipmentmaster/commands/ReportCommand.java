@@ -215,7 +215,7 @@ public class ReportCommand extends Command {
             int baseDemand = 0;
 
             for (String modCode : relatedModules) {
-                Module module = getModuleByName(moduleList, modCode);
+                Module module = moduleList.getModule(modCode);
                 if (module != null) {
                     //This is not efficient due to the copying of the getER()
                     var requirements = module.getEquipmentRequirements();
@@ -264,15 +264,6 @@ public class ReportCommand extends Command {
         if (!foundProcurementNeeded) {
             ui.showMessage("Great news! No procurement needed based on current module requirements.");
         }
-    }
-
-    private Module getModuleByName(ModuleList moduleList, String name) {
-        for (Module m : moduleList.getModules()) {
-            if (m.getName().equalsIgnoreCase(name)) {
-                return m;
-            }
-        }
-        return null; // Orphaned tag or not found
     }
 }
 
