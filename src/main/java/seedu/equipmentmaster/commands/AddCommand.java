@@ -268,9 +268,16 @@ public class AddCommand extends Command {
                 }
             }
         }
+
         try {
-            // Using the base class helper or direct storage call
+            // Save the newly added equipment to disk
             storage.save(equipments.getAllEquipments());
+
+            // Without this, the new requirements will only exist in RAM and vanish upon restart.
+            if (!moduleCodes.isEmpty() && globalModuleList != null) {
+                storage.saveModules(globalModuleList);
+            }
+
         } catch (EquipmentMasterException e) {
             // ROLLBACK: Remove the item from memory if the disk save fails.
             // This prevents "Inconsistent State" where the item exists in RAM but not on Disk.
@@ -312,7 +319,7 @@ public class AddCommand extends Command {
         }
 
         ui.showMessage(message.toString());
-        //fix: alert if starting quantity is at or below minimum threshold
+        // alert if starting quantity is at or below minimum threshold
         if (currentMinQty > 0 && actualEquipment.getAvailable() <= currentMinQty) {
             ui.showMessage("!!! LOW STOCK ALERT: " + name +
                     " is at or below threshold! (Current: " + quantity +

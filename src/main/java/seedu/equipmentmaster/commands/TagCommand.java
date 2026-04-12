@@ -3,6 +3,7 @@ package seedu.equipmentmaster.commands;
 import static seedu.equipmentmaster.parser.Parser.CommandSpec.extractArgument;
 
 import seedu.equipmentmaster.context.Context;
+import seedu.equipmentmaster.equipment.Equipment;
 import seedu.equipmentmaster.equipmentlist.EquipmentList;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
 import seedu.equipmentmaster.module.Module;
@@ -40,10 +41,12 @@ public class TagCommand extends Command {
         }
 
         Module targetModule = modules.getModule(moduleName);
-        String officialEquipmentName = equipments.findByName(equipmentName).getName();
+        Equipment targetEquipment = equipments.findByName(equipmentName);
+        String officialEquipmentName = targetEquipment.getName();
 
-        // Use the officialEquipmentName and the module's canonical name
         targetModule.addEquipmentRequirement(officialEquipmentName, requirementRatio);
+        targetEquipment.addModuleCode(targetModule.getName());
+
         String moduleDisplayName = targetModule.getName();
         String equipmentDisplayName = officialEquipmentName;
         StringBuilder successMessage = new StringBuilder();
@@ -65,6 +68,7 @@ public class TagCommand extends Command {
 
         try {
             storage.saveModules(modules);
+            storage.saveEquipments(equipments);
         } catch (EquipmentMasterException e) {
             ui.showMessage("Warning: Failed to save the updated tags to the data file. " + e.getMessage());
         }
@@ -108,5 +112,4 @@ public class TagCommand extends Command {
         // 4. Return the constructed command
         return new TagCommand(moduleName, equipmentName, requirementRatio);
     }
-
 }

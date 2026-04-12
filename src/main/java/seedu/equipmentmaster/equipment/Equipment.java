@@ -118,7 +118,9 @@ public class Equipment {
      * @param minQuantity New threshold value.
      */
     public void setMinQuantity(int minQuantity) {
-        assert minQuantity >= 0 : "Minimum quantity threshold cannot be negative";
+        if (minQuantity < 0) {
+            throw new IllegalArgumentException("Minimum quantity threshold cannot be negative.");
+        }
         this.minQuantity = minQuantity;
     }
 
@@ -266,6 +268,25 @@ public class Equipment {
         String upperCode = moduleCode.toUpperCase().trim();
         if (!moduleCodes.contains(upperCode)) {
             moduleCodes.add(upperCode);
+        }
+    }
+
+    /**
+     * Checks if the equipment is tagged to a specific module code.
+     */
+    public boolean hasModuleCode(String moduleCode) {
+        if (moduleCode == null || moduleCode.trim().isEmpty()) {
+            return false;
+        }
+        return moduleCodes.contains(moduleCode.trim().toUpperCase());
+    }
+
+    /**
+     * Removes a module code from this equipment (Safe Dereferencing).
+     */
+    public void removeModuleCode(String moduleCode) {
+        if (moduleCode != null && !moduleCode.trim().isEmpty()) {
+            moduleCodes.remove(moduleCode.trim().toUpperCase());
         }
     }
 

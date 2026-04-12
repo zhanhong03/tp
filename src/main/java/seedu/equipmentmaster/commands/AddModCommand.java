@@ -29,7 +29,7 @@ public class AddModCommand extends Command {
      * @throws EquipmentMasterException If the pax value is negative.
      */
     public AddModCommand(String moduleName, int pax) throws EquipmentMasterException {
-        if (pax < 0) {
+        if (pax <= 0) {
             throw new EquipmentMasterException("Pax cannot be a negative number.");
         }
         this.moduleName = moduleName;
@@ -100,7 +100,7 @@ public class AddModCommand extends Command {
             throw new EquipmentMasterException("Invalid command format.\nExpected: addmod n/NAME pax/QTY");
         }
 
-        String name = matcher.group(1).trim();
+        String name = matcher.group(1).trim().toUpperCase();
         validateName(name);
 
         String paxString = matcher.group(2).trim();

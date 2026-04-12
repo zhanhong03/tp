@@ -102,15 +102,17 @@ public class DeleteCommand extends Command {
 
         EquipmentList equipments = context.getEquipments();
         Ui ui = context.getUi();
-
         ModuleList moduleList = context.getModuleList();
 
         Equipment target = findTarget(equipments);
 
         updateInternalQuantities(target);
-        processDeletionResult(target, equipments, ui, moduleList);
 
-        saveToStorage(context.getStorage(), equipments, ui);
+        // Track if Safe Dereferencing actually modified any modules
+        boolean isModuleModified = processDeletionResult(target, equipments, ui, moduleList);
+
+        // Pass the flag and the moduleList to the storage method
+        saveToStorage(context.getStorage(), equipments, moduleList, isModuleModified, ui);
     }
 
     /**
@@ -149,23 +151,29 @@ public class DeleteCommand extends Command {
         target.setQuantity(target.getQuantity() - quantity);
     }
 
-    private void processDeletionResult(Equipment target, EquipmentList list, Ui ui, ModuleList moduleList) {
+    private boolean processDeletionResult(Equipment target, EquipmentList list, Ui ui, ModuleList moduleList) {
+        boolean isModuleModified = false;
         ui.showMessage("Deleted " + quantity + " " + status + " unit(s) of " + target.getName() + ".");
+
         if (target.getQuantity() == 0) {
             list.removeEquipment(target);
             ui.showMessage("Notice: Item completely removed (Total reached 0).");
+
             if (moduleList != null) {
                 // Iterate through every module in the system
                 for (Module module : moduleList.getModules()) {
-                    // Attempt to remove the equipment from the module.
-                    // If the equipment wasn't tagged to this specific module,
-                    // this method safely does nothing and returns false.
-                    module.removeEquipmentRequirement(target.getName());
+                    // Safe Dereferencing: Attempt to remove the equipment from the module.
+                    boolean removed = module.removeEquipmentRequirement(target.getName());
+                    if (removed) {
+                        isModuleModified = true; // Mark as modified if a tag was actually removed
+                    }
                 }
             }
         } else if (target.getQuantity() <= target.getMinQuantity()) {
             ui.showMessage("!!! LOW STOCK ALERT: " + target.getName() + " is below threshold!");
         }
+
+        return isModuleModified;
     }
 
     private static String extractValue(String cmd, int curIdx, int otherIdx, String flag) {
@@ -213,10 +221,18 @@ public class DeleteCommand extends Command {
         }
     }
 
-    private void saveToStorage(Storage storage, EquipmentList list, Ui ui) {
+    private void saveToStorage(Storage storage, EquipmentList list, ModuleList moduleList,
+                               boolean isModuleModified, Ui ui) {
         try {
             if (storage != null) {
+                // Always save the equipment list because quantities were changed
                 storage.save(list.getAllEquipments());
+
+                // CRITICAL FIX: Save module list ONLY if safe dereferencing modified it
+                if (isModuleModified && moduleList != null) {
+                    storage.saveModules(moduleList);
+                }
+
                 logger.log(Level.INFO, "Data successfully saved to disk after deletion.");
             }
         } catch (Exception e) {

@@ -33,7 +33,13 @@ public class GetSemCommand extends Command {
             ui.showMessage("The system time has not been initialized yet.");
         } else {
             logger.log(Level.INFO, "Successfully displayed current semester: " + current);
-            ui.showMessage("The current system time is: " + current);
+
+            if (current.toString().equals("AY2024/25 Sem1")) {
+                ui.showMessage("The current system time is: " + current + " (System Default)");
+                ui.showMessage("Tip: You can update this to your actual current semester using the 'setsem' command.");
+            } else {
+                ui.showMessage("The current system time is: " + current);
+            }
         }
     }
 }

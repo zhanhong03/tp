@@ -107,19 +107,21 @@ public class FindCommand extends Command {
      * @return true if the token is found in the name or module codes.
      */
     private boolean matchesNameOrModule(Equipment eq, String token) {
+        String cleanToken = token.trim().toLowerCase();
+
         // 1. Check equipment name
-        if (eq.getName().toLowerCase().contains(token)) {
+        if (eq.getName().toLowerCase().contains(cleanToken)) {
             return true;
         }
 
-        // 2. Guard Clause: If there are no modules, stop checking here
+        // 2. Guard Clause
         if (eq.getModuleCodes() == null || eq.getModuleCodes().isEmpty()) {
             return false;
         }
 
         // 3. Check module codes
         for (String module : eq.getModuleCodes()) {
-            if (module.toLowerCase().contains(token)) {
+            if (module.trim().toLowerCase().contains(cleanToken)) {
                 return true;
             }
         }

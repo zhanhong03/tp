@@ -3,6 +3,7 @@ package seedu.equipmentmaster.storage;
 import seedu.equipmentmaster.equipment.Equipment;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
 import seedu.equipmentmaster.modulelist.ModuleList;
+import seedu.equipmentmaster.equipmentlist.EquipmentList;
 import seedu.equipmentmaster.semester.AcademicSemester;
 import seedu.equipmentmaster.ui.Ui;
 import seedu.equipmentmaster.module.Module;
@@ -58,7 +59,7 @@ public class Storage {
      * Saves the current system semester to the settings file.
      *
      * @param currentSem The semester to be saved.
-     * @throws EquipmentMasterException If file writing fails. (Fixes the SetSemCommand compilation error)
+     * @throws EquipmentMasterException If file writing fails.
      */
     public void saveSettings(AcademicSemester currentSem) throws EquipmentMasterException {
         try {
@@ -91,6 +92,22 @@ public class Storage {
             logger.log(Level.WARNING, "Settings file not found, using default.");
         }
         return defaultSem;
+    }
+
+    /**
+     * Helper method to bridge EquipmentList and ArrayList.
+     * Used heavily by commands like DelModCommand to ensure dual-saving.
+     *
+     * @param equipmentList The current state of the EquipmentList wrapper.
+     * @throws EquipmentMasterException If file writing fails.
+     */
+    public void saveEquipments(EquipmentList equipmentList) throws EquipmentMasterException {
+        // We extract the underlying ArrayList to pass it to the existing save method
+        ArrayList<Equipment> extractedList = new ArrayList<>();
+        for (int i = 0; i < equipmentList.getSize(); i++) {
+            extractedList.add(equipmentList.getEquipment(i));
+        }
+        this.save(extractedList);
     }
 
     /**
@@ -129,9 +146,14 @@ public class Storage {
         }
 
         try (Scanner scanner = new Scanner(file)) {
+            int lineNumber = 0;
             while (scanner.hasNextLine()) {
+                lineNumber++;
                 String line = scanner.nextLine();
-                Equipment eq = parseEquipment(line);
+
+                // FIX: Pass the line number down so we can report exactly which line is corrupted
+                Equipment eq = parseEquipment(line, lineNumber);
+
                 if (eq != null) {
                     equipments.add(eq);
                 }
@@ -146,9 +168,10 @@ public class Storage {
      * Converts a formatted string from the .txt file into an Equipment object.
      *
      * @param line A single line of text from the save file.
+     * @param lineNumber The line number in the text file, used for accurate error reporting.
      * @return An Equipment object, or null if the string format is corrupted.
      */
-    private Equipment parseEquipment(String line) {
+    private Equipment parseEquipment(String line, int lineNumber) {
         if (line == null || line.isBlank()) {
             return null;
         }
@@ -202,7 +225,11 @@ public class Storage {
             }
 
             return new Equipment(name, q, a, l, sem, life, modules, min, bufferPercentage);
+
         } catch (Exception e) {
+            // FIX: Warn the user instead of silently deleting their data
+            logger.log(Level.WARNING, "Corrupted equipment data skipped at line " + lineNumber);
+            ui.showMessage("Warning: Skipping corrupted equipment data at line " + lineNumber);
             return null;
         }
     }

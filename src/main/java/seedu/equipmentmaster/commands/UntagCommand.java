@@ -70,24 +70,31 @@ public class UntagCommand extends Command {
         Module targetModule = modules.getModule(moduleName);
         Equipment targetEquipment = equipments.findByName(equipmentName);
 
-        // Grab the official capitalized name so it matches exactly what's inside the HashMap
+        // Grab the official names to ensure a perfect match in the internal lists
         String officialEquipmentName = targetEquipment.getName();
+        String officialModuleName = targetModule.getName();
 
-        // 3. Remove the dependency
-        boolean isRemoved = targetModule.removeEquipmentRequirement(officialEquipmentName);
+        // 3. Bidirectional Removal (Safe Dereferencing)
+        // Remove from Module's requirement map
+        boolean isRemovedFromModule = targetModule.removeEquipmentRequirement(officialEquipmentName);
+
+        // FIX 1: Also remove the module code from the Equipment's internal tag list
+        targetEquipment.removeModuleCode(officialModuleName);
 
         // 4. Output the result
-        if (isRemoved) {
+        if (isRemovedFromModule) {
             ui.showMessage("Successfully untagged equipment from module:\n" +
-                    targetModule.getName() + " no longer requires " + officialEquipmentName + ".");
+                    officialModuleName + " no longer requires " + officialEquipmentName + ".");
         } else {
             // Throw an exception if they tried to untag something that wasn't tagged in the first place
-            throw new EquipmentMasterException("Aborted: " + targetModule.getName() +
+            throw new EquipmentMasterException("Aborted: " + officialModuleName +
                     " does not currently have " + officialEquipmentName + " as a requirement.");
         }
 
+        // 5. FIX 2: Dual-Saving (Ensure both files on the hard disk are updated)
         try {
             storage.saveModules(modules);
+            storage.saveEquipments(equipments); // CRITICAL: Save equipment to remove the tag on disk
         } catch (EquipmentMasterException e) {
             ui.showMessage("Warning: Failed to save the updated tags to the data file. " + e.getMessage());
         }
