@@ -1,0 +1,51 @@
+@startuml
+actor ":Main" as Main
+participant ":Parser" as Parser
+participant ":SetStatusCommand" as Command
+participant ":EquipmentList" as EqList
+participant "target:Equipment" as Eq
+participant ":Storage" as Storage
+
+Main -> Parser : parse("setstatus n/BasyS3 FPGA 5 loaned")
+activate Parser
+
+create Command
+Parser -> Command : new SetStatusCommand(name, quantity, status)
+activate Command
+
+Parser --> Main : SetStatusCommand object
+deactivate Parser
+
+Main -> Command : execute(context)
+
+Command -> EqList : findEquipment(name)
+activate EqList
+EqList --> Command : target
+deactivate EqList
+
+Command -> Eq : setLoaned(loaned + quantity)
+activate Eq
+Eq --> Command
+deactivate Eq
+
+Command -> Eq : setAvailable(available - quantity)
+activate Eq
+Eq --> Command
+deactivate Eq
+
+opt available < minQuantity
+    Command -> Eq : getMinQuantity()
+    activate Eq
+    Eq --> Command : minQuantity
+    deactivate Eq
+    Command -> Command : showMessage(warning)
+end
+
+Command -> Storage : save(equipments)
+activate Storage
+Storage --> Command
+deactivate Storage
+
+Command --> Main
+deactivate Command
+@enduml

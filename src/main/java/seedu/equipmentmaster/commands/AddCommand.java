@@ -5,9 +5,11 @@ import seedu.equipmentmaster.context.Context;
 import seedu.equipmentmaster.equipment.Equipment;
 import seedu.equipmentmaster.equipmentlist.EquipmentList;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
+import seedu.equipmentmaster.modulelist.ModuleList;
 import seedu.equipmentmaster.semester.AcademicSemester;
 import seedu.equipmentmaster.storage.Storage;
 import seedu.equipmentmaster.ui.Ui;
+import seedu.equipmentmaster.module.Module;
 
 import java.util.ArrayList;
 
@@ -150,6 +152,9 @@ public class AddCommand extends Command {
         if (!minQtyStr.isEmpty()) {
             try {
                 minQuantity = Integer.parseInt(minQtyStr);
+                if (minQuantity < 0) {
+                    throw new EquipmentMasterException("Minimum threshold cannot be negative.");
+                }
             } catch (NumberFormatException e) {
                 throw new EquipmentMasterException("Please enter a valid whole number for minimum threshold");
             }
@@ -172,7 +177,9 @@ public class AddCommand extends Command {
     private static String extractArgument(String fullCommand, String prefix) {
         String paddedCommand = " " + fullCommand.trim() + " ";
         String searchPrefix = " " + prefix;
-        int startIdx = paddedCommand.indexOf(searchPrefix);
+
+        int startIdx = paddedCommand.lastIndexOf(searchPrefix);
+
         if (startIdx == -1) {
             return "";
         }
@@ -242,6 +249,25 @@ public class AddCommand extends Command {
                 moduleCodes, minQuantity, 0.0);
         equipments.addEquipment(equipment);
 
+        ModuleList globalModuleList = context.getModuleList();
+
+        if (!moduleCodes.isEmpty() && globalModuleList != null) {
+            for (String code : moduleCodes) {
+
+                // 1. If the module does not exist, create it!
+                if (!globalModuleList.hasModule(code)) {
+                    // Use a default pax of 0 for newly discovered modules
+                    Module newModule = new Module(code, 0);
+                    globalModuleList.addModule(newModule);
+                }
+
+                // 2. Retrieve the actual module object and tag the equipment to it
+                Module targetModule = globalModuleList.getModule(code);
+                if (targetModule != null) {
+                    targetModule.addEquipmentRequirement(equipment.getName(), 1.0);
+                }
+            }
+        }
         try {
             // Using the base class helper or direct storage call
             storage.save(equipments.getAllEquipments());
@@ -254,6 +280,15 @@ public class AddCommand extends Command {
             throw e;
         }
 
+        Equipment actualEquipment = equipment; // Default to our new object
+        for (Equipment e : equipments.getAllEquipments()) {
+            // Using equalsIgnoreCase is safer for matching names
+            if (e.getName().equalsIgnoreCase(name)) {
+                actualEquipment = e;
+                break;
+            }
+        }
+
         // Build message
         StringBuilder message = new StringBuilder();
         message.append("Added ").append(quantity).append(" of ").append(name);
@@ -262,20 +297,23 @@ public class AddCommand extends Command {
             message.append(" with modules ").append(moduleCodes);
         }
 
-        message.append(". (Total Available: ").append(equipment.getAvailable()).append(")");
+        message.append(". (Total Available: ").append(actualEquipment.getAvailable()).append(")");
 
         if (purchaseSem != null) {
             message.append(" Purchase: ").append(purchaseSem)
                     .append(" | Lifespan: ").append(lifespanYears)
                     .append(lifespanYears == 1.0 ? " year" : " years");
         }
-        if (minQuantity > 0) {
-            message.append(" | Min Threshold: ").append(minQuantity);
+
+        int currentMinQty = actualEquipment.getMinQuantity() > 0 ? actualEquipment.getMinQuantity() : minQuantity;
+
+        if (currentMinQty > 0) {
+            message.append(" | Min Threshold: ").append(currentMinQty);
         }
 
         ui.showMessage(message.toString());
         //fix: alert if starting quantity is at or below minimum threshold
-        if (minQuantity > 0 && quantity <= minQuantity) {
+        if (currentMinQty > 0 && actualEquipment.getAvailable() <= currentMinQty) {
             ui.showMessage("!!! LOW STOCK ALERT: " + name +
                     " is at or below threshold! (Current: " + quantity +
                     ", Min: " + minQuantity + ")");

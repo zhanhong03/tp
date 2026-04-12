@@ -239,6 +239,12 @@ public class SetStatusCommand extends Command {
             targetEquipment.setAvailable(available - quantity);
             targetEquipment.setLoaned(loaned + quantity);
             ui.showMessage(quantity + " units of " + equipmentName + " are now LOANED.");
+
+            if (targetEquipment.getAvailable() < targetEquipment.getMinQuantity()) {
+                ui.showMessage("Warning: " + equipmentName + " is now below minimum threshold of "
+                        + targetEquipment.getMinQuantity() + ". Consider restocking.");
+            }
+
             break;
 
         case "available":

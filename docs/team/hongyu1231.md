@@ -1,32 +1,34 @@
 # Project Portfolio: Hongyu Chen
 
 ## 1. Overview
-**Equipment Master** is a desktop CLI inventory management system for University Lab Technicians. It replaces manual logbooks with a digital registry capable of tracking equipment against academic modules and forecasting procurement needs.
+**Equipment Master** is a desktop CLI inventory management system optimized for University Lab Technicians. It replaces error-prone manual logbooks with a relational digital registry, enabling technicians to track hardware against academic modules, monitor lifecycles, and algorithmically forecast procurement needs.
 
 ---
 
 ## 2. Summary of Contributions
 
 ### Code Contributed
-[Repo Dashboard Link](https://nus-cs2113-ay2526-s2.github.io/tp-dashboard/?search=hongyu1231&breakdown=true)
+[RepoSense Dashboard Link](https://nus-cs2113-ay2526-s2.github.io/tp-dashboard/?search=hongyu1231&breakdown=true)
 
 ### Enhancements Implemented
-* **Module Tracking System:** Engineered a normalized entity structure to track course enrollment (`pax`). Implemented **Safe Dereferencing** in `delmod` to maintain data integrity when modules are removed.
-* **Semantic Aging Report:** Designed a custom `AcademicSemester` class to perform time-difference calculations on university timelines (e.g., `AY24/25 Sem1`), enabling proactive equipment replacement audits.
-* **Enhanced Find Feature:** Refactored search logic to cross-reference equipment names and module codes. Applied **SLAP** and eliminated deeply nested loops via early returns and helper methods.
-* **Architecture Implementation:** System-wide implementation of the **Context Object Pattern** to facilitate clean dependency injection across all commands.
+* **Module Tracking & Relational Mapping:** Engineered a normalized entity structure linking `Equipment` to `Module` requirements. Implemented **Safe Dereferencing** to prevent "ghost references" and maintain data integrity during module deletions.
+* **Semantic Time Calculation (Aging Report):** Designed an `AcademicSemester` normalization algorithm to perform floating-point mathematical calculations on non-standard university timelines (e.g., `AY24/25 Sem1`), enabling proactive lifespan audits.
+* **Algorithmic Search Optimization (Find):** Refactored search mechanics to cross-reference both item names and module codes. Enforced the **Single Level of Abstraction Principle (SLAP)**, utilizing early returns to eliminate deeply nested iterations.
+* **Architectural Refactoring:** System-wide integration of the **Context Object Pattern**, decoupling the logic component from storage and UI, which significantly improved testability via dependency injection.
 
 ### Documentation Contributions
-* **User Guide (UG):** Authored the *Introduction*, *Quick Start*, and functional instructions for *Module Tracking*, *Find*, and *Aging Reports*. Standardized command formats and provided practical usage examples.
-* **Developer Guide (DG):** 
-  * **Technical Architecture:** Documented logic for **Module Tracking**, **Enhanced Find**, and **Aging Reports** via PlantUML Class, Sequence (Update/Report), and Activity (Find algorithm) diagrams.
-  * **Project Scope:** Drafted the *Target User Profile*, *User Stories*, and *Non-Functional Requirements*.
-  * **Quality Assurance:** Authored the *Glossary* and *Manual Testing Instructions* to ensure system reliability and edge-case verification.
+* **User Guide (UG):** Authored the *Introduction*, *Quick Start*, *FAQ*, and core feature tutorials (*Module Tracking, Find, Aging Reports*).
+  * Enhanced UX by designing the *Error Handling* section and integrating **responsive ASCII UI screenshots** to visualize command outputs.
+  * Formulated the *Command Summary (Cheat Sheet)* and established strict, idiot-proof syntax guidelines (`[ ]` vs `UPPER_CASE`).
+* **Developer Guide (DG):** Authored the technical deep-dives and integrated complex **PlantUML diagrams** for *Module Tracking*, *Enhanced Find*, and *Aging Reports*.
+  * **Project Scope & Requirements:** Wrote the *Target User Profile*, *Prioritized User Stories*, detailed **Use Cases (MSS & Extensions)**, and *Manual Testing Instructions*.
+  * **Project Effort:** Drafted the *Appendix* to explicitly highlight the team's technical challenges (Relational Mapping, Forecasting) for grading justification.
 
-### Team-Based Tasks
-* **Release Management:** Orchestrated GitHub Issue tracking and enforced **WEEKLY milestones**. Managed the end-to-end Release process (JAR packaging and tagging) for all iterations.
-* **Quality Control:** Led overarching debugging efforts and maintained storage backward compatibility. Managed the final compilation and formatting of PDF deliverables (UG/DG).
+### Team-Based Tasks & Project Management
+* **Release Management:** Managed the end-to-end release cycle (JAR packaging and GitHub releases) across all iterations.
+* **Workflow Coordination:** Enforced weekly milestones via GitHub Issues and coordinated integration testing to maintain Storage backward compatibility.
+* **Deliverable Quality:** Managed the final typesetting, Markdown standardization, and dynamic TOC generation for all PDF deliverables (UG/DG).
 
-### Review / Mentoring Contributions
-* **Gatekeeping:** Conducted rigorous code reviews focusing on **SLAP**, **Checkstyle**, and preventing regression bugs in storage logic.
-* **Technical Mentorship:** Guided the team through major refactoring phases (dependency injection) and mentored peers on effective JUnit testing and IDE debugging.
+### Review & Mentoring Contributions
+* **Code Gatekeeping:** Acted as a primary reviewer for PRs, rigorously enforcing Checkstyle compliance, Defensive Programming standards, and proper Exception handling.
+* **Technical Mentorship:** Guided the team through complex refactoring phases (e.g., transitioning to the Command Factory pattern) and mentored peers on effective JUnit 5 testing strategies.

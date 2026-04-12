@@ -1,0 +1,38 @@
+@startuml
+actor ":Main" as Main
+participant ":Parser" as Parser
+participant ":SetBufferCommand" as Command
+participant ":EquipmentList" as EqList
+participant "target:Equipment" as Eq
+participant ":Storage" as Storage
+
+Main -> Parser : parse("setbuffer n/STM32 b/10%")
+activate Parser
+
+create Command
+Parser -> Command : new SetBufferCommand(name, percentage)
+activate Command
+
+Parser --> Main : SetBufferCommand object
+deactivate Parser
+
+Main -> Command : execute(context)
+
+Command -> EqList : findByName(name)
+activate EqList
+EqList --> Command : target
+deactivate EqList
+
+Command -> Eq : setBufferPercentage(percentage)
+activate Eq
+Eq --> Command
+deactivate Eq
+
+Command -> Storage : save(equipments)
+activate Storage
+Storage --> Command
+deactivate Storage
+
+Command --> Main
+deactivate Command
+@enduml

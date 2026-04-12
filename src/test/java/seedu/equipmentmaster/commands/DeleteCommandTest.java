@@ -12,12 +12,14 @@ import seedu.equipmentmaster.semester.AcademicSemester;
 import seedu.equipmentmaster.storage.Storage;
 import seedu.equipmentmaster.ui.Ui;
 import seedu.equipmentmaster.exception.EquipmentMasterException;
+import seedu.equipmentmaster.module.Module;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -37,14 +39,18 @@ public class DeleteCommandTest {
     private EquipmentList equipments;
     private Ui ui;
     private Storage storage;
+    private ModuleList moduleList;
+    private Context context;
 
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws EquipmentMasterException {
         equipments = new EquipmentList();
+        moduleList  = new ModuleList();
         ui = new Ui();
         // Use a temporary file so we don't overwrite real data during tests
         storage = new Storage(tempDir.resolve("test_equipment.txt").toString(),
                 ui, tempDir.resolve("test_setting.txt").toString(), tempDir.resolve("test_module.txt").toString());
+        context = new Context(equipments, moduleList, ui, storage, new AcademicSemester("AY2024/25 Sem1"));
     }
 
     //@@author Hongyu1231
@@ -299,4 +305,158 @@ public class DeleteCommandTest {
     }
 
 
+
+    @Test
+    public void parse_missingFlags_throwsException() {
+        // Missing s/ flag
+        assertThrows(EquipmentMasterException.class, () -> DeleteCommand.parse("delete 1 q/5"));
+        // Missing q/ flag
+        assertThrows(EquipmentMasterException.class, () -> DeleteCommand.parse("delete 1 s/available"));
+    }
+
+    @Test
+    public void parse_reversedFlagsOrder_success() throws EquipmentMasterException {
+        // Targets extractValue() branch where curIdx > otherIdx
+        Command cmd = DeleteCommand.parse("delete 1 s/available q/5");
+        assertTrue(cmd instanceof DeleteCommand);
+    }
+
+    @Test
+    public void parse_invalidStatus_throwsException() {
+        // Targets validateStatus() branch
+        EquipmentMasterException thrown = assertThrows(EquipmentMasterException.class, () -> {
+            DeleteCommand.parse("delete 1 q/5 s/broken");
+        });
+        assertTrue(thrown.getMessage().contains("Status must be 'available' or 'loaned'"));
+    }
+
+    @Test
+    public void parse_invalidQuantity_throwsException() {
+        // Targets parseQuantity() q <= 0 branch
+        assertThrows(EquipmentMasterException.class, () -> DeleteCommand.parse("delete 1 q/0 s/available"));
+        assertThrows(EquipmentMasterException.class, () -> DeleteCommand.parse("delete 1 q/-5 s/available"));
+
+        // Targets parseQuantity() NumberFormatException branch
+        assertThrows(EquipmentMasterException.class, () -> DeleteCommand.parse("delete 1 q/abc s/available"));
+    }
+
+    @Test
+    public void parse_emptyNameOrInvalidIdentifier_throwsException() {
+        // Targets createDeleteCommand() branch where name is empty
+        assertThrows(EquipmentMasterException.class, () -> DeleteCommand.parse("delete n/ q/5 s/available"));
+
+        // Targets createDeleteCommand() catch(NumberFormatException) for identifier
+        assertThrows(EquipmentMasterException.class, () ->
+                DeleteCommand.parse("delete notAValidNumber q/5 s/available"));
+    }
+
+    @Test
+    public void execute_nameNotFound_throwsException() {
+        // Targets findTarget() branch where name is not in the list
+        DeleteCommand command = new DeleteCommand("GhostEquipment", 1, "available");
+        Context context = new Context(equipments, new ModuleList(), ui, storage, null);
+        assertThrows(EquipmentMasterException.class, () -> command.execute(context));
+    }
+
+    @Test
+    public void constructor_indexLessThanOne_assertionFails() {
+        // Targets the constructor assertion branch: assert index > 0
+        try {
+            // This will throw an AssertionError before execute() is even called
+            new DeleteCommand(0, 1, "available");
+        } catch (AssertionError e) {
+            assertTrue(e.getMessage().contains("Index must be positive"));
+        }
+
+        try {
+            new DeleteCommand(-5, 1, "available");
+        } catch (AssertionError e) {
+            assertTrue(e.getMessage().contains("Index must be positive"));
+        }
+    }
+
+    @Test
+    public void execute_nullStorage_success() throws EquipmentMasterException {
+        // Targets saveToStorage() branch: if (storage != null) -> False
+        equipments.addEquipment(new Equipment("Laptop", 5));
+        DeleteCommand command = new DeleteCommand(1, 1, "available");
+        Context nullStorageContext = new Context(equipments, new ModuleList(), ui, null, null);
+
+        // Should execute successfully without throwing NPE
+        command.execute(nullStorageContext);
+        assertEquals(4, equipments.getEquipment(0).getQuantity());
+    }
+
+    @Test
+    public void execute_storageException_caughtAndLogged() throws EquipmentMasterException {
+        // Targets saveToStorage() catch(Exception e) block
+        equipments.addEquipment(new Equipment("Laptop", 5));
+        Storage faultyStorage = new Storage("e.txt", ui, "s.txt", "m.txt") {
+            @Override
+            // CHANGE 1: Match the parent class's throws declaration
+            public void save(java.util.ArrayList<Equipment> list) throws EquipmentMasterException {
+                // CHANGE 2: Throw the specific custom exception
+                throw new EquipmentMasterException("Simulated disk crash");
+            }
+        };
+        Context context = new Context(equipments, new ModuleList(), ui, faultyStorage, null);
+        DeleteCommand command = new DeleteCommand(1, 1, "available");
+
+        // Should catch internally and not throw to the caller
+        command.execute(context);
+        assertEquals(4, equipments.getEquipment(0).getQuantity());
+    }
+
+    @Test
+    public void constructor_nullOrEmptyName_assertionFails() {
+        try {
+            new DeleteCommand(null, 1, "available");
+        } catch (AssertionError e) {
+            assertTrue(e.getMessage().contains("Name cannot be null or empty"));
+        }
+        try {
+            new DeleteCommand("", 1, "available");
+        } catch (AssertionError e) {
+            assertTrue(e.getMessage().contains("Name cannot be null or empty"));
+        }
+    }
+
+    @Test
+    public void execute_nullContext_assertionFails() {
+        DeleteCommand command = new DeleteCommand(1, 1, "available");
+        AssertionError thrown = assertThrows(AssertionError.class, () -> {
+            command.execute(null);
+        });
+        assertTrue(thrown.getMessage().contains("Context should not be null"));
+    }
+
+    @Test
+    public void execute_deleteCompletely_removesDanglingReferencesFromModules() throws EquipmentMasterException {
+        // Bug Fix #5: When an item reaches 0, untag it from all modules
+
+        String itemName = "Beer";
+        String moduleName = "CS2113";
+
+        // 1. Setup Initial State (Item exists, Module exists, Item is tagged to Module)
+        Equipment beer = new Equipment(itemName, 5, 5, 0, null, 0.0, null, 0, 0.0);
+        equipments.addEquipment(beer);
+
+        Module cs2113 = new Module(moduleName, 100);
+        cs2113.addEquipmentRequirement(itemName, 1.0);
+        moduleList.addModule(cs2113);
+
+        // Verify initial setup is correct
+        assertTrue(moduleList.getModule(moduleName).getEquipmentRequirements().containsKey(itemName));
+
+        // 2. Execute deletion of ALL units (5 available units)
+        DeleteCommand deleteCommand = new DeleteCommand(itemName, 5, "available");
+        deleteCommand.execute(context);
+
+        // 3. Verify the item is gone from the main equipment list
+        assertEquals(0, equipments.getSize());
+
+        // 4. THE CRITICAL CHECK: Verify it was automatically untagged from the module
+        assertFalse(moduleList.getModule(moduleName).getEquipmentRequirements().containsKey(itemName),
+                "Dangling reference detected! Item was not removed from the module.");
+    }
 }

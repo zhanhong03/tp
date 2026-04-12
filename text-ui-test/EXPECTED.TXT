@@ -158,6 +158,7 @@ Invalid index. Please provide an index between 1 and 5.
 ===================================================
 ===================================================
 10 units of Ghost are now LOANED.
+Warning: Ghost is now below minimum threshold of 10. Consider restocking.
 ===================================================
 ===================================================
 Invalid format. Use: delete [INDEX|n/NAME] q/QUANTITY s/STATUS
@@ -212,7 +213,7 @@ Aging Equipment Report (Calculated for: AY2024/25 Sem1):
 1. Oscilloscope (Qty: 5, Bought: AY2020/21 Sem1) | Age: 4.0 Years | Status: [REPLACE SOON]
 ===================================================
 ===================================================
-Successfully added module: CG2111A | Enrollment: 150 students
+Module 'CG2111A' already exists!
 ===================================================
 ===================================================
 Successfully added module: CS2113 | Enrollment: 200 students
@@ -233,8 +234,10 @@ Expected: addmod n/NAME pax/QTY
 ===================================================
 ===================================================
 Here are the current course modules in your system:
-1. CG2111A | Enrollment: 150 students
-2. CS2113 | Enrollment: 200 students
+1. CG2111A | Enrollment: 0 students | Required: STM32 (1.0)
+2. CG2271 | Enrollment: 0 students | Required: STM32 (1.0)
+3. EE2026 | Enrollment: 0 students | Required: Soldering Iron (1.0)
+4. CS2113 | Enrollment: 200 students
 ===================================================
 ===================================================
 Successfully updated module:
@@ -248,8 +251,10 @@ Pax cannot be a negative number.
 ===================================================
 ===================================================
 Here are the current course modules in your system:
-1. CG2111A | Enrollment: 180 students
-2. CS2113 | Enrollment: 200 students
+1. CG2111A | Enrollment: 180 students | Required: STM32 (1.0)
+2. CG2271 | Enrollment: 0 students | Required: STM32 (1.0)
+3. EE2026 | Enrollment: 0 students | Required: Soldering Iron (1.0)
+4. CS2113 | Enrollment: 200 students
 ===================================================
 ===================================================
 Successfully deleted module: CS2113
@@ -293,7 +298,9 @@ Buffer percentage cannot be negative.
 ===================================================
 ===================================================
 Here are the current course modules in your system:
-1. CG2111A | Enrollment: 180 students
+1. CG2111A | Enrollment: 180 students | Required: STM32 (1.0)
+2. CG2271 | Enrollment: 0 students | Required: STM32 (1.0)
+3. EE2026 | Enrollment: 0 students | Required: Soldering Iron (1.0)
 ===================================================
 ===================================================
 Goodbye! See you back in the lab soon.

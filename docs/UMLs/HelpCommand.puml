@@ -1,0 +1,40 @@
+@startuml
+participant ":HelpCommand" as Command
+participant ":Ui" as Ui
+participant "table:UiTable" as Table
+participant "Parser" as Parser <<class>>
+
+[-> Command : execute(context)
+activate Command
+
+Command -> Ui : showHelp()
+activate Ui
+
+Ui -> Table ** : new UiTable(hasHeader=true)
+activate Table
+Table --> Ui
+deactivate Table
+
+Ui -> Parser : getCommandSpecs()
+activate Parser
+Parser --> Ui : List<CommandSpec>
+deactivate Parser
+
+loop for each CommandSpec
+    Ui -> Table : addRow([spec.keyword, spec.format])
+    activate Table
+    Table --> Ui
+    deactivate Table
+end
+
+Ui -> Table : toString()
+activate Table
+Table --> Ui : formattedString
+deactivate Table
+
+Ui --> Command
+deactivate Ui
+
+[<-- Command
+deactivate Command
+@enduml
