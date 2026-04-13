@@ -7,10 +7,10 @@ public class Messages {
     public static final String MESSAGE_INVALID_ADD_FORMAT = "Please enter with the right format (with n/ and q/)";
     public static final String MESSAGE_INVALID_FIND_FORMAT = "Please provide a keyword to find. Example: find STM32";
     public static final String MESSAGE_INVALID_SET_STATUS_FORMAT =
-            "Invalid setstatus format. Use: setstatus n/NAME q/QUANTITY s/STATUS";
+            "Invalid setstatus format. Use: setstatus n/NAME q/QUANTITY s/STATUS or INDEX q/QUANTITY s/STATUS";
     public static final String MESSAGE_DIVIDER = "===================================================";
     public static final String MESSAGE_INVALID_SETBUFFER_FORMAT =
-            "Invalid setbuffer format. Usage: setbuffer n/NAME b/PERCENTAGE or setbuffer i/INDEX b/PERCENTAGE";
+            "Invalid setbuffer format. Usage: setbuffer n/NAME b/PERCENTAGE or setbuffer INDEX b/PERCENTAGE";
     public static final String MESSAGE_NAME_CONTAINS_RESERVED_CHARS =
             "Invalid name! Names cannot contain reserved storage characters: '|', ',', or '='";
 }

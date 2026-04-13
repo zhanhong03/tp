@@ -1,51 +1,81 @@
 @startuml
-actor ":Main" as Main
+actor ":User" as User
 participant ":Parser" as Parser
 participant ":SetStatusCommand" as Command
 participant ":EquipmentList" as EqList
 participant "target:Equipment" as Eq
 participant ":Storage" as Storage
+participant ":Ui" as Ui
 
-Main -> Parser : parse("setstatus n/BasyS3 FPGA 5 loaned")
+User -> Parser : parse("setstatus n/Basys3 FPGA q/5 s/loaned")
 activate Parser
 
 create Command
 Parser -> Command : new SetStatusCommand(name, quantity, status)
 activate Command
 
-Parser --> Main : SetStatusCommand object
+Parser --> User : SetStatusCommand object
 deactivate Parser
 
-Main -> Command : execute(context)
+User -> Command : execute(context)
+activate Command
 
-Command -> EqList : findEquipment(name)
+Command -> EqList : findByName(name)
 activate EqList
 EqList --> Command : target
 deactivate EqList
 
-Command -> Eq : setLoaned(loaned + quantity)
+Command -> Eq : getAvailable()
 activate Eq
-Eq --> Command
+Eq --> Command : currentAvail
 deactivate Eq
 
-Command -> Eq : setAvailable(available - quantity)
+Command -> Eq : getLoaned()
 activate Eq
-Eq --> Command
+Eq --> Command : currentLoaned
 deactivate Eq
 
-opt available < minQuantity
-    Command -> Eq : getMinQuantity()
-    activate Eq
-    Eq --> Command : minQuantity
-    deactivate Eq
-    Command -> Command : showMessage(warning)
+alt status == "loaned"
+    alt quantity > currentAvail
+        Command -> Ui : showMessage("Insufficient stock...")
+        Ui --> Command
+        Command --> User : return (no change)
+    else
+        Command -> Eq : setAvailable(currentAvail - quantity)
+        Command -> Eq : setLoaned(currentLoaned + quantity)
+        Command -> Ui : showMessage("Successfully LOANED...")
+        Ui --> Command
+        opt target.getAvailable() < target.getMinQuantity()
+            Command -> Ui : showMessage("!!! LOW STOCK ALERT...")
+            Ui --> Command
+        end
+    end
+else status == "available"
+    alt quantity > currentLoaned
+        Command -> Ui : showMessage("Return error...")
+        Ui --> Command
+        Command --> User : return
+    else
+        Command -> Eq : setAvailable(currentAvail + quantity)
+        Command -> Eq : setLoaned(currentLoaned - quantity)
+        Command -> Ui : showMessage("Successfully returned...")
+        Ui --> Command
+    end
 end
 
 Command -> Storage : save(equipments)
 activate Storage
-Storage --> Command
+alt save fails
+    Storage --> Command : exception
+    Command -> Eq : setAvailable(currentAvail)  // rollback
+    Command -> Eq : setLoaned(currentLoaned)
+    Command -> Ui : showMessage("Error: Failed to save...")
+    Ui --> Command
+else save succeeds
+    Storage --> Command : success
+end
 deactivate Storage
 
-Command --> Main
+Command --> User
 deactivate Command
 @enduml

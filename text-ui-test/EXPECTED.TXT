@@ -25,7 +25,7 @@ Here are the available commands:
 13. updatemod | updatemod n/NAME pax/QTY
 14. delmod    | delmod n/NAME
 15. listmod   | listmod
-16. setbuffer | setbuffer n/NAME b/PERCENTAGE or setbuffer i/INDEX b/PERCENTAGE
+16. setbuffer | setbuffer n/NAME b/PERCENTAGE or setbuffer INDEX b/PERCENTAGE
 17. tag       | tag m/MOD_NAME n/EQ_NAME req/FRACTION
 18. untag     | untag m/MOD_NAME n/EQ_NAME
 ===================================================
@@ -47,7 +47,7 @@ Here are the available commands:
 13. updatemod | updatemod n/NAME pax/QTY
 14. delmod    | delmod n/NAME
 15. listmod   | listmod
-16. setbuffer | setbuffer n/NAME b/PERCENTAGE or setbuffer i/INDEX b/PERCENTAGE
+16. setbuffer | setbuffer n/NAME b/PERCENTAGE or setbuffer INDEX b/PERCENTAGE
 17. tag       | tag m/MOD_NAME n/EQ_NAME req/FRACTION
 18. untag     | untag m/MOD_NAME n/EQ_NAME
 ===================================================
@@ -154,14 +154,32 @@ There is no matching equipment in your list.
 1. STM32 | Total: 50 | Available: 50 | loaned: 0 | Min: 0 | Purchase: AY2024/25 Sem1 | Lifespan: 2.5 years | Modules: [CG2111A, CG2271]
 ===================================================
 ===================================================
-Invalid setstatus format. Use: setstatus n/NAME q/QUANTITY s/STATUS
+Invalid setstatus format. Use: setstatus n/NAME q/QUANTITY s/STATUS or INDEX q/QUANTITY s/STATUS
 ===================================================
 ===================================================
 Invalid index. List size is 5
 ===================================================
 ===================================================
-Successfully LOANED 10 units of Ghost.
+Successfully LOANED 5 units of Ghost.
 !!! LOW STOCK ALERT: Ghost is at or below minimum threshold!
+===================================================
+===================================================
+Successfully returned 3 units of Ghost to AVAILABLE.
+===================================================
+===================================================
+Successfully LOANED 100 units of Resistor.
+===================================================
+===================================================
+Equipment 'SomeItem' not found.
+===================================================
+===================================================
+Status must be either 'loaned' or 'available'.
+===================================================
+===================================================
+Equipment 'Ghost 1' not found.
+===================================================
+===================================================
+Equipment 'NonExistentItem' not found.
 ===================================================
 ===================================================
 Invalid format. Use: delete [INDEX|n/NAME] q/QUANTITY s/STATUS
@@ -173,7 +191,7 @@ Invalid index. Please check the list again.
 Equipment 'Aliens' not found.
 ===================================================
 ===================================================
-Only 0 unit(s) are available. Cannot delete 5000.
+Only 8 unit(s) are available. Cannot delete 5000.
 ===================================================
 ===================================================
 Quantity must be > 0.
@@ -185,10 +203,11 @@ Quantity must be > 0.
 Quantity must be a valid whole number.
 ===================================================
 ===================================================
-Only 0 unit(s) are available. Cannot delete 1.
+Deleted 1 available unit(s) of Ghost.
+!!! LOW STOCK ALERT: Ghost is at or below threshold!
 ===================================================
 ===================================================
-Only 0 unit(s) are available. Cannot delete 10.
+Only 7 unit(s) are available. Cannot delete 10.
 ===================================================
 ===================================================
 Deleted 5 available unit(s) of STM32.
@@ -205,12 +224,12 @@ Invalid report type. Currently supported: aging, lowstock, procurement.
 ===================================================
 ===================================================
 Low Stock Alert (Items below minimum threshold):
-1. Ghost | Available: 0 | Min: 10 -> RESTOCK NEEDED
+1. Ghost | Available: 7 | Min: 10 -> RESTOCK NEEDED
 2. Soldering Iron | Available: 10 | Min: 20 -> RESTOCK NEEDED
 ===================================================
 ===================================================
 Low Stock Alert (Items below minimum threshold):
-1. Ghost | Available: 0 | Min: 10 -> RESTOCK NEEDED
+1. Ghost | Available: 7 | Min: 10 -> RESTOCK NEEDED
 2. Soldering Iron | Available: 10 | Min: 20 -> RESTOCK NEEDED
 ===================================================
 ===================================================
@@ -272,23 +291,32 @@ Invalid command format.
 Expected: delmod n/NAME
 ===================================================
 ===================================================
+Invalid setbuffer format. Usage: setbuffer n/NAME b/PERCENTAGE or setbuffer INDEX b/PERCENTAGE
+===================================================
+===================================================
+Invalid setbuffer format. Usage: setbuffer n/NAME b/PERCENTAGE or setbuffer INDEX b/PERCENTAGE
+===================================================
+===================================================
+Buffer percentage cannot exceed 1000.
+===================================================
+===================================================
+Please enter a valid number for buffer percentage.
+===================================================
+===================================================
 Buffer Updated:
-STM32 | Safety Buffer: 10.0%
+STM32 | Safety Buffer: 15.0%
 ===================================================
 ===================================================
-Equipment 'Basys3' not found.
+Buffer Updated:
+STM32 | Safety Buffer: 15.5%
 ===================================================
 ===================================================
-Buffer percentage cannot be negative.
+Buffer Updated:
+STM32 | Safety Buffer: 0.0%
 ===================================================
 ===================================================
-Invalid setbuffer format. Usage: setbuffer n/NAME b/PERCENTAGE or setbuffer i/INDEX b/PERCENTAGE
-===================================================
-===================================================
-Invalid setbuffer format. Usage: setbuffer n/NAME b/PERCENTAGE or setbuffer i/INDEX b/PERCENTAGE
-===================================================
-===================================================
-Invalid setbuffer format. Usage: setbuffer n/NAME b/PERCENTAGE or setbuffer i/INDEX b/PERCENTAGE
+Buffer Updated:
+STM32 | Safety Buffer: 1000.0%
 ===================================================
 ===================================================
 Buffer Updated:
@@ -296,10 +324,40 @@ Ghost | Safety Buffer: 15.0%
 ===================================================
 ===================================================
 Buffer Updated:
-Resistor | Safety Buffer: 25.5%
+Ghost | Safety Buffer: 0.0%
 ===================================================
 ===================================================
-Buffer percentage cannot be negative.
+Buffer Updated:
+Ghost | Safety Buffer: 1000.0%
+===================================================
+===================================================
+Buffer percentage cannot exceed 1000.
+===================================================
+===================================================
+Please enter a valid number for buffer percentage.
+===================================================
+===================================================
+Please enter a valid positive integer for index.
+===================================================
+===================================================
+Please enter a valid positive integer for index.
+===================================================
+===================================================
+Equipment at index 999 not found. (Total: 5 equipment(s))
+===================================================
+===================================================
+Equipment 'STM32 1' not found.
+===================================================
+===================================================
+Buffer Updated:
+STM32 | Safety Buffer: 10.0%
+===================================================
+===================================================
+Equipment name cannot be empty.
+===================================================
+===================================================
+Buffer Updated:
+STM32 | Safety Buffer: 10.0%
 ===================================================
 ===================================================
 Here are the current course modules in your system:

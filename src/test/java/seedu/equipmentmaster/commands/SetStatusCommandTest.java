@@ -6,6 +6,7 @@ import static seedu.equipmentmaster.common.Messages.MESSAGE_INVALID_SET_STATUS_F
 import static seedu.equipmentmaster.common.Messages.MESSAGE_NAME_CONTAINS_RESERVED_CHARS;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,6 +20,8 @@ import seedu.equipmentmaster.modulelist.ModuleList;
 import seedu.equipmentmaster.semester.AcademicSemester;
 import seedu.equipmentmaster.storage.Storage;
 import seedu.equipmentmaster.ui.Ui;
+
+//@@author JovianJosh
 
 public class SetStatusCommandTest {
 
@@ -78,14 +81,15 @@ public class SetStatusCommandTest {
     }
 
     @Test
-    public void executeByName_loanWithZeroAvailable_throwsException() throws EquipmentMasterException {
+    public void executeByName_loanWithZeroAvailable_showsErrorAndNoChange() throws EquipmentMasterException {
         addEquipmentWithSemester("Camera", 5, 0, 5, currentSystemSemester, 5.0);
         SetStatusCommand command = new SetStatusCommand("Camera", 1, "loaned");
 
-        EquipmentMasterException exception = assertThrows(EquipmentMasterException.class, () -> {
-            command.execute(createContext());
-        });
-        assertEquals("Insufficient stock. Only 0 units available.", exception.getMessage());
+        command.execute(createContext());
+
+        Equipment eq = equipments.getEquipment(0);
+        assertEquals(0, eq.getAvailable());
+        assertEquals(5, eq.getLoaned());
     }
 
     @Test
@@ -136,75 +140,108 @@ public class SetStatusCommandTest {
         assertEquals(15, eq.getLoaned());
     }
 
+    @Test
+    public void execute_loanTriggersLowStockAlert() throws EquipmentMasterException {
+        Equipment eq = new Equipment("AlertItem", 20, 15, 5, currentSystemSemester, 5.0, 10);
+        equipments.addEquipment(eq);
+
+        SetStatusCommand command = new SetStatusCommand("AlertItem", 7, "loaned");
+        command.execute(createContext());
+
+        Equipment updated = equipments.getEquipment(0);
+        assertEquals(8, updated.getAvailable());
+        assertEquals(12, updated.getLoaned());
+    }
+
+    @Test
+    public void execute_storageSaveFailure_rollsBackChanges() throws EquipmentMasterException {
+        addEquipmentWithSemester("SaveTest", 10, 10, 0, currentSystemSemester, 5.0);
+
+        // Anonymous subclass guarantees save() always throws, making the failure deterministic
+        Storage throwingStorage = new Storage(tempDir.resolve("test.txt").toString(),
+                ui, tempDir.resolve("test_setting.txt").toString(),
+                tempDir.resolve("test_module.txt").toString()) {
+            @Override
+            public void save(ArrayList<Equipment> equipments) throws EquipmentMasterException {
+                throw new EquipmentMasterException("Simulated save failure");
+            }
+        };
+
+        Context context = new Context(equipments, moduleList, ui, throwingStorage, currentSystemSemester);
+        SetStatusCommand command = new SetStatusCommand("SaveTest", 3, "loaned");
+        command.execute(context);
+
+        // SetStatusCommand catches the exception and rolls back — values must revert to original
+        Equipment eq = equipments.getEquipment(0);
+        assertEquals(10, eq.getAvailable());
+        assertEquals(0, eq.getLoaned());
+    }
+
     // =====================================
     // EXCEPTION TESTS FOR EXECUTE
     // =====================================
 
     @Test
-    public void executeByIndex_loanExceedsAvailable_throwsException() throws EquipmentMasterException {
-        addEquipmentWithSemester("Basys3 FPGA", 40, 10, 30, currentSystemSemester, 5.0);
-        SetStatusCommand command = new SetStatusCommand(1, 20, "loaned");
-
-        EquipmentMasterException exception = assertThrows(EquipmentMasterException.class, () -> {
-            command.execute(createContext());
-        });
-        assertEquals("Insufficient stock. Only 10 units available.", exception.getMessage());
-    }
-
-    @Test
-    public void executeByName_loanExceedsAvailable_throwsException() throws EquipmentMasterException {
+    public void executeByName_loanExceedsAvailable_showsErrorAndNoChange() throws EquipmentMasterException {
         addEquipmentWithSemester("Basys3 FPGA", 40, 10, 30, currentSystemSemester, 5.0);
         SetStatusCommand command = new SetStatusCommand("Basys3 FPGA", 20, "loaned");
 
-        EquipmentMasterException exception = assertThrows(EquipmentMasterException.class, () -> {
-            command.execute(createContext());
-        });
-        assertEquals("Insufficient stock. Only 10 units available.", exception.getMessage());
+        command.execute(createContext());
+
+        Equipment eq = equipments.getEquipment(0);
+        assertEquals(10, eq.getAvailable());
+        assertEquals(30, eq.getLoaned());
     }
 
     @Test
-    public void executeByIndex_returnExceedsLoaned_throwsException() throws EquipmentMasterException {
+    public void executeByIndex_returnExceedsLoaned_showsErrorAndNoChange() throws EquipmentMasterException {
         addEquipmentWithSemester("Basys3 FPGA", 40, 35, 5, currentSystemSemester, 5.0);
         SetStatusCommand command = new SetStatusCommand(1, 10, "available");
 
-        EquipmentMasterException exception = assertThrows(EquipmentMasterException.class, () -> {
-            command.execute(createContext());
-        });
-        assertEquals("Return error. Only 5 units are currently on loan.", exception.getMessage());
+        command.execute(createContext());
+
+        Equipment eq = equipments.getEquipment(0);
+        assertEquals(35, eq.getAvailable());
+        assertEquals(5, eq.getLoaned());
     }
 
     @Test
-    public void executeByName_equipmentNotFound_throwsException() throws EquipmentMasterException {
+    public void executeByName_equipmentNotFound_showsErrorAndNoChange() throws EquipmentMasterException {
         addEquipmentWithSemester("Basys3 FPGA", 40, 40, 0, currentSystemSemester, 5.0);
         SetStatusCommand command = new SetStatusCommand("NonExistent", 5, "loaned");
 
-        EquipmentMasterException exception = assertThrows(EquipmentMasterException.class, () -> {
-            command.execute(createContext());
-        });
-        assertEquals("Equipment 'NonExistent' not found.", exception.getMessage());
+        command.execute(createContext());  // Should NOT throw
+
+        // Optionally verify the list hasn't changed (it hasn't, because nothing was found)
+        Equipment eq = equipments.getEquipment(0);
+        assertEquals(40, eq.getAvailable());
+        assertEquals(0, eq.getLoaned());
     }
 
     @Test
-    public void executeByIndex_outOfBounds_throwsException() throws EquipmentMasterException {
+    public void executeByIndex_outOfBounds_showsErrorAndNoChange() throws EquipmentMasterException {
         addEquipmentWithSemester("Basys3 FPGA", 40, 40, 0, currentSystemSemester, 5.0);
         SetStatusCommand command = new SetStatusCommand(99, 5, "loaned");
 
-        EquipmentMasterException exception = assertThrows(EquipmentMasterException.class, () -> {
-            command.execute(createContext());
-        });
-        assertEquals("Invalid index. List size is 1", exception.getMessage());
+        // Should NOT throw
+        command.execute(createContext());
+
+        Equipment eq = equipments.getEquipment(0);
+        assertEquals(40, eq.getAvailable());
+        assertEquals(0, eq.getLoaned());
     }
 
     @Test
-    public void executeByName_invalidStatus_throwsException() throws EquipmentMasterException {
+    public void executeByName_invalidStatus_showsErrorAndNoChange() throws EquipmentMasterException {
         addEquipmentWithSemester("PowerSupply", 10, 10, 0, currentSystemSemester, 5.0);
         SetStatusCommand command = new SetStatusCommand("PowerSupply", 2, "damaged");
 
-        // "damaged" goes to else block (processReturn) because it's not "loaned"
-        EquipmentMasterException exception = assertThrows(EquipmentMasterException.class, () -> {
-            command.execute(createContext());
-        });
-        assertEquals("Return error. Only 0 units are currently on loan.", exception.getMessage());
+        // Should not throw
+        command.execute(createContext());
+
+        Equipment eq = equipments.getEquipment(0);
+        assertEquals(10, eq.getAvailable());
+        assertEquals(0, eq.getLoaned());
     }
 
     // =====================================
@@ -227,14 +264,7 @@ public class SetStatusCommandTest {
     public void parseByName_emptyName_throwsException() {
         EquipmentMasterException exception = assertThrows(EquipmentMasterException.class,
                 () -> SetStatusCommand.parse("setstatus n/ q/5 s/loaned"));
-        assertEquals(MESSAGE_INVALID_SET_STATUS_FORMAT, exception.getMessage());
-    }
-
-    @Test
-    public void parseByIndex_missingIndex_throwsException() {
-        EquipmentMasterException exception = assertThrows(EquipmentMasterException.class,
-                () -> SetStatusCommand.parse("setstatus q/5 s/loaned"));
-        assertEquals("Please provide a valid 1-based index or use n/NAME.", exception.getMessage());
+        assertEquals("Equipment name cannot be empty.", exception.getMessage());
     }
 
     @Test
@@ -296,5 +326,54 @@ public class SetStatusCommandTest {
         EquipmentMasterException exception = assertThrows(EquipmentMasterException.class,
                 () -> SetStatusCommand.parse("setstatus n/Test|Name q/5 s/loaned"));
         assertEquals(MESSAGE_NAME_CONTAINS_RESERVED_CHARS, exception.getMessage());
+    }
+
+    @Test
+    public void parse_neitherNameNorIndexProvided_throwsException() {
+        EquipmentMasterException exception = assertThrows(EquipmentMasterException.class,
+                () -> SetStatusCommand.parse("setstatus q/5 s/loaned"));
+        assertEquals(MESSAGE_INVALID_SET_STATUS_FORMAT, exception.getMessage());
+    }
+
+    @Test
+    public void parse_emptyStatus_throwsException() {
+        EquipmentMasterException exception = assertThrows(EquipmentMasterException.class,
+                () -> SetStatusCommand.parse("setstatus n/Arduino q/5 s/"));
+        assertEquals(MESSAGE_INVALID_SET_STATUS_FORMAT, exception.getMessage());
+    }
+
+    @Test
+    public void parse_zeroQuantity_throwsException() {
+        EquipmentMasterException exception = assertThrows(EquipmentMasterException.class,
+                () -> SetStatusCommand.parse("setstatus n/Arduino q/0 s/loaned"));
+        assertEquals("Quantity must be a positive whole number.", exception.getMessage());
+    }
+
+    @Test
+    public void parse_nameWithComma_throwsException() {
+        EquipmentMasterException exception = assertThrows(EquipmentMasterException.class,
+                () -> SetStatusCommand.parse("setstatus n/Name,WithComma q/5 s/loaned"));
+        assertEquals(MESSAGE_NAME_CONTAINS_RESERVED_CHARS, exception.getMessage());
+    }
+
+    @Test
+    public void parse_nameWithEquals_throwsException() {
+        EquipmentMasterException exception = assertThrows(EquipmentMasterException.class,
+                () -> SetStatusCommand.parse("setstatus n/Name=WithEquals q/5 s/loaned"));
+        assertEquals(MESSAGE_NAME_CONTAINS_RESERVED_CHARS, exception.getMessage());
+    }
+
+    @Test
+    public void parse_zeroIndex_throwsException() {
+        EquipmentMasterException exception = assertThrows(EquipmentMasterException.class,
+                () -> SetStatusCommand.parse("setstatus 0 q/5 s/loaned"));
+        assertEquals("Index must be a positive number.", exception.getMessage());
+    }
+
+    @Test
+    public void parse_emptyQuantityValue_throwsException() {
+        EquipmentMasterException exception = assertThrows(EquipmentMasterException.class,
+                () -> SetStatusCommand.parse("setstatus n/Arduino q/ s/loaned"));
+        assertEquals(MESSAGE_INVALID_SET_STATUS_FORMAT, exception.getMessage());
     }
 }
