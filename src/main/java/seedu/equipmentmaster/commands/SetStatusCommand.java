@@ -17,7 +17,8 @@ import static seedu.equipmentmaster.common.Messages.MESSAGE_NAME_CONTAINS_RESERV
 /**
  * Represents a command to update the status (loaned/available) of equipment.
  * This command supports identifying equipment by either its index in the list or its name.
- * It features a flexible parser that allows flags (i/, n/, q/, s/) to be in any order.
+ * It features a flexible parser that allows flags (n/, q/, s/) to be in any order,
+ * and supports a bare numeric INDEX (without any prefix) for index-based targeting.
  */
 public class SetStatusCommand extends Command {
     private static final Logger logger = Logger.getLogger(SetStatusCommand.class.getName());
@@ -57,7 +58,7 @@ public class SetStatusCommand extends Command {
 
     /**
      * Parses the raw command string into a SetStatusCommand.
-     * Supports both name-based (n/) and index-based (i/) identification.
+     * Supports both name-based (n/) and index-based (bare INDEX) identification.
      *
      * @param fullCommand The complete user input.
      * @return A ready-to-execute SetStatusCommand.

@@ -399,7 +399,7 @@ setbuffer 1 b/10
 
 #### 4. Design Considerations
 * **Alternative 1 (Current Implementation): Dual Targeting (Name or Index)**
-  * **How it works:** The `Parser` detects whether the input starts with `n/` (name mode) or a positive integer (index mode) to choose between name-based and index-based resolution.
+  * **How it works:** The `Parser` selects name mode whenever `n/` appears anywhere in the arguments; otherwise, it interprets a positive integer target as index mode and resolves the equipment by its 1-based list position.
   * **Why it was chosen:** Provides flexibility for both deliberate configuration (by name, which is explicit and unambiguous) and rapid access (by index, when the position is already known from a recent `list` output). This mirrors the dual-targeting approach used by `SetStatusCommand` for consistency across the command set.
 * **Alternative 2: Name-Only Targeting**
   * **How it works:** The command would only accept `n/<name>` as the equipment identifier.
@@ -453,8 +453,8 @@ setstatus 1 q/3 s/available
 
 #### 4. Design Considerations
 * **Alternative 1 (Current Implementation): Dual Targeting (Name or Index)**
-  * **How it works:** The `Parser` detects whether the first token after the command is a `n/` prefix (name mode) or a positive integer (index mode) to choose between name-based and index-based resolution.
-  * **Why it was chosen:** During busy lab hours, a technician processing a queue of students can rapidly type `setstatus 1 q/3 s/loaned` without needing to recall the full equipment name. At the same time, name-based targeting remains available for unambiguous operations. Supporting both modes maximises throughput without sacrificing precision.
+  * **How it works:** The `Parser` switches to name-based resolution if an `n/` prefix appears anywhere in the command arguments. Otherwise, it treats a positive integer target as index-based resolution. This means inputs such as `setstatus 1 n/Ghost q/5 s/loaned` are parsed using name mode, not index mode.
+  * **Why it was chosen:** During busy lab hours, a technician processing a queue of students can rapidly type `setstatus 1 q/3 s/loaned` without needing to recall the full equipment name. At the same time, name-based targeting remains available for unambiguous operations whenever `n/` is supplied. Supporting both modes maximises throughput without sacrificing precision.
 * **Alternative 2: Name-Only Targeting**
   * **How it works:** The command would only accept `n/<name>` as the equipment identifier.
   * **Why it was rejected:** Loan and return operations are the most frequent actions in the system, performed under time pressure. Forcing technicians to type full equipment names (which may be long, e.g., `Basys3 FPGA`) for every transaction would significantly slow down the workflow, directly undermining the CLI speed advantage that the application is designed to provide.

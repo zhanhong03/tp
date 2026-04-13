@@ -6,6 +6,7 @@ import static seedu.equipmentmaster.common.Messages.MESSAGE_INVALID_SET_STATUS_F
 import static seedu.equipmentmaster.common.Messages.MESSAGE_NAME_CONTAINS_RESERVED_CHARS;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -153,22 +154,27 @@ public class SetStatusCommandTest {
     }
 
     @Test
-    public void execute_storageSaveFailure_showsWarningAndContinues() throws EquipmentMasterException {
-        Path invalidPath = tempDir.resolve("non_existent_dir").resolve("save.txt");
-        Storage failingStorage = new Storage(invalidPath.toString(), ui,
-                tempDir.resolve("test_setting.txt").toString(),
-                tempDir.resolve("test_module.txt").toString());
-
+    public void execute_storageSaveFailure_rollsBackChanges() throws EquipmentMasterException {
         addEquipmentWithSemester("SaveTest", 10, 10, 0, currentSystemSemester, 5.0);
 
-        Context context = new Context(equipments, moduleList, ui, failingStorage, currentSystemSemester);
-        SetStatusCommand command = new SetStatusCommand("SaveTest", 3, "loaned");
+        // Anonymous subclass guarantees save() always throws, making the failure deterministic
+        Storage throwingStorage = new Storage(tempDir.resolve("test.txt").toString(),
+                ui, tempDir.resolve("test_setting.txt").toString(),
+                tempDir.resolve("test_module.txt").toString()) {
+            @Override
+            public void save(ArrayList<Equipment> equipments) throws EquipmentMasterException {
+                throw new EquipmentMasterException("Simulated save failure");
+            }
+        };
 
+        Context context = new Context(equipments, moduleList, ui, throwingStorage, currentSystemSemester);
+        SetStatusCommand command = new SetStatusCommand("SaveTest", 3, "loaned");
         command.execute(context);
 
+        // SetStatusCommand catches the exception and rolls back — values must revert to original
         Equipment eq = equipments.getEquipment(0);
-        assertEquals(7, eq.getAvailable());
-        assertEquals(3, eq.getLoaned());
+        assertEquals(10, eq.getAvailable());
+        assertEquals(0, eq.getLoaned());
     }
 
     // =====================================

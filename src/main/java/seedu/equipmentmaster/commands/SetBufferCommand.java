@@ -34,7 +34,7 @@ public class SetBufferCommand extends Command {
             throw new IllegalArgumentException("Buffer percentage cannot be negative.");
         }
         if (percentage > 1000) {
-            throw new IllegalArgumentException("Buffer percentage cannot be greater than 1000.");
+            throw new IllegalArgumentException("Buffer percentage cannot exceed 1000.");
         }
         this.name = name;
         this.index = -1;
@@ -57,7 +57,7 @@ public class SetBufferCommand extends Command {
         }
 
         if (percentage > 1000) {
-            throw new IllegalArgumentException("Buffer percentage cannot be greater than 1000.");
+            throw new IllegalArgumentException("Buffer percentage cannot exceed 1000.");
         }
 
         this.name = null;
@@ -67,7 +67,7 @@ public class SetBufferCommand extends Command {
 
     /**
      * Parses the arguments for the 'setbuffer' command and creates a SetBufferCommand object.
-     * Supports either name format (n/NAME b/VALUE) or index format (i/INDEX b/VALUE).
+     * Supports either name format (n/NAME b/VALUE) or index format (INDEX b/VALUE).
      *
      * @param fullCommand The complete input string containing the 'setbuffer' command and its arguments.
      * @return A SetBufferCommand object.
