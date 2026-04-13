@@ -93,7 +93,7 @@ else Both Exist (Happy Path)
     Module --> TagCommand
     deactivate Module
 
-    TagCommand -> Equipment : addModuleCode(moduleName)
+    TagCommand -> Equipment : addModuleCode(targetModule.getName())
     activate Equipment
     Equipment --> TagCommand
     deactivate Equipment

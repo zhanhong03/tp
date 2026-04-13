@@ -106,7 +106,7 @@ else equipmentExists == true
         Module --> UntagCommand : isRemovedFromModule
         deactivate Module
 
-        UntagCommand -> Equipment : removeModuleCode(moduleName)
+        UntagCommand -> Equipment : removeModuleCode(officialModuleName)
         activate Equipment
         Equipment --> UntagCommand
         deactivate Equipment
@@ -116,19 +116,18 @@ else equipmentExists == true
             activate Ui
             Ui --> UntagCommand
             deactivate Ui
+
+            UntagCommand -> Storage : saveModules(modules)
+            activate Storage
+            Storage --> UntagCommand
+            deactivate Storage
+            UntagCommand -> Storage : saveEquipments(equipments)
+            activate Storage
+            Storage --> UntagCommand
+            deactivate Storage
         else isRemovedFromModule == false
             UntagCommand -> UntagCommand : throw EquipmentMasterException
         end
-
-        UntagCommand -> Storage : saveModules(modules)
-        activate Storage
-        Storage --> UntagCommand
-        deactivate Storage
-
-        UntagCommand -> Storage : saveEquipments(equipments)
-        activate Storage
-        Storage --> UntagCommand
-        deactivate Storage
     end
 end
 

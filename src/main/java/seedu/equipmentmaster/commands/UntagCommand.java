@@ -69,14 +69,21 @@ public class UntagCommand extends Command {
         String officialEquipmentName = targetEquipment.getName();
 
         if (!moduleExists) {
-            targetEquipment.removeModuleCode(moduleName);
-            ui.showMessage("Notice: Module '" + moduleName +
-                    "' does not exist in the system, but any invalid links were cleaned up from "
-                    + officialEquipmentName + ".");
-            try {
-                storage.saveEquipments(equipments); // Save the cleaned equipment
-            } catch (EquipmentMasterException e) {
-                ui.showMessage("Warning: Failed to save the data file. " + e.getMessage());
+            boolean hadGhostModuleCode = targetEquipment.hasModuleCode(moduleName);
+            if (hadGhostModuleCode) {
+                targetEquipment.removeModuleCode(moduleName);
+                ui.showMessage("Notice: Module '" + moduleName +
+                        "' does not exist in the system, but invalid links were cleaned up from "
+                        + officialEquipmentName + ".");
+                try {
+                    storage.saveEquipments(equipments); // Save the cleaned equipment
+                } catch (EquipmentMasterException e) {
+                    ui.showMessage("Warning: Failed to save the data file. " + e.getMessage());
+                }
+            } else {
+                ui.showMessage("Notice: Module '" + moduleName +
+                        "' does not exist in the system, and " + officialEquipmentName
+                        + " had no invalid link to clean up.");
             }
             return; // Exit early, since there is no module to update
         }
