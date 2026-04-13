@@ -361,11 +361,11 @@ During the initialization phase, the `Storage` class reads files line-by-line. T
 The `SetBufferCommand` allows lab managers to configure a safety buffer percentage on an equipment item. This buffer is factored into the Procurement Report to ensure that recommended purchase quantities account for expected wear, breakage, or unexpected demand spikes, rather than relying solely on raw student enrollment figures.
 
 #### 2. Implementation Details
-The command supports targeting equipment by name (`n/`) or by 1-based list index (`i/`), and persists the updated buffer to storage immediately after execution.
+The command supports targeting equipment by name (`n/`) or by 1-based list index (a bare positive integer), and persists the updated buffer to storage immediately after execution.
 
 **Format:**
 - `setbuffer n/<name> b/<percentage>[%]` — targets equipment by name
-- `setbuffer i/<index> b/<percentage>[%]` — targets equipment by 1-based list index
+- `setbuffer <index> b/<percentage>[%]` — targets equipment by 1-based list index
 
 Execution flow:
 1. The `Parser` processes the input and instantiates a `SetBufferCommand` with either the equipment name or index, and the buffer percentage value.
@@ -378,15 +378,15 @@ Execution flow:
 
 **Parsing behaviour:**
 - The `%` symbol in the buffer value is optional and is stripped during parsing before the value is stored.
-- Negative buffer percentages are rejected with an error message.
-- Specifying both `n/` and `i/` simultaneously is rejected with an error message.
+- Negative buffer percentages are rejected with an error message. Buffer percentages exceeding 1000 are also rejected.
+- Mode is determined by whether `n/` appears anywhere in the arguments: if present, name mode is used; otherwise, the first token is treated as a bare index. If both `n/` and a bare number appear together (e.g. `setbuffer 1 n/STM32 b/10`), name mode takes precedence and the number before `n/` is ignored. If a number appears after the name value (e.g. `setbuffer n/STM32 1 b/10`), it is absorbed into the name, resulting in a lookup for `"STM32 1"`.
 - Buffer percentage defaults to `0.0` when equipment is first added.
 
 **Example:**
 ```
 setbuffer n/STM32 b/10%
 setbuffer n/STM32 b/10
-setbuffer i/1 b/10
+setbuffer 1 b/10
 ```
 
 #### 3. Sequence Diagram
@@ -399,11 +399,11 @@ setbuffer i/1 b/10
 
 #### 4. Design Considerations
 * **Alternative 1 (Current Implementation): Dual Targeting (Name or Index)**
-    * **How it works:** The `Parser` detects whether the input contains `n/` or `i/` to choose between name-based and index-based resolution.
-    * **Why it was chosen:** Provides flexibility for both deliberate configuration (by name, which is explicit and unambiguous) and rapid access (by index, when the position is already known from a recent `list` output). This mirrors the dual-targeting approach used by `SetStatusCommand` for consistency across the command set.
+  * **How it works:** The `Parser` detects whether the input starts with `n/` (name mode) or a positive integer (index mode) to choose between name-based and index-based resolution.
+  * **Why it was chosen:** Provides flexibility for both deliberate configuration (by name, which is explicit and unambiguous) and rapid access (by index, when the position is already known from a recent `list` output). This mirrors the dual-targeting approach used by `SetStatusCommand` for consistency across the command set.
 * **Alternative 2: Name-Only Targeting**
-    * **How it works:** The command would only accept `n/<name>` as the equipment identifier.
-    * **Why it was rejected:** Requiring technicians to always type the full equipment name adds unnecessary friction when the index is already known. Eliminating the index option without justification would also create an inconsistent user experience across commands.
+  * **How it works:** The command would only accept `n/<name>` as the equipment identifier.
+  * **Why it was rejected:** Requiring technicians to always type the full equipment name adds unnecessary friction when the index is already known. Eliminating the index option without justification would also create an inconsistent user experience across commands.
 
 ---
 
@@ -425,13 +425,15 @@ Execution flow:
 1. The `Parser` processes the input and instantiates a `SetStatusCommand` with either a name or index, a count, and a direction (`loaned` or `available`).
 2. `SetStatusCommand#execute(Context)` is invoked.
 3. The command resolves the target `Equipment` from the `EquipmentList` using either the name or the index.
-4. Input validation is performed: zero and negative counts are rejected with an error message, and the count is checked against the current available stock (when loaning) or current loaned stock (when returning) to prevent invalid states.
+4. The count is checked against the current available stock (when loaning) or current loaned stock (when returning) to prevent invalid states.
 5. The appropriate counter is updated on the `Equipment` object.
 6. `Storage#save()` is invoked to persist the change.
 7. The `Ui` displays a confirmation message.
 
-**Constraints:**
+**Constraints (enforced during parsing):**
 - Zero and negative counts are rejected with an error message — no change is made.
+
+**Constraints (enforced during execution):**
 - Count must not exceed current available quantity when loaning out.
 - Count must not exceed current loaned quantity when returning.
 
@@ -451,11 +453,11 @@ setstatus 1 q/3 s/available
 
 #### 4. Design Considerations
 * **Alternative 1 (Current Implementation): Dual Targeting (Name or Index)**
-    * **How it works:** The `Parser` detects whether the input contains `n/` to choose between name-based and index-based resolution.
-    * **Why it was chosen:** During busy lab hours, a technician processing a queue of students can rapidly type `setstatus 1 q/3 s/loaned` without needing to recall the full equipment name. At the same time, name-based targeting remains available for unambiguous operations. Supporting both modes maximises throughput without sacrificing precision.
+  * **How it works:** The `Parser` detects whether the first token after the command is a `n/` prefix (name mode) or a positive integer (index mode) to choose between name-based and index-based resolution.
+  * **Why it was chosen:** During busy lab hours, a technician processing a queue of students can rapidly type `setstatus 1 q/3 s/loaned` without needing to recall the full equipment name. At the same time, name-based targeting remains available for unambiguous operations. Supporting both modes maximises throughput without sacrificing precision.
 * **Alternative 2: Name-Only Targeting**
-    * **How it works:** The command would only accept `n/<name>` as the equipment identifier.
-    * **Why it was rejected:** Loan and return operations are the most frequent actions in the system, performed under time pressure. Forcing technicians to type full equipment names (which may be long, e.g., `Basys3 FPGA`) for every transaction would significantly slow down the workflow, directly undermining the CLI speed advantage that the application is designed to provide.
+  * **How it works:** The command would only accept `n/<name>` as the equipment identifier.
+  * **Why it was rejected:** Loan and return operations are the most frequent actions in the system, performed under time pressure. Forcing technicians to type full equipment names (which may be long, e.g., `Basys3 FPGA`) for every transaction would significantly slow down the workflow, directly undermining the CLI speed advantage that the application is designed to provide.
 
 ---
 
@@ -1183,7 +1185,7 @@ To test the system with pre-populated data without typing everything manually:
 
 ### 7. Testing Status, Thresholds, and Buffers
 1. **Setting Equipment Status:**
-  * **Test Case:** Type `setstatus n/Oscilloscope q/3 s/LOANED`.
+  * **Test Case:** Type `setstatus n/Oscilloscope q/3 s/loaned`.
   * **Expected:** 3 Oscilloscopes are moved from "AVAILABLE" to "LOANED" status.
 2. **Setting Minimum Threshold:**
   * **Test Case:** Type `setmin n/Oscilloscope min/5`.

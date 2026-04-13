@@ -13,10 +13,11 @@ import java.util.logging.Logger;
 import static seedu.equipmentmaster.common.Messages.MESSAGE_INVALID_SET_STATUS_FORMAT;
 import static seedu.equipmentmaster.common.Messages.MESSAGE_NAME_CONTAINS_RESERVED_CHARS;
 
+//@@author JovianJosh
 /**
  * Represents a command to update the status (loaned/available) of equipment.
  * This command supports identifying equipment by either its index in the list or its name.
- * It features a flexible parser that allows flags (n/, q/, s/) to be in any order.
+ * It features a flexible parser that allows flags (i/, n/, q/, s/) to be in any order.
  */
 public class SetStatusCommand extends Command {
     private static final Logger logger = Logger.getLogger(SetStatusCommand.class.getName());
@@ -56,90 +57,109 @@ public class SetStatusCommand extends Command {
 
     /**
      * Parses the raw command string into a SetStatusCommand.
-     * Supports both name-based (n/) and index-based identification.
+     * Supports both name-based (n/) and index-based (i/) identification.
      *
      * @param fullCommand The complete user input.
      * @return A ready-to-execute SetStatusCommand.
      * @throws EquipmentMasterException If the format is invalid or values are illegal.
      */
     public static Command parse(String fullCommand) throws EquipmentMasterException {
-        logger.log(Level.INFO, "Parsing SetStatusCommand arguments.");
-        String args = " " + fullCommand.replaceFirst("(?i)^setstatus", "").trim() + " ";
+        logger.log(Level.INFO, "Starting to parse setstatus command input.");
 
-        if (args.trim().isEmpty()) {
+        String paddedCommand = " " + fullCommand.trim() + " ";
+
+        // Check for required flags
+        if (!paddedCommand.contains(" q/") || !paddedCommand.contains(" s/")) {
+            logger.log(Level.WARNING, "Missing compulsory flag (q/ or s/) in user input.");
             throw new EquipmentMasterException(MESSAGE_INVALID_SET_STATUS_FORMAT);
         }
 
-        if (args.contains("n/")) {
-            return parseByName(args);
-        }
-        return parseByIndex(args);
-    }
+        // Check if using name (n/ flag)
+        boolean hasName = paddedCommand.contains(" n/");
 
-    private static Command parseByName(String args) throws EquipmentMasterException {
-        String name = extractValue(args, "n/");
-        String qStr = extractValue(args, "q/");
-        String sStr = extractValue(args, "s/").toLowerCase();
-
-        validateCommonInputs(name, qStr, sStr);
-        int quantity = parseQuantity(qStr);
-
-        return new SetStatusCommand(name, quantity, sStr);
-    }
-
-    private static Command parseByIndex(String args) throws EquipmentMasterException {
-        String[] words = args.trim().split("\\s+");
-        int index;
-        try {
-            index = Integer.parseInt(words[0]);
-            if (index < 1) {
-                throw new NumberFormatException();
-            }
-        } catch (NumberFormatException e) {
-            throw new EquipmentMasterException("Please provide a valid 1-based index or use n/NAME.");
-        }
-
-        String qStr = extractValue(args, "q/");
-        String sStr = extractValue(args, "s/").toLowerCase();
-
-        validateCommonInputs("placeholder", qStr, sStr);
-        int quantity = parseQuantity(qStr);
-
-        return new SetStatusCommand(index, quantity, sStr);
-    }
-
-    /**
-     * Safely extracts the value following a specific flag by finding the start of the next flag.
-     * This allows parameters to be provided in any order as per the User Guide.
-     */
-    private static String extractValue(String input, String flag) {
-        int start = input.indexOf(flag);
-        if (start == -1) {
-            return "";
-        }
-        start += flag.length();
-
-        int end = input.length();
-        String[] possibleNextFlags = {" n/", " q/", " s/"};
-        for (String f : possibleNextFlags) {
-            int nextIdx = input.indexOf(f, start);
-            if (nextIdx != -1 && nextIdx < end) {
-                end = nextIdx;
+        // Detect bare index: no name flag, and the first argument after command is a number
+        boolean hasIndex = false;
+        int bareIndex = -1;
+        if (!hasName) {
+            String trimmed = fullCommand.trim();
+            String[] parts = trimmed.split("\\s+", 2);
+            if (parts.length >= 2) {
+                String firstToken = parts[1].split("\\s+")[0];
+                if (firstToken.matches("\\d+")) {
+                    hasIndex = true;
+                    bareIndex = Integer.parseInt(firstToken);
+                }
             }
         }
-        return input.substring(start, end).trim();
-    }
 
-    private static void validateCommonInputs(String name, String qStr, String sStr) throws EquipmentMasterException {
-        if (name.isEmpty() || qStr.isEmpty() || sStr.isEmpty()) {
+        if (!hasName && !hasIndex) {
+            logger.log(Level.WARNING, "Missing compulsory flag (n/) or index number in user input.");
             throw new EquipmentMasterException(MESSAGE_INVALID_SET_STATUS_FORMAT);
         }
-        if (name.contains("|") || name.contains(",") || name.contains("=")) {
-            throw new EquipmentMasterException(MESSAGE_NAME_CONTAINS_RESERVED_CHARS);
+
+        // Extract and validate status
+        String sStr = extractArgument(fullCommand, "s/").toLowerCase();
+        if (sStr.isEmpty()) {
+            throw new EquipmentMasterException(MESSAGE_INVALID_SET_STATUS_FORMAT);
         }
         if (!sStr.equals("loaned") && !sStr.equals("available")) {
             throw new EquipmentMasterException("Status must be either 'loaned' or 'available'.");
         }
+
+        // Extract and validate quantity
+        String qStr = extractArgument(fullCommand, "q/");
+        if (qStr.isEmpty()) {
+            throw new EquipmentMasterException(MESSAGE_INVALID_SET_STATUS_FORMAT);
+        }
+        int quantity = parseQuantity(qStr);
+
+        // Handle name-based identification
+        if (hasName) {
+            String name = extractArgument(fullCommand, "n/");
+            if (name.isEmpty()) {
+                throw new EquipmentMasterException("Equipment name cannot be empty.");
+            }
+            if (name.contains("|") || name.contains(",") || name.contains("=")) {
+                throw new EquipmentMasterException(MESSAGE_NAME_CONTAINS_RESERVED_CHARS);
+            }
+            logger.log(Level.INFO, "Successfully parsed SetStatusCommand for equipment: " + name
+                    + " with status: " + sStr + ", quantity: " + quantity);
+            return new SetStatusCommand(name, quantity, sStr);
+        }
+
+        // Handle index-based identification (bare index)
+        if (bareIndex <= 0) {
+            throw new EquipmentMasterException("Index must be a positive number.");
+        }
+        logger.log(Level.INFO, "Successfully parsed SetStatusCommand for index: " + bareIndex
+                + " with status: " + sStr + ", quantity: " + quantity);
+        return new SetStatusCommand(bareIndex, quantity, sStr);
+    }
+
+    /**
+     * Extracts a single argument value for a given prefix.
+     *
+     * @param fullCommand The raw input string from the user.
+     * @param prefix      The parameter flag to search for (e.g., "n/", "s/").
+     * @return The extracted string value, or an empty string if not found.
+     */
+    private static String extractArgument(String fullCommand, String prefix) {
+        String paddedCommand = " " + fullCommand.trim() + " ";
+        String searchPrefix = " " + prefix;
+        int startIdx = paddedCommand.indexOf(searchPrefix);
+        if (startIdx == -1) {
+            return "";
+        }
+        startIdx += searchPrefix.length();
+        int endIdx = paddedCommand.length();
+        String[] allPrefixes = {" n/", " i/", " q/", " s/"};
+        for (String p : allPrefixes) {
+            int pIdx = paddedCommand.indexOf(p, startIdx);
+            if (pIdx != -1 && pIdx < endIdx) {
+                endIdx = pIdx;
+            }
+        }
+        return paddedCommand.substring(startIdx, endIdx).trim();
     }
 
     private static int parseQuantity(String qStr) throws EquipmentMasterException {
@@ -163,30 +183,47 @@ public class SetStatusCommand extends Command {
      */
     @Override
     public void execute(Context context) throws EquipmentMasterException {
-        assert context != null : "Context should not be null during execution";
-        logExecution("SetStatusCommand");
-
         EquipmentList equipments = context.getEquipments();
-        Equipment target = findTarget(equipments);
+        Ui ui = context.getUi();
+        Storage storage = context.getStorage();
+
+        assert equipments != null : "EquipmentList dependency cannot be null";
+        assert ui != null : "Ui dependency cannot be null";
+        assert storage != null : "Storage dependency cannot be null";
+
+        Equipment target;
+        try {
+            target = findTarget(equipments);
+        } catch (EquipmentMasterException e) {
+            ui.showMessage(e.getMessage());
+            return;
+        }
 
         int currentAvail = target.getAvailable();
         int currentLoaned = target.getLoaned();
 
-        if (status.equals("loaned")) {
-            processLoan(target, currentAvail, currentLoaned, context.getUi());
-        } else {
-            processReturn(target, currentAvail, currentLoaned, context.getUi());
-        }
-
-        // PERSISTENCE: Save to disk immediately to prevent data loss or desync
         try {
-            Storage storage = context.getStorage();
-            if (storage != null) {
-                storage.save(equipments.getAllEquipments());
-                logger.log(Level.INFO, "Successfully saved equipment status to storage.");
+            if (status.equals("loaned")) {
+                processLoan(target, currentAvail, currentLoaned, ui);
+            } else {
+                processReturn(target, currentAvail, currentLoaned, ui);
             }
         } catch (EquipmentMasterException e) {
-            context.getUi().showMessage("Warning: Memory updated, but failed to save to disk: " + e.getMessage());
+            ui.showMessage(e.getMessage());
+            return;
+        }
+
+        // Persist – rollback if fails
+        try {
+            storage.save(equipments.getAllEquipments());
+            logger.log(Level.INFO, "Successfully saved equipment status to storage.");
+        } catch (EquipmentMasterException e) {
+            // Rollback to original state
+            target.setAvailable(currentAvail);
+            target.setLoaned(currentLoaned);
+            ui.showMessage("Error: Failed to save to disk. Changes reverted. " + e.getMessage());
+            logger.log(Level.SEVERE, "Failed to save status update for " + target.getName(), e);
+            // Do NOT re-throw
         }
     }
 

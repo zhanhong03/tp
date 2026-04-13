@@ -196,7 +196,7 @@ Action Required: Please arrange for immediate equipment recovery or procurement.
 
 #### Setting a Safety Buffer: `setbuffer`
 Sets a percentage safety buffer on specific equipment. This ensures you buy slightly more than the baseline module enrollments to account for potential damage, loss, or unexpected student increases.
-* **Format:** `setbuffer n/NAME b/PERCENTAGE` or `setbuffer i/INDEX b/PERCENTAGE`
+* **Format:** `setbuffer n/NAME b/PERCENTAGE` or `setbuffer INDEX b/PERCENTAGE`
 * **Example:** `setbuffer n/STM32 b/10` (Sets a 10% procurement buffer for STM32 boards)
 
 #### Generating the Procurement Report: `report procurement`
@@ -241,7 +241,7 @@ Updates the loaned or available count of an equipment item to reflect real-time 
 * **Format:**
   * `setstatus n/NAME q/COUNT s/STATUS` — updates by name
   * `setstatus INDEX q/COUNT s/STATUS` — updates by list index
-  * *(where STATUS is strictly `loaned` or `available`)*
+  * *(where STATUS is `loaned` or `available`, case-insensitive)*
 * **Example:** `setstatus n/Basys3 FPGA q/5 s/loaned`
 * **Example:** `setstatus 1 q/3 s/available`
 
@@ -390,7 +390,7 @@ When an error occurs, the system will reject the invalid input, print a clear er
 * **Find Equipment:** `find KEYWORD [MORE_KEYWORDS]`
 * **Set Semester:** `setsem AY[YYYY]/[YY] Sem[1/2]`
 * **Aging Report:** `report aging [AY[YYYY]/[YY] Sem[1/2]]`
-* **Set Buffer:** `setbuffer n/NAME b/PERCENTAGE` or `setbuffer i/INDEX b/PERCENTAGE`
+* **Set Buffer:** `setbuffer n/NAME b/PERCENTAGE` or `setbuffer INDEX b/PERCENTAGE`
 * **Update Loan Status:** `setstatus n/NAME q/COUNT s/STATUS` or `setstatus INDEX q/COUNT s/STATUS` *(where STATUS is `loaned` or `available`)*
 * **Set Min Threshold:** `setmin [n/NAME | INDEX] min/QUANTITY`
 * **Delete Specific Quantity:** `delete [n/NAME | INDEX] q/QUANTITY s/STATUS` *(where STATUS is `loaned` or `available`)*

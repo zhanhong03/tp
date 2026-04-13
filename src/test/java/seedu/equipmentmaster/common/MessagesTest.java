@@ -35,10 +35,10 @@ public class MessagesTest {
     @Test
     public void testNewMessages() {
         // Verify the newer status and buffer related messages
-        assertEquals("Invalid setstatus format. Use: setstatus n/NAME q/QUANTITY s/STATUS",
+        assertEquals("Invalid setstatus format. Use: setstatus n/NAME q/QUANTITY s/STATUS or INDEX q/QUANTITY s/STATUS",
                 Messages.MESSAGE_INVALID_SET_STATUS_FORMAT);
 
-        assertEquals("Invalid setbuffer format. Usage: setbuffer n/NAME b/PERCENTAGE or setbuffer i/INDEX b/PERCENTAGE",
+        assertEquals("Invalid setbuffer format. Usage: setbuffer n/NAME b/PERCENTAGE or setbuffer INDEX b/PERCENTAGE",
                 Messages.MESSAGE_INVALID_SETBUFFER_FORMAT);
 
         assertEquals("Invalid name! Names cannot contain reserved storage characters: '|', ',', or '='",

@@ -11,6 +11,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static seedu.equipmentmaster.common.Messages.MESSAGE_INVALID_SETBUFFER_FORMAT;
+//@@author JovianJosh
 
 /**
  * Represents a command to set the safety buffer percentage for existing equipment.
@@ -29,10 +30,15 @@ public class SetBufferCommand extends Command {
      * @param percentage Buffer percentage to set.
      */
     public SetBufferCommand(String name, double percentage) {
+        if (percentage < 0) {
+            throw new IllegalArgumentException("Buffer percentage cannot be negative.");
+        }
+        if (percentage > 1000) {
+            throw new IllegalArgumentException("Buffer percentage cannot be greater than 1000.");
+        }
         this.name = name;
         this.index = -1;
         this.percentage = percentage;
-        assert percentage >= 0 : "Buffer percentage should be non-negative";
     }
 
     /**
@@ -48,6 +54,10 @@ public class SetBufferCommand extends Command {
 
         if (percentage < 0) {
             throw new IllegalArgumentException("Buffer percentage cannot be negative.");
+        }
+
+        if (percentage > 1000) {
+            throw new IllegalArgumentException("Buffer percentage cannot be greater than 1000.");
         }
 
         this.name = null;
@@ -66,76 +76,93 @@ public class SetBufferCommand extends Command {
     public static SetBufferCommand parse(String fullCommand) throws EquipmentMasterException {
         logger.log(Level.INFO, "Starting to parse setbuffer command input.");
 
-        // Check for required flags
-        if (!fullCommand.contains("b/")) {
+        String trimmed = fullCommand.trim();
+        if (trimmed.isEmpty()) {
+            throw new EquipmentMasterException(MESSAGE_INVALID_SETBUFFER_FORMAT);
+        }
+
+        String[] parts = trimmed.split("\\s+", 2);
+        if (parts.length < 2) {
+            throw new EquipmentMasterException(MESSAGE_INVALID_SETBUFFER_FORMAT);
+        }
+        String args = parts[1];
+
+        if (!args.contains("b/")) {
             logger.log(Level.WARNING, "Missing compulsory flag (b/) in user input.");
             throw new EquipmentMasterException(MESSAGE_INVALID_SETBUFFER_FORMAT);
         }
 
-        // Check if using name or index
-        boolean hasName = fullCommand.contains("n/");
-        boolean hasIndex = fullCommand.contains("i/");
-
-        if (!hasName && !hasIndex) {
-            logger.log(Level.WARNING, "Missing compulsory flag (n/ or i/) in user input.");
+        String[] tokens = args.split("\\s+");
+        if (tokens.length == 0) {
             throw new EquipmentMasterException(MESSAGE_INVALID_SETBUFFER_FORMAT);
         }
+        String firstToken = tokens[0];
+        boolean hasNameFlag = args.contains(" n/") || args.startsWith("n/");
 
-        if (hasName && hasIndex) {
-            throw new EquipmentMasterException("Please specify either name (n/) OR index (i/), not both.");
+        if (!hasNameFlag) {
+            if (firstToken.matches("\\d+")) {
+                // Bare index mode
+                int index = Integer.parseInt(firstToken);
+                if (index <= 0) {
+                    throw new EquipmentMasterException("Index must be a positive number.");
+                }
+                String percentageStr = extractArgument(args, "b/");
+                if (percentageStr.isEmpty()) {
+                    throw new EquipmentMasterException(MESSAGE_INVALID_SETBUFFER_FORMAT);
+                }
+                percentageStr = percentageStr.replace("%", "").trim();
+                double percentage;
+                try {
+                    percentage = Double.parseDouble(percentageStr);
+                    if (percentage < 0) {
+                        throw new EquipmentMasterException("Buffer percentage cannot be negative.");
+                    }
+                    if (percentage > 1000) {
+                        throw new EquipmentMasterException("Buffer percentage cannot exceed 1000.");
+                    }
+                } catch (NumberFormatException e) {
+                    throw new EquipmentMasterException("Please enter a valid number for buffer percentage.");
+                }
+                logger.log(Level.INFO, "Successfully parsed SetBufferCommand for index: " + index
+                        + " with buffer: " + percentage + "%");
+                return new SetBufferCommand(index, percentage);
+            } else if (!firstToken.contains("/")) {
+                // Token without slash and not a number → invalid index
+                throw new EquipmentMasterException("Please enter a valid positive integer for index.");
+            } else {
+                // Token contains a slash (e.g., "b/10") → missing name/index flag
+                throw new EquipmentMasterException(MESSAGE_INVALID_SETBUFFER_FORMAT);
+            }
         }
 
-        // Extract buffer percentage
+        // Name mode (hasNameFlag == true)
+        String name = extractArgument(fullCommand, "n/");
+        if (name.isEmpty()) {
+            throw new EquipmentMasterException("Equipment name cannot be empty.");
+        }
+
         String percentageStr = extractArgument(fullCommand, "b/");
         if (percentageStr.isEmpty()) {
             throw new EquipmentMasterException(MESSAGE_INVALID_SETBUFFER_FORMAT);
         }
-
-        // Strip % symbol if present
         percentageStr = percentageStr.replace("%", "").trim();
 
         double percentage;
         try {
             percentage = Double.parseDouble(percentageStr);
             if (percentage < 0) {
-                logger.log(Level.WARNING, "Parsed buffer percentage is negative: " + percentage);
                 throw new EquipmentMasterException("Buffer percentage cannot be negative.");
             }
+            if (percentage > 1000) {
+                throw new EquipmentMasterException("Buffer percentage cannot exceed 1000.");
+            }
         } catch (NumberFormatException e) {
-            logger.log(Level.WARNING, "Failed to parse buffer percentage: " + percentageStr, e);
             throw new EquipmentMasterException("Please enter a valid number for buffer percentage.");
         }
 
-        // Handle name-based identification
-        if (hasName) {
-            String name = extractArgument(fullCommand, "n/");
-            if (name.isEmpty()) {
-                throw new EquipmentMasterException("Equipment name cannot be empty.");
-            }
-            logger.log(Level.INFO, "Successfully parsed SetBufferCommand for equipment: " + name
-                    + " with buffer: " + percentage + "%");
-            return new SetBufferCommand(name, percentage);
-        }
-
-        // Handle index-based identification
-        String indexStr = extractArgument(fullCommand, "i/");
-        if (indexStr.isEmpty()) {
-            throw new EquipmentMasterException("Equipment index cannot be empty.");
-        }
-
-        int index;
-        try {
-            index = Integer.parseInt(indexStr);
-            if (index <= 0) {
-                throw new EquipmentMasterException("Index must be a positive number.");
-            }
-        } catch (NumberFormatException e) {
-            throw new EquipmentMasterException("Please enter a valid positive integer for index.");
-        }
-
-        logger.log(Level.INFO, "Successfully parsed SetBufferCommand for index: " + index
+        logger.log(Level.INFO, "Successfully parsed SetBufferCommand for equipment: " + name
                 + " with buffer: " + percentage + "%");
-        return new SetBufferCommand(index, percentage);
+        return new SetBufferCommand(name, percentage);
     }
 
     /**
@@ -201,7 +228,6 @@ public class SetBufferCommand extends Command {
         }
         double oldPercentage = target.getBufferPercentage();
 
-        target.setBufferPercentage(percentage);
         try {
             // Update in-memory state
             target.setBufferPercentage(percentage);

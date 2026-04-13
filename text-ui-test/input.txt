@@ -31,7 +31,13 @@ find xyz123
 find STM
 setstatus
 setstatus 999 q/5 s/loaned
-setstatus 1 q/10 s/loaned
+setstatus 1 q/5 s/loaned
+setstatus n/Ghost q/3 s/available
+setstatus 2 q/100 s/loaned
+setstatus n/SomeItem q/99 s/available
+setstatus 1 q/5 s/broken
+setstatus n/Ghost 1 q/5 s/loaned
+setstatus n/NonExistentItem q/5 s/loaned
 delete
 delete 100 q/5 s/available
 delete n/Aliens q/5 s/available
@@ -62,14 +68,25 @@ listmod
 delmod n/CS2113
 delmod n/GhostModule
 delmod n/
-setbuffer n/STM32 b/10
-setbuffer n/Basys3 b/10
-setbuffer n/STM32 b/-10
-setbuffer n/
-setbuffer i/
-setbuffer b/
-setbuffer i/1 b/15
-setbuffer i/2 b/25.5
-setbuffer i/0 b/-10
+setbuffer
+setbuffer n/STM32
+setbuffer n/STM32 b/1001
+setbuffer n/STM32 b/abc
+setbuffer n/STM32 b/15%
+setbuffer n/STM32 b/15.5
+setbuffer n/STM32 b/0
+setbuffer n/STM32 b/1000
+setbuffer 1 b/15%
+setbuffer 1 b/0
+setbuffer 1 b/1000
+setbuffer 1 b/1001
+setbuffer 1 b/abc
+setbuffer abc b/10
+setbuffer -1 b/10
+setbuffer 999 b/10
+setbuffer n/STM32 1 b/10
+setbuffer 1 n/STM32 b/10
+setbuffer n/   b/10
+setbuffer n/STM32   b/10
 listmod
 bye

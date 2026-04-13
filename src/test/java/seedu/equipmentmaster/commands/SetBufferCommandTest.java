@@ -3,6 +3,7 @@ package seedu.equipmentmaster.commands;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 import static seedu.equipmentmaster.common.Messages.MESSAGE_INVALID_SETBUFFER_FORMAT;
 
@@ -21,6 +22,7 @@ import seedu.equipmentmaster.modulelist.ModuleList;
 import seedu.equipmentmaster.semester.AcademicSemester;
 import seedu.equipmentmaster.storage.Storage;
 import seedu.equipmentmaster.ui.Ui;
+//@@author JovianJosh
 
 public class SetBufferCommandTest {
     private static final String TEST_FILE_PATH = "test_equipment.txt";
@@ -153,18 +155,11 @@ public class SetBufferCommandTest {
     public void parse_inputWithIndex_createsCommand() throws EquipmentMasterException {
         addEquipment("STM32", 10);
 
-        SetBufferCommand command = SetBufferCommand.parse("setbuffer i/1 b/25");
+        SetBufferCommand command = SetBufferCommand.parse("setbuffer 1 b/25");
         command.execute(context);
 
         Equipment equipment = equipments.getEquipment(0);
         assertEquals(25.0, equipment.getBufferPercentage(), 0.0001);
-    }
-
-    @Test
-    public void parse_bothNameAndIndexFlags_throwsException() {
-        EquipmentMasterException exception = assertThrows(EquipmentMasterException.class,
-                () -> SetBufferCommand.parse("setbuffer n/STM32 i/1 b/10"));
-        assertTrue(exception.getMessage().contains("Please specify either name (n/) OR index (i/), not both"));
     }
 
     @Test
@@ -196,23 +191,16 @@ public class SetBufferCommandTest {
     }
 
     @Test
-    public void parse_emptyIndex_throwsException() {
-        EquipmentMasterException exception = assertThrows(EquipmentMasterException.class,
-                () -> SetBufferCommand.parse("setbuffer i/ b/10"));
-        assertEquals("Equipment index cannot be empty.", exception.getMessage());
-    }
-
-    @Test
     public void parse_zeroIndex_throwsException() {
         EquipmentMasterException exception = assertThrows(EquipmentMasterException.class,
-                () -> SetBufferCommand.parse("setbuffer i/0 b/10"));
+                () -> SetBufferCommand.parse("setbuffer 0 b/10"));
         assertEquals("Index must be a positive number.", exception.getMessage());
     }
 
     @Test
     public void parse_nonNumericIndex_throwsException() {
         EquipmentMasterException exception = assertThrows(EquipmentMasterException.class,
-                () -> SetBufferCommand.parse("setbuffer i/abc b/10"));
+                () -> SetBufferCommand.parse("setbuffer abc b/10"));
         assertEquals("Please enter a valid positive integer for index.", exception.getMessage());
     }
 
@@ -253,5 +241,56 @@ public class SetBufferCommandTest {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> new SetBufferCommand(1, -5.0));
         assertEquals("Buffer percentage cannot be negative.", exception.getMessage());
+    }
+
+    @Test
+    public void parse_bufferAtExactlyMax_succeeds() throws EquipmentMasterException {
+        SetBufferCommand cmd = SetBufferCommand.parse("setbuffer n/microscope b/1000");
+        assertNotNull(cmd);
+    }
+
+    @Test
+    public void constructor_nameWithNegativePercentage_throwsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () ->
+                new SetBufferCommand("microscope", -1.0));
+    }
+
+    @Test
+    public void constructor_nameWithExcessivePercentage_throwsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () ->
+                new SetBufferCommand("microscope", 1001.0));
+    }
+
+    @Test
+    public void constructor_indexWithExcessivePercentage_throwsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () ->
+                new SetBufferCommand(1, 1001.0));
+    }
+
+    @Test
+    public void parse_bFlagSubstringInsideName_doesNotBreakParsing() throws EquipmentMasterException {
+        SetBufferCommand cmd = SetBufferCommand.parse("setbuffer n/b/special b/30");
+        assertNotNull(cmd);
+    }
+
+    @Test
+    public void execute_indexAtUpperBound_setsBuffer() throws EquipmentMasterException {
+        addEquipment("item1", 10);
+        SetBufferCommand cmd = new SetBufferCommand(1, 50.0); // only 1 item exists
+        cmd.execute(context);
+        assertEquals(50.0, context.getEquipments().getEquipment(0).getBufferPercentage());
+    }
+
+    @Test
+    public void parse_indexWithPercentSymbol_createsCommand() throws EquipmentMasterException {
+        SetBufferCommand cmd = SetBufferCommand.parse("setbuffer 1 b/50%");
+        assertNotNull(cmd);
+    }
+
+    @Test
+    public void parse_bufferExceedsMax_throwsException() {
+        EquipmentMasterException exception = assertThrows(EquipmentMasterException.class, () ->
+                SetBufferCommand.parse("setbuffer n/STM32 b/1001"));
+        assertTrue(exception.getMessage().contains("cannot exceed 1000"));
     }
 }
